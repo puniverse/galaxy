@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="galaxy" default="default" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+             
+    <condition property="import.path" value="build1.xml">
+        <not><isset property="netbeans.user"/></not>
+    </condition>
+    <condition property="import.path" value="nb-build.xml">
+        <isset property="netbeans.user"/>
+    </condition>
+
+    <!-- conditional import. 
+         If triggered from NetBeans, use old build script if triggered from shell, user new build script -->
+    <import file="${import.path}" />
+</project>

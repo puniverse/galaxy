@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
+    <info module="galaxy" organisation="co.paralleluniverse" revision="1.0-alpha1" status="milestone">
+        <description homepage="http://puniverse.github.com/galaxy/">A high-performance in-memory data-grid.</description>
+        <!-- <license name="LGPL" url="http://www.gnu.org/licenses/lgpl-3.0.txt"/> -->
+    </info>
+    
+    <configurations>
+        <conf name="compile"/>
+        <conf name="runtime" extends="compile"/>
+        <conf name="default" extends="runtime"/>
+        <conf name="test" extends="runtime" visibility="private" 
+              description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases."/>
+        <conf name="javadoc" description="this configuration contains the javadoc artifact of this module, if any."/>
+        <conf name="sources" description="this configuration contains the source artifact of this module, if any."/>
+        <conf name="compile-test" extends="test" visibility="private"/>
+        <conf name="runtime-test" extends="test" visibility="private"/>
+    </configurations>
+    
+    <publications>
+        <artifact name="galaxy" type="pom" ext="pom" conf="default"/>
+        <artifact name="galaxy" type="jar" conf="default"/>
+        <artifact name="galaxy" type="source" ext="jar" conf="sources" m:classifier="sources"/>
+        <artifact name="galaxy" type="javadoc" ext="jar" conf="javadoc" m:classifier="javadoc"/>
+    </publications>
+    
+    <dependencies>
+        <dependency org="org.slf4j"            name="slf4j-api"         rev="1.6.4"         conf="compile->default,javadoc(*),sources(*)" />
+        <dependency org="org.slf4j"            name="slf4j-jdk14"       rev="1.6.4"         conf="runtime->default" />
+        <dependency org="org.slf4j"            name="jcl-over-slf4j"    rev="1.6.4"         conf="runtime->default" />
+        <dependency org="org.slf4j"            name="log4j-over-slf4j"  rev="1.6.4"         conf="runtime->default" />
+        <dependency org="com.google.guava"     name="guava"             rev="11.0.1"        conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="net.sf.trove4j"       name="trove4j"           rev="3.0.2"         conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="org.springframework"  name="spring-beans"      rev="3.1.0.RELEASE" conf="compile->default,javadoc(*); runtime->default" />
+        <dependency org="org.springframework"  name="spring-context"    rev="3.1.0.RELEASE" conf="compile->default,javadoc(*); runtime->default" />
+        <dependency org="com.yammer.metrics"   name="metrics-core"      rev="2.0.3"         conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="io.netty"             name="netty"             rev="3.5.0.Final"   conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="org.jgroups"          name="jgroups"           rev="3.1.0.Beta"    conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="org.apache.zookeeper" name="zookeeper"         rev="3.4.3"         conf="compile->default,javadoc(*); runtime->default" />
+        <dependency org="com.netflix.curator"  name="curator-client"    rev="1.1.9"         conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="com.netflix.curator"  name="curator-framework" rev="1.1.9"         conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="com.netflix.curator"  name="curator-recipes"   rev="1.1.9"         conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        <dependency org="com.googlecode.concurrentlinkedhashmap" name="concurrentlinkedhashmap-lru" rev="1.3" conf="compile->default,javadoc(*),sources(*); runtime->default" />
+        
+        <dependency org="junit"                name="junit"             rev="4.10"          conf="test->default" />
+        <dependency org="org.apache.ant"       name="ant-junit4"        rev="1.8.4"         conf="test->default" />
+        <dependency org="org.hamcrest"         name="hamcrest-core"     rev="1.3.RC2"       conf="test->default,javadoc(*),sources(*)" />
+        <dependency org="org.hamcrest"         name="hamcrest-library"  rev="1.3.RC2"       conf="test->default,javadoc(*),sources(*)" />
+        <dependency org="org.mockito"          name="mockito-all"       rev="1.9.0"         conf="test->default,javadoc(*),sources(*)" />
+        
+        <dependency org="com.sleepycat"        name="je"                rev="5.0.34"        conf="compile->default,javadoc(*); runtime->default" />
+        
+        <exclude org="commons-logging" module="commons-logging"/>
+        <exclude org="org.jboss.netty" module="netty"/>
+        <exclude org="org.slf4j" module="slf4j-log4j12"/>
+        <exclude org="javax.mail" module="mail"/>
+        <exclude org="javax.jms" module="jms"/>
+        <exclude org="com.sun.jdmk" module="jmxtools"/>
+        <exclude org="com.sun.jmx" module="jmxri"/>
+    </dependencies>
+</ivy-module>
+
+<!--
+        <dependency org="de.javakaffee" name="kryo-serializers" rev="0.9" conf="compile->default,javadoc(*),sources(*)" />
+        <dependency org="com.googlecode" name="kryo" rev="1.04" conf="compile->default,javadoc(*),sources(*)" />
+-->

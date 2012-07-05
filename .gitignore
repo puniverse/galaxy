@@ -1,0 +1,9 @@
+*~
+/dist/
+/artifacts
+/nbproject
+build/
+.DS_Store
+/nb-build.xml
+/catalog.xml
+

@@ -1,0 +1,120 @@
+
+This product depends on 'SLF4J', a simple logging facade for Java:
+
+  * LICENSE: license/LICENSE.slf4j.txt (MIT)
+  * HOMEPAGE: ttp://www.slf4j.org/
+
+This product depends on 'Trove', high performance collections for Java:
+
+  * LICENSE: licenses/LICENSE.lgpl.2.1.txt (LGPL 2.1)
+  * HOMEPAGE: http://trove.starlight-systems.com/
+
+Two classes (HashFunctions and PrimeFinder) included in Trove are licensed under the following terms: 
+  Copyright (c) 1999 CERN - European Organization for Nuclear Research. 
+  Permission to use, copy, modify, distribute and sell this software and its documentation for any 
+  purpose is hereby granted without fee, provided that the above copyright notice appear in all 
+  copies and that both that copyright notice and this permission notice appear in supporting documentation. 
+  CERN makes no representations about the suitability of this software for any purpose. 
+  It is provided "as is" without expressed or implied warranty.
+
+This product depends on 'Spring Framework':
+
+  * LICENSE: licenses/LICENSE.apache.2.0.txt (Apache 2.0)
+  * HOMEPAGE: http://www.springsource.org/spring-framework
+
+This product includes software developed at The Apache Software Foundation (http://www.apache.org/).
+
+This product depends on 'Google Guava Libraries'
+  
+  * LICENSE: licenses/LICENSE.apache.2.0.txt (Apache 2.0)
+  * HOMEPAGE: http://code.google.com/p/guava-libraries/ (Apache 2.0)
+
+This product depends on 'Highly Scalable Java (high-scale-lib), a collection of concurrent 
+and highly scalable utilities.
+
+  * LICENSE: licenses/LICENSE.publicdomain.txt (Public Domain)
+  * HOMEPAGE: http://sourceforge.net/projects/high-scale-lib/ 
+
+This product depends on 'Metrics', capturing JVM- and application-level metrics,
+software developed by Coda Hale and Yammer, Inc:
+
+  * LICENSE: licenses/LICENSE.apache.2.0.txt (Apache 2.0)
+  * HOMEPAGE: http://metrics.codahale.com/
+
+The Sphinx documentation theme used for documenting Galaxy has been adapted from
+that of Metrics, by Coda Hale and Yammer, Inc.
+
+This product includes code derived from the JSR-166 project (ThreadLocalRandom), which was released
+with the following comments:
+
+    Written by Doug Lea with assistance from members of JCP JSR-166
+    Expert Group and released to the public domain, as explained at
+    http://creativecommons.org/publicdomain/zero/1.0/
+
+This product depends on `ConcurrentLinkedHashMap', a high performance version of java.util.LinkedHashMap 
+for use as a software cache.
+
+  * LICENSE: licenses/LICENSE.apache.2.0.txt (Apache 2.0)
+  * HOMEPAGE: http://code.google.com/p/concurrentlinkedhashmap/
+
+This product depends on 'Netty', an asynchronous event-driven network application 
+framework:
+  
+  * LICENSE: licenses/LICENSE.apache.2.0.txt (Apache 2.0)
+  * HOMEPAGE: http://netty.io/
+
+This product contains the extensions to Java Collections Framework which has
+been derived from the works by JSR-166 EG, Doug Lea, and Jason T. Greene:
+
+  * LICENSE: licenses/LICENSE.publicdomain.txt (Public Domain)
+  * HOMEPAGE:
+      http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/
+      http://viewvc.jboss.org/cgi-bin/viewvc.cgi/jbosscache/experimental/jsr166/
+
+This product contains a modified version of Robert Harder's Public Domain
+Base64 Encoder and Decoder:
+
+  * LICENSE: licenses/LICENSE.publicdomain.txt (Public Domain)
+  * HOMEPAGE: http://iharder.sourceforge.net/current/java/base64/
+
+This product contains a modified version of 'JZlib', a re-implementation of
+zlib in pure Java:
+
+  * LICENSE: licenses/LICENSE.jzlib.txt (BSD Style License)
+  * HOMEPAGE: http://www.jcraft.com/jzlib/
+
+This product optionally depends on 'Protocol Buffers', Google's data
+interchange format, which can be obtained at:
+
+  * LICENSE: licenses/LICENSE.protobuf.txt (New BSD License)
+  * HOMEPAGE: http://code.google.com/p/protobuf/
+
+This product optionally depends on 'Apache Zookeeper':
+Copyright 2009-2011 The Apache Software Foundation
+
+  * LICENSE: licenses/LICENSE.apache.2.0.txt (Apache 2.0)
+  * HOMEPAGE: http://zookeeper.apache.org/
+
+This product optionally depends on 'Curator', a ZooKeeper client wrapper 
+and rich ZooKeeper framework by Netflix:
+
+  * LICENSE: licenses/LICENSE.apache.2.0.txt (Apache 2.0)
+  * HOMEPAGE: https://github.com/Netflix/curator
+
+This product optionally depends on 'JGroups', a toolkit for reliable 
+multicast communication:
+
+  Copyright (c) 1998-2012 Bela Ban 
+  * LICENSE: licenses/LICENSE.lgpl.2.1.txt (LGPL 2.1)
+  * HOMEPAGE: http://www.jgroups.org/
+
+This product optionally depends on 'Berkeley DB Java Edition':
+
+  * LICENSE: licenses/LICENSE.bdb_je.txt
+  * HOMEPAGE: http://www.oracle.com/technetwork/database/berkeleydb/overview/index-093405.html
+
+This product optionally depends on 'AS, a very small and fast Java 
+bytecode manipulation framework:
+
+  * LICENSE: licenses/LICENSE.asm.txt (New BSD License)
+  * HOMEPAGE: http://asm.ow2.org/
