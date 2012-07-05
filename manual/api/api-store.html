@@ -1,0 +1,441 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <title>Data Store | Galaxy</title>
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css"/>
+        <link rel="stylesheet" href="../../_static/pudoc.css" type="text/css"/>
+        <link rel="top" title="Galaxy" href="../../index.html"/>
+        <link rel="up" title="Galaxy’s API" href="api.html"/>
+        <link rel="next" title="Messenger" href="api-messenger.html"/>
+        <link rel="prev" title="Galaxy’s API" href="api.html"/>
+        <style lang="text/css">
+            #top-bar, #top-bar small, #top-bar a {
+                text-shadow: 0px -1px 0px #EAEAEA;
+            color: #000;
+            }
+
+            #top-bar {
+                background-color: #444;
+            background-image: -moz-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -ms-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#FAFAFA), to(#EAEAEA));
+            background-image: -webkit-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -o-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: linear-gradient(top, #FAFAFA, #EAEAEA);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#FAFAFA', endColorstr = '#EAEAEA', GradientType = 0);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0;
+            border-bottom: 1px solid #CACACA;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+
+            .hero-unit {
+                background-image: url("../../_static/xxx.png") !important;
+                background-repeat: no-repeat !important;
+                background-position: 30px 50px;
+            }
+
+            .hero-unit div.section {
+                padding-left: 200px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="https://github.com/puniverse/galaxy">
+            <img style="position: absolute; top: 0; right: 0; border: 0;"
+                 src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"
+                 alt="Fork me on GitHub"></a>
+        <div class="navbar">
+            <div class="navbar-inner container-fluid" id="top-bar">
+                <header class="row-fluid">
+                    <h1 class="span12" id="title">
+                        <a href="../../index.html">Galaxy</a>
+                        <small>a high-performance in-memory data grid</small>
+                    </h1>
+                </header>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span3" id="sidebar">
+                    <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Galaxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../start/getting-started.html">Getting Started With Galaxy</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Introduction to Galaxy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html">Galaxy&#8217;s API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api.html#getting-the-grid-instance">Getting the grid instance</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="api.html#grid-services">Grid services</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="">Data Store</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#data-items">Data items</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#root-items">Root items</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#serialization-and-persistables">Serialization and Persistables</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#allocating-items">Allocating items</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#reading-items">Reading items</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#hinted-reads">Hinted reads</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#writing-items">Writing items</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#deleting-items">Deleting items</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#item-ownership">Item ownership</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#owned-items-and-shared-items">Owned items and shared items</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#sharing-an-item">Sharing an item</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#owning-an-item">Owning an item</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#deadlocks">Deadlocks</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#listeners">Listeners</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#transactions">Transactions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#asynchronous-operations">Asynchronous operations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#multithreading">Multithreading</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#performance">Performance</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="api-messenger.html">Messenger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api-cluster.html">Cluster Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../config/config.html">Configuring and Monitoring Galaxy</a></li>
+</ul>
+</li>
+</ul>
+
+                    <hr/>
+                    <ul>
+                        <li><a href="http://puniverse.github.com/galaxy/javadoc/index.html">Javadocs</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
+                        <li><a href="https://groups.google.com/forum/#!forum/xxxx">Mailing List</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
+                        <li><a href="http://blog.paralleluniverse.co">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="span9" id="body">
+                     
+  <div class="section" id="data-store">
+<span id="man-api-store"></span><h1>Data Store<a class="headerlink" href="#data-store" title="Permalink to this headline">¶</a></h1>
+<p>The grid&#8217;s shared data store is accessed through the <tt class="docutils literal"><span class="pre">Store</span></tt> class (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html">Javadoc</a>),
+which is used for all operations on data items.</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#data-items" id="id1">Data items</a><ul>
+<li><a class="reference internal" href="#root-items" id="id2">Root items</a></li>
+<li><a class="reference internal" href="#serialization-and-persistables" id="id3">Serialization and Persistables</a></li>
+<li><a class="reference internal" href="#allocating-items" id="id4">Allocating items</a></li>
+<li><a class="reference internal" href="#reading-items" id="id5">Reading items</a></li>
+<li><a class="reference internal" href="#hinted-reads" id="id6">Hinted reads</a></li>
+<li><a class="reference internal" href="#writing-items" id="id7">Writing items</a></li>
+<li><a class="reference internal" href="#deleting-items" id="id8">Deleting items</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#item-ownership" id="id9">Item ownership</a><ul>
+<li><a class="reference internal" href="#owned-items-and-shared-items" id="id10">Owned items and shared items</a></li>
+<li><a class="reference internal" href="#sharing-an-item" id="id11">Sharing an item</a></li>
+<li><a class="reference internal" href="#owning-an-item" id="id12">Owning an item</a></li>
+<li><a class="reference internal" href="#deadlocks" id="id13">Deadlocks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#listeners" id="id14">Listeners</a></li>
+<li><a class="reference internal" href="#transactions" id="id15">Transactions</a></li>
+<li><a class="reference internal" href="#asynchronous-operations" id="id16">Asynchronous operations</a></li>
+<li><a class="reference internal" href="#multithreading" id="id17">Multithreading</a></li>
+<li><a class="reference internal" href="#performance" id="id18">Performance</a></li>
+</ul>
+</div>
+<div class="section" id="data-items">
+<span id="man-api-store-items"></span><h2>Data items<a class="headerlink" href="#data-items" title="Permalink to this headline">¶</a></h2>
+<p>Galaxy data items are simple byte arrays, which are assigned a unique <tt class="docutils literal"><span class="pre">long</span></tt> identifier by the grid. You cannot choose the id
+given to a data item (Galaxy is <em>not</em> a key value store), so you are responsible for storing the item ids in your object graph
+(you can think of item ids as the grid version of references). This is all because Galaxy is meant to be used to implement any kind
+of distributed data structure (you can implement a distributed map on top of Galaxy and thus build your own key-value store).</p>
+<p>To get an item&#8217;s id, you would either read it from another item (like following a reference), or read it from a message
+(see <a class="reference internal" href="api-messenger.html#man-api-messenger"><em>Messenger</em></a>). However, all cluster nodes need a way to easily find the root (or roots) of the object graph, and
+for this purpose, Galaxy provides root items.</p>
+<div class="section" id="root-items">
+<h3>Root items<a class="headerlink" href="#root-items" title="Permalink to this headline">¶</a></h3>
+<p>A root item is a data item which you&#8217;d like to access without knowing its id in advance. Roots are found using string identifiers
+of your own choosing. When a root is first located, it will be allocated, but only by one of the nodes accessing it. So if several
+cluster nodes are all accessing the same root, one will be responsible for initializing it (if it has not already been created before),
+and the rest of the nodes will observe the initialized root. This ensures that any node will either find an initialized root, or
+be assigned the task of initializing it (this will only happen once for each root).</p>
+<p>Finding a root is done by calling  the <tt class="docutils literal"><span class="pre">getRoot</span></tt> method within a transaction
+(<tt class="docutils literal"><span class="pre">getRoot</span></tt> is the only <tt class="docutils literal"><span class="pre">Store</span></tt> operation that requires a transaction.
+For all other operations, transactions are optional. Transactions are fully explained later in this chapter),
+like so:</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="kt">long</span> <span class="n">root</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+<span class="n">StoreTransaction</span> <span class="n">txn</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">beginTransaction</span><span class="o">();</span>
+<span class="k">try</span> <span class="o">{</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">getRoot</span><span class="o">(</span><span class="s">&quot;myRootName&quot;</span><span class="o">,</span> <span class="n">txn</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">store</span><span class="o">.</span><span class="na">isRootCreated</span><span class="o">(</span><span class="n">root</span><span class="o">,</span> <span class="n">txn</span><span class="o">)</span>
+        <span class="n">store</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">root</span><span class="o">,</span> <span class="n">initialRootData</span><span class="o">(),</span> <span class="n">txn</span><span class="o">);</span> <span class="c1">// initialize root</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">commit</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span>
+<span class="o">}</span> <span class="k">catch</span><span class="o">(</span><span class="n">Exception</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">rollback</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">abort</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Locating a root by its name can be costly, so only locate a root once (during application startup) and store its id for future
+accesses.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Do not use the root mechanism as a general key-value store. Roots were designed to be accessed by their string identifiers
+only rarely (usually only when the application starts). Locating a root by its name is a costly operation.</p>
+</div>
+</div>
+<div class="section" id="serialization-and-persistables">
+<h3>Serialization and Persistables<a class="headerlink" href="#serialization-and-persistables" title="Permalink to this headline">¶</a></h3>
+<p>In order to represent application objects, you can use any serialization mechanism, such as
+<tt class="docutils literal"><span class="pre">java.io</span></tt> serialization, <a class="reference external" href="http://code.google.com/p/protobuf/">Protocol Buffers</a>, <a class="reference external" href="http://code.google.com/p/kryo/">Kryo</a> or any other. However, for best serialization performance, it is best to
+have your data objects implement the <tt class="docutils literal"><span class="pre">Persistable</span></tt> interface.</p>
+<p>The <tt class="docutils literal"><span class="pre">Persistable</span></tt> interface (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/common/io/Persistable.html">Javadoc</a>)
+provides direct access to galaxy&#8217;s internal <tt class="docutils literal"><span class="pre">ByteBuffers</span></tt>,
+and eschews copying data to and from byte arrays. All of the <tt class="docutils literal"><span class="pre">Store</span></tt>&#8216;s data methods (<tt class="docutils literal"><span class="pre">get</span></tt>, <tt class="docutils literal"><span class="pre">set</span></tt>, <tt class="docutils literal"><span class="pre">put</span></tt> etc.)
+have versions that work with <tt class="docutils literal"><span class="pre">Persistables</span></tt>.
+Just make sure never to modify the <tt class="docutils literal"><span class="pre">ByteBuffer</span></tt>&#8216;s contents inside your implementation of <tt class="docutils literal"><span class="pre">Persistable</span></tt>&#8216;s
+<tt class="docutils literal"><span class="pre">read</span></tt> method.</p>
+</div>
+<div class="section" id="allocating-items">
+<span id="man-api-store-items-allocation"></span><h3>Allocating items<a class="headerlink" href="#allocating-items" title="Permalink to this headline">¶</a></h3>
+<p>Root items are allocated automatically. All other items must be allocated explicitly using one of the <tt class="docutils literal"><span class="pre">put</span></tt> methods or with
+the <tt class="docutils literal"><span class="pre">alloc</span></tt> method.</p>
+<p>The <tt class="docutils literal"><span class="pre">alloc</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#alloc(int, co.paralleluniverse.galaxy.StoreTransaction)">Javadoc</a>)
+allocates one or more items.
+The items allocated are empty (i.e. contain nulls), and can be set with one of the
+<tt class="docutils literal"><span class="pre">set</span></tt> methods. This method is mostly intended for allocating arrays - a block of items with consecutive ids. The return value is
+the identifier for the first allocated item, with subsequent ids assigned to the following allocated items.</p>
+<p>The <tt class="docutils literal"><span class="pre">put</span></tt> methods allocates a new item and sets its value
+(there are variants taking values of different types - array, <tt class="docutils literal"><span class="pre">ByteBuffer</span></tt> and <tt class="docutils literal"><span class="pre">Persistable</span></tt>).
+It returns the newly allocated item id.</p>
+</div>
+<div class="section" id="reading-items">
+<h3>Reading items<a class="headerlink" href="#reading-items" title="Permalink to this headline">¶</a></h3>
+<p>To read an items value, simply pass its id to one of the <tt class="docutils literal"><span class="pre">get</span></tt> methods.</p>
+<ul class="simple">
+<li>To learn about reading items within transactions, see <a class="reference internal" href="#man-api-store-transactions"><em>Transactions</em></a>.</li>
+<li>To learn about reading items asynchronously, see <a class="reference internal" href="#man-api-store-async"><em>Asynchronous operations</em></a>.</li>
+<li>To learn about the effect <cite>get</cite> has over item ownership, see <a class="reference internal" href="#man-api-store-ownership"><em>Item ownership</em></a>.</li>
+</ul>
+</div>
+<div class="section" id="hinted-reads">
+<h3>Hinted reads<a class="headerlink" href="#hinted-reads" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes your application may know which node likely owns a certain item (say if this information was conveyed in a
+<a class="reference internal" href="api-messenger.html#man-api-messenger"><em>message</em></a>) or that an item is likely owned by the same node that currently owns a different item
+(if this is how your distributed data structure behaves). In such cases, you can provide hints to the <tt class="docutils literal"><span class="pre">get</span></tt> method as to
+the item&#8217;s owner, which may sometimes be helpful in improving the running time of the operation (however, even if the hint is
+wrong and the item is not, in fact, stored on the hinted node, the operation will still perform correctly and find the item
+wherever it is).</p>
+<p>Some variants of the <tt class="docutils literal"><span class="pre">get</span></tt> method take a <tt class="docutils literal"><span class="pre">nodeHint</span></tt> parameter (a <tt class="docutils literal"><span class="pre">short</span></tt> value) that names the (supposed) owning node.</p>
+<p>The <tt class="docutils literal"><span class="pre">getFromOwner</span></tt> methods take a second item id that points to an item which is likely owned by the same node that owns
+the requested item. Note that calling this method may only improve performance if the hinting item (the second parameter) is
+found on the local node (and so its owner is already known).</p>
+</div>
+<div class="section" id="writing-items">
+<h3>Writing items<a class="headerlink" href="#writing-items" title="Permalink to this headline">¶</a></h3>
+<p>To write an item&#8217;s value, use one of the <tt class="docutils literal"><span class="pre">set</span></tt> methods.</p>
+<ul class="simple">
+<li>To learn about writing items within transactions, see <a class="reference internal" href="#man-api-store-transactions"><em>Transactions</em></a>.</li>
+<li>To learn about writing items asynchronously, see <a class="reference internal" href="#man-api-store-async"><em>Asynchronous operations</em></a>.</li>
+<li>To learn about the effect <cite>set</cite> has over item ownership, see <a class="reference internal" href="#man-api-store-ownership"><em>Item ownership</em></a>.</li>
+</ul>
+</div>
+<div class="section" id="deleting-items">
+<h3>Deleting items<a class="headerlink" href="#deleting-items" title="Permalink to this headline">¶</a></h3>
+<p>An item can be deleted with the <tt class="docutils literal"><span class="pre">del</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#del(long, co.paralleluniverse.galaxy.StoreTransaction">Javadoc</a>).</p>
+<p>Trying to access (<tt class="docutils literal"><span class="pre">get</span></tt> or <tt class="docutils literal"><span class="pre">set</span></tt>) a deleted item will result in an exception, but you should not rely on that to detect deleted
+items (making sure an item is deleted might be costly). Instead, try to only delete items when they are no longer &#8220;referenced&#8221; by
+any other item (i.e., they are unreachable).</p>
+</div>
+</div>
+<div class="section" id="item-ownership">
+<span id="man-api-store-ownership"></span><h2>Item ownership<a class="headerlink" href="#item-ownership" title="Permalink to this headline">¶</a></h2>
+<p>As explained in the <a class="reference internal" href="../intro.html#man-intro-architecture"><em>introduction</em></a>, Galaxy is different from other IMDGs in that item ownership
+can move between cluster nodes during normal operation. This will now be explained in further detail.</p>
+<div class="section" id="owned-items-and-shared-items">
+<h3>Owned items and shared items<a class="headerlink" href="#owned-items-and-shared-items" title="Permalink to this headline">¶</a></h3>
+<p>Whenever you access a Galaxy data item in your application, it is sent to the cluster node your code is running on. The item
+is then stored in RAM in one of two states: <strong>owned</strong> or <strong>shared</strong>.</p>
+<p>Every Galaxy data item is <strong>owned</strong> by exactly one node at any point in time, but can be <strong>shared</strong> by many. All nodes
+<strong>sharing</strong> an item can read its value, but only the <strong>owning</strong> node can write it. The owning node and sharing nodes for each
+item change based on the operations the program performs. You can check whether an item is shared, owned or non-existent in
+any particular node by calling the <tt class="docutils literal"><span class="pre">getState</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#getState(long)">Javadoc</a>).</p>
+</div>
+<div class="section" id="sharing-an-item">
+<h3>Sharing an item<a class="headerlink" href="#sharing-an-item" title="Permalink to this headline">¶</a></h3>
+<p>When you call the <tt class="docutils literal"><span class="pre">get</span></tt> method (any of its variants), if the item is not found on the local node (in either a shared or an owned
+state), it will be fetched from the owning node, and kept in RAM in the shared state, until the owning node invalidates it (when
+the item value is changed). Any further reads (with <tt class="docutils literal"><span class="pre">get</span></tt>) will complete immediately with no required network operations.</p>
+<p>The <tt class="docutils literal"><span class="pre">gets</span></tt> method (all of its variants) is very similar to <tt class="docutils literal"><span class="pre">get</span></tt>, except that the item will remain shared on the current node
+until it is explicitly released. In other words, the item is <em>pinned</em> to this node in the shared state. You shouldn&#8217;t keep the
+item pinned for long, because as long as it&#8217;s pinned to the local node, it&#8217;s value cannot be changed by the owning node!
+(this is not exactly true - see <a class="reference internal" href="#man-api-store-ownership-inner"><em>Inner Workings</em></a>)</p>
+<p>To release a pinned item, you must call the <tt class="docutils literal"><span class="pre">release</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#release(long)">Javadoc</a>)
+or use the <tt class="docutils literal"><span class="pre">gets</span></tt> method in a <a class="reference internal" href="#man-api-store-transactions"><em>transaction</em></a>.</p>
+</div>
+<div class="section" id="owning-an-item">
+<h3>Owning an item<a class="headerlink" href="#owning-an-item" title="Permalink to this headline">¶</a></h3>
+<p>In order for an item to be written (with the <tt class="docutils literal"><span class="pre">set</span></tt> method), it must be owned by the local node, and it must not be shared by
+any other node (we then say that the item is <strong>exclusive</strong> in the calling node). So, when you call the <tt class="docutils literal"><span class="pre">set</span></tt> method, ownership
+of the item is transferred to the calling node, and all sharing nodes are asked to invalidate their copies of the item.</p>
+<p>The <tt class="docutils literal"><span class="pre">getx</span></tt> method (all of its variants) reads an item&#8217;s value, but first it obtains ownership over it, and invalidates all sharers.
+In other words, it <em>pins</em> the item to the local node in the <strong>exclusive</strong> state. As long as the item is pinned, no other node can
+<em>read or write</em> the item (this, too, is not exactly true - see <a class="reference internal" href="#man-api-store-ownership-inner"><em>Inner Workings</em></a>), so you
+should release it as soon as possible. <tt class="docutils literal"><span class="pre">getx</span></tt> is essentially a &#8220;get for write&#8221; operation, used to read the the item
+with the intent to soon modify it with <tt class="docutils literal"><span class="pre">set</span></tt>.</p>
+<p>To release a pinned item, you must call the <tt class="docutils literal"><span class="pre">release</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#release(long)">Javadoc</a>)
+or use the <tt class="docutils literal"><span class="pre">gets</span></tt> method in a <a class="reference internal" href="#man-api-store-transactions"><em>transaction</em></a>.</p>
+</div>
+<div class="section" id="deadlocks">
+<span id="man-api-store-ownership-deadlock"></span><h3>Deadlocks<a class="headerlink" href="#deadlocks" title="Permalink to this headline">¶</a></h3>
+<p>Because <tt class="docutils literal"><span class="pre">getx</span></tt> and <tt class="docutils literal"><span class="pre">gets</span></tt> pin an item to the local node until it is explicitly released, pinning more than one item can
+result in a deadlock. For example if node A pins item X in a shared mode (using <tt class="docutils literal"><span class="pre">gets</span></tt>) and then wishes to pin item Y in the
+exclusive mode (with <tt class="docutils literal"><span class="pre">getx</span></tt>), while, at the same time node B pins Y in the shared mode and wishes to pin X in the exclusive mode,
+a conflict may occur which will result in both nodes A and B unable to complete their operation. This is called a <strong>deadlock</strong>.</p>
+<p>When deadlock occurs, the failed operation will throw a <tt class="docutils literal"><span class="pre">TimeoutException</span></tt>. If this happens, you must undo all writes
+that have succeeded to relevant items and release all pinned items in order to allow the other node to complete its operation.
+Then, you may retry the operation.
+<a class="reference internal" href="#man-api-store-transactions"><em>transactions</em></a> make dealing with timeouts easier.</p>
+<p>See <a class="reference internal" href="../config/config-comm.html#man-config-comm-common-timeout"><em>Timeout</em></a> for instructions on setting the timeout duration.</p>
+<div class="admonition note" id="man-api-store-ownership-inner">
+<p class="first admonition-title">Note</p>
+<p>Inner Workings</p>
+<p>When <tt class="docutils literal"><span class="pre">set</span></tt> or <tt class="docutils literal"><span class="pre">getx</span></tt> are called, the caller does not actually wait for all sharers to invalidate the items before
+modifying it. Galaxy assumes that if a tree falls in the forest and no one is around to hear it, it does not make a sound,
+so some lengthy operations are allowed to proceed as long as no other node can have access to the item.</p>
+<p>Therefore, <tt class="docutils literal"><span class="pre">set</span></tt> or <tt class="docutils literal"><span class="pre">getx</span></tt> will complete before all sharers have invalidated their copies, but the item&#8217;s new value
+will not be made available to other nodes until they do so. In fact, this is also done with high availability backup data
+(to the server or slave nodes). Writes do not wait for the server or slaves to acknowledge the backup, but other nodes cannot
+read the item&#8217;s new value until the backup has been completed.</p>
+<p class="last">Neither is it entirely true that items pinned in the exclusive mode (with <tt class="docutils literal"><span class="pre">getx</span></tt>) cannot be read by other nodes. In fact
+Galaxy allows nodes to read an exclusively pinned item&#8217;s old value (as it had been before it was pinned), provided that
+the item is found on that node (because it was once a sharer or an owner of the item), and provided that reading the value
+will not violate consistency guarantees. In any case, Galaxy never allows reading (or writing) an item in a way that will violate
+consistency.</p>
+</div>
+</div>
+</div>
+<div class="section" id="listeners">
+<span id="man-api-store-listeners"></span><h2>Listeners<a class="headerlink" href="#listeners" title="Permalink to this headline">¶</a></h2>
+<p>You can listen for changes in an item&#8217;s value by providing a listener to the method <tt class="docutils literal"><span class="pre">setListener</span></tt>
+(<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#setListener(long, co.paralleluniverse.galaxy.CacheListener)">Javadoc</a>),
+which will get notified of events pertaining to a specific item. Only one listener can be set for a given item, and it may be removed
+by passing a <tt class="docutils literal"><span class="pre">null</span></tt> listener to <tt class="docutils literal"><span class="pre">setListener</span></tt>.</p>
+<p>A listener may be useful, say, for updating a deserialized representation of the item.</p>
+<p>The listener implements three methods:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">received</span></tt> - called when a new value for the item has been received by the node when a <tt class="docutils literal"><span class="pre">get</span></tt> completes after the node&#8217;s value
+has been changed by another node. Received will not be called when the value is modified by the local node, nor will it be called
+when another node updates the item, but the local node has not requested its value with a <tt class="docutils literal"><span class="pre">get</span></tt> (or <tt class="docutils literal"><span class="pre">gets/x</span></tt>).
+That is, the listener does   not listen for all modifications done to the item, only those which are of interest to this node,
+namely only when a <tt class="docutils literal"><span class="pre">get/s/x</span></tt> has been issued.</li>
+<li><tt class="docutils literal"><span class="pre">invalidated</span></tt> - called when the item&#8217;s owner requested the item be invalidated by the local node (because it wants an exclusive
+ownership for an update). Note that this does not necessarily mean that the item may not be read by the local node, as sometimes
+Galaxy allows stale reads as long as they don&#8217;t break consistency (see <a class="reference internal" href="#man-api-store-ownership-inner"><em>Inner Workings</em></a>).</li>
+<li><tt class="docutils literal"><span class="pre">evicted</span></tt> - called when the item has been evicted entirely from the local node, either because it was a shared item that was not
+accessed recently and Galaxy evicted it to conserve memory, because the item has been deleted, or because Galaxy has determined that
+it can no longer be read without violating consistency.</li>
+</ul>
+</div>
+<div class="section" id="transactions">
+<span id="man-api-store-transactions"></span><h2>Transactions<a class="headerlink" href="#transactions" title="Permalink to this headline">¶</a></h2>
+<p>Transactions are used to make multi-item atomic operations easier to use. An atomic multi-item operation is one that potentially
+modifies more than one item, and allows other nodes to observe the items&#8217; values either as they were before the transaction started
+or as they are once the transaction has completed. Internally, transaction simply track which items were pinned, and allows releasing
+all of them with one simple method call (remember, an item pinned with <tt class="docutils literal"><span class="pre">getx</span></tt> cannot be observed by other nodes).</p>
+<p>A transaction is started with the <tt class="docutils literal"><span class="pre">beginTransaction</span></tt> method, completed with the <tt class="docutils literal"><span class="pre">commit</span></tt> or <tt class="docutils literal"><span class="pre">abort</span></tt> method, and is used so:</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="n">StoreTransaction</span> <span class="n">txn</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">beginTransaction</span><span class="o">();</span>
+<span class="k">try</span> <span class="o">{</span>
+    <span class="kt">byte</span><span class="o">[]</span> <span class="n">valX</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">gets</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">txn</span><span class="o">);</span>
+    <span class="kt">byte</span><span class="o">[]</span> <span class="n">valY</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">getx</span><span class="o">(</span><span class="n">y</span><span class="o">,</span> <span class="n">txn</span><span class="o">);</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">y</span><span class="o">,</span> <span class="n">process</span><span class="o">(</span><span class="n">valX</span><span class="o">,</span> <span class="n">valY</span><span class="o">),</span> <span class="n">txn</span><span class="o">);</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">commit</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span>
+<span class="o">}</span> <span class="k">catch</span><span class="o">(</span><span class="n">TimeoutException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">rollback</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span> <span class="c1">// or undo writes manually with a series of sets.</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">abort</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Note how you must explicitly undo your changes if the transaction fails - either using <tt class="docutils literal"><span class="pre">rollback</span></tt> or manually using <tt class="docutils literal"><span class="pre">set</span></tt>.
+By default, transactions support the rollback operation, but this makes them slower (and consume more memory) as they must remember
+items&#8217; old values. You can disable this &#8220;redo log&#8221; in the configuration file (See <a class="reference internal" href="../config/config-cache.html#man-config-cache"><em>Configuring and Monitoring the Cache</em></a>).</p>
+<p>See <a class="reference internal" href="../config/config-comm.html#man-config-comm-common-timeout"><em>Timeout</em></a> for instructions on setting the timeout duration.</p>
+</div>
+<div class="section" id="asynchronous-operations">
+<span id="man-api-store-async"></span><h2>Asynchronous operations<a class="headerlink" href="#asynchronous-operations" title="Permalink to this headline">¶</a></h2>
+<p>Galaxy works best when most data operations access items that are already stored on the local node (see <cite>man-api-store-performance</cite>).
+However, occasionally operations do require network hops (for ownership transfer etc.), and so may block.</p>
+<p>The data-store API provides non-blocking versions to all data operations (called <tt class="docutils literal"><span class="pre">getAsync</span></tt>, <tt class="docutils literal"><span class="pre">getsAsync</span></tt>, <tt class="docutils literal"><span class="pre">getxAsync</span></tt> etc.)
+that do not block, but instead return a <tt class="docutils literal"><span class="pre">Future</span></tt>. This is especially useful (and will give a significant performance boost)
+when performing several operations that don&#8217;t each require the result of the previous one. In the worst case (when network IO is
+required) this will result in all network requests being sent together instead of each being sent only after the previous has
+completed.</p>
+<p>Here&#8217;s an example:</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="n">ListenableFuture</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[]&gt;</span> <span class="n">valX</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">getsAsync</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">txn</span><span class="o">);</span>
+<span class="n">ListenableFuture</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[]&gt;</span> <span class="n">valY</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">getxAsync</span><span class="o">(</span><span class="n">y</span><span class="o">,</span> <span class="n">txn</span><span class="o">);</span>
+<span class="n">store</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">y</span><span class="o">,</span> <span class="n">process</span><span class="o">(</span><span class="n">valX</span><span class="o">.</span><span class="na">get</span><span class="o">(),</span> <span class="n">valY</span><span class="o">.</span><span class="na">get</span><span class="o">()),</span> <span class="n">txn</span><span class="o">);</span> <span class="c1">// this call is synchronous</span>
+</pre></div>
+</div>
+<p>When used in a transaction, <tt class="docutils literal"><span class="pre">commit</span></tt> (and <tt class="docutils literal"><span class="pre">abort</span></tt>) will automatically wait for all futures returned within the transactions (and will
+so guarantee they are all complete when the transaction ends.</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="n">StoreTransaction</span> <span class="n">txn</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">beginTransaction</span><span class="o">();</span>
+
+<span class="k">try</span> <span class="o">{</span>
+    <span class="n">ListenableFuture</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[]&gt;</span> <span class="n">valX</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">getsAsync</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">txn</span><span class="o">);</span>
+    <span class="n">ListenableFuture</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[]&gt;</span> <span class="n">valY</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">getxAsync</span><span class="o">(</span><span class="n">y</span><span class="o">,</span> <span class="n">txn</span><span class="o">);</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">setAsync</span><span class="o">(</span><span class="n">y</span><span class="o">,</span> <span class="n">process</span><span class="o">(</span><span class="n">valX</span><span class="o">.</span><span class="na">get</span><span class="o">(),</span> <span class="n">valY</span><span class="o">.</span><span class="na">get</span><span class="o">()),</span> <span class="n">txn</span><span class="o">);</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">commit</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span>
+<span class="o">}</span> <span class="k">catch</span><span class="o">(</span><span class="n">TimeoutException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">rollback</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span> <span class="c1">// or undo writes manually with a series of sets.</span>
+    <span class="n">store</span><span class="o">.</span><span class="na">abort</span><span class="o">(</span><span class="n">txn</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="multithreading">
+<span id="man-api-store-multithreading"></span><h2>Multithreading<a class="headerlink" href="#multithreading" title="Permalink to this headline">¶</a></h2>
+<p>All of <tt class="docutils literal"><span class="pre">Store</span></tt>&#8216;s methods are thread safe, and the <tt class="docutils literal"><span class="pre">Store</span></tt> instance may safely be used by multiple threads. However, Galaxy
+was built to provide inter-node synchronization - not intra-node synchronization - and so pinning an item to the local node
+entails no locking. Meaning, an item that was pinned with <tt class="docutils literal"><span class="pre">getx</span></tt> on one thread, will result in <tt class="docutils literal"><span class="pre">getx</span></tt> succeeding immediately
+when called from another. Even transactions (which are a thin management layer over pinning) will easily trample over each other
+if they touch the same items on different threads. Any synchronization among threads (such as locking) must be done by the
+application (or another layer of middleware on top of Galaxy).</p>
+<p>By leaving locking to the application, Galaxy provides a lot of flexibility. For example, if used carefully, several threads
+may cooperate in running the same Galaxy transaction.</p>
+</div>
+<div class="section" id="performance">
+<span id="man-api-store-performance"></span><h2>Performance<a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h2>
+<p>To fully enjoy Galaxy&#8217;s low-latency processing, abide by the following advice:</p>
+<ul class="simple">
+<li>Reduce contention - just like in all distributed systems (and even inside your CPU), contention <em>invariably</em> requires communication
+and communication invariably increases latency. Try to avoid multiple nodes all competing to update the same items.</li>
+<li>The more nodes share an item, the less often it should be updated - even if an item is usually updated by the same node, if the item
+is shared (for read access), by a large number of nodes, updating it will increase latency (in the reader nodes, not the writer node).</li>
+<li>Trees are good - Tree data structures (like B-trees and tries) often have the property that the higher up a tree-node is, it will be
+shared more, but will be updated less often. That&#8217;s a great property.</li>
+<li>Keep your transactions short - this will also reduce contention. Try not to do any blocking operation while in a Galaxy transaction.</li>
+<li>Use asynchronous operations when appropriate.</li>
+</ul>
+</div>
+</div>
+
+
+                </div>
+            </div>
+            <hr/>
+            <footer>
+                &copy; Copyright 2012, Parallel Universe Software Co..
+                Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>
+                1.1.3.
+            </footer>
+        </div>
+    </body>
+</html>
+
+

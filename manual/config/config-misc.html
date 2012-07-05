@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <title>Miscellaneous Configurations | Galaxy</title>
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css"/>
+        <link rel="stylesheet" href="../../_static/pudoc.css" type="text/css"/>
+        <link rel="top" title="Galaxy" href="../../index.html"/>
+        <link rel="up" title="Configuring and Monitoring Galaxy" href="config.html"/>
+        <link rel="prev" title="Configuring, Running and Monitoring the Server" href="config-server.html"/>
+        <style lang="text/css">
+            #top-bar, #top-bar small, #top-bar a {
+                text-shadow: 0px -1px 0px #EAEAEA;
+            color: #000;
+            }
+
+            #top-bar {
+                background-color: #444;
+            background-image: -moz-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -ms-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#FAFAFA), to(#EAEAEA));
+            background-image: -webkit-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -o-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: linear-gradient(top, #FAFAFA, #EAEAEA);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#FAFAFA', endColorstr = '#EAEAEA', GradientType = 0);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0;
+            border-bottom: 1px solid #CACACA;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+
+            .hero-unit {
+                background-image: url("../../_static/xxx.png") !important;
+                background-repeat: no-repeat !important;
+                background-position: 30px 50px;
+            }
+
+            .hero-unit div.section {
+                padding-left: 200px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="https://github.com/puniverse/galaxy">
+            <img style="position: absolute; top: 0; right: 0; border: 0;"
+                 src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"
+                 alt="Fork me on GitHub"></a>
+        <div class="navbar">
+            <div class="navbar-inner container-fluid" id="top-bar">
+                <header class="row-fluid">
+                    <h1 class="span12" id="title">
+                        <a href="../../index.html">Galaxy</a>
+                        <small>a high-performance in-memory data grid</small>
+                    </h1>
+                </header>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span3" id="sidebar">
+                    <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Galaxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../start/getting-started.html">Getting Started With Galaxy</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Introduction to Galaxy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/api.html">Galaxy&#8217;s API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="config.html">Configuring and Monitoring Galaxy</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="config.html#the-configuration-file-s">The configuration file(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#configuring-galaxy-monitoring">Configuring Galaxy monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#monitoring-galaxy-s-components">Monitoring Galaxy&#8217;s components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#logging">Logging</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="config.html#galaxy-s-components">Galaxy&#8217;s components</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="config-spring.html">A Spring Primer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-cluster.html">Configuring the Cluster Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-cache.html">Configuring and Monitoring the Cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-messenger.html">Configuring and Monitoring the Messenger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-comm.html">Configuring and Monitoring the Comm Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-server.html">Configuring, Running and Monitoring the Server</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="">Miscellaneous Configurations</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#thread-pools">Thread pools</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#configuring-a-thread-pool">Configuring a thread-pool</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#monitoring-thread-pools">Monitoring thread-pools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+                    <hr/>
+                    <ul>
+                        <li><a href="http://puniverse.github.com/galaxy/javadoc/index.html">Javadocs</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
+                        <li><a href="https://groups.google.com/forum/#!forum/xxxx">Mailing List</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
+                        <li><a href="http://blog.paralleluniverse.co">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="span9" id="body">
+                     
+  <div class="section" id="miscellaneous-configurations">
+<span id="man-config-misc"></span><h1>Miscellaneous Configurations<a class="headerlink" href="#miscellaneous-configurations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="thread-pools">
+<span id="man-config-misc-threadpool"></span><h2>Thread pools<a class="headerlink" href="#thread-pools" title="Permalink to this headline">¶</a></h2>
+<p>Galaxy makes extensive use of thread-pools.</p>
+<div class="section" id="configuring-a-thread-pool">
+<span id="man-config-misc-threadpool-config"></span><h3>Configuring a thread-pool<a class="headerlink" href="#configuring-a-thread-pool" title="Permalink to this headline">¶</a></h3>
+<p>Several Galaxy components require you to provide a thread-pool in the form of a <tt class="docutils literal"><span class="pre">java.util.concurrent.ThreadPoolExecutor</span></tt>
+instance or a subclass of it.</p>
+<p>These are <tt class="docutils literal"><span class="pre">ThreadPoolExecutor</span></tt>&#8216;s constructor-args:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">corePoolSize</span></tt>, index:0, <tt class="docutils literal"><span class="pre">int</span></tt></dt>
+<dd>The number of threads to keep in the pool, even if they are idle.</dd>
+<dt><tt class="docutils literal"><span class="pre">maximumPoolSize</span></tt>, index:1, <tt class="docutils literal"><span class="pre">int</span></tt></dt>
+<dd>The maximum number of threads to allow in the pool.</dd>
+<dt><tt class="docutils literal"><span class="pre">keepAliveTime</span></tt>, index:2, <tt class="docutils literal"><span class="pre">long</span></tt></dt>
+<dd>When the number of threads is greater than the core, this is the maximum time that excess idle threads
+will wait for new tasks before terminating.</dd>
+<dt><tt class="docutils literal"><span class="pre">unit</span></tt>, index:3, <tt class="docutils literal"><span class="pre">java.util.concurrent.TimeUnit</span></tt></dt>
+<dd>The time unit for the <tt class="docutils literal"><span class="pre">keepAliveTime</span></tt> argument.
+Can be <tt class="docutils literal"><span class="pre">NONOSECONDS</span></tt>, <tt class="docutils literal"><span class="pre">MICROSECONDS</span></tt>, <tt class="docutils literal"><span class="pre">MILLISECONDS</span></tt>, <tt class="docutils literal"><span class="pre">SECONDS</span></tt>, <tt class="docutils literal"><span class="pre">MINUTES</span></tt>, <tt class="docutils literal"><span class="pre">HOURS</span></tt> or <tt class="docutils literal"><span class="pre">DAYS</span></tt>.</dd>
+<dt><tt class="docutils literal"><span class="pre">workQueue</span></tt>, index:4, <tt class="docutils literal"><span class="pre">java.util.concurrent.BlockingQueue</span></tt></dt>
+<dd>The queue to use for holding tasks before they are executed.</dd>
+</dl>
+<p>For the <tt class="docutils literal"><span class="pre">workQueue</span></tt> argument, is is best to use <cite>an instance of ``co.paralleluniverse.common.concurrent.QueueFactory`</cite>
+which constructs the queue most appropriate for the given maximum size. It is defined like this:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.common.concurrent.QueueFactory&quot;</span> <span class="na">factory-method=</span><span class="s">&quot;getInstance&quot;</span> <span class="na">c:maxSize=</span><span class="s">&quot;500&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>And there are two special values for <tt class="docutils literal"><span class="pre">maxSize</span></tt>. <tt class="docutils literal"><span class="pre">-1</span></tt> designates an unbounded queue, and <tt class="docutils literal"><span class="pre">0</span></tt> specifies a handoff &#8220;queue&#8221;
+where each producer must wait for a consumer (i.e. there can be no tasks waiting in the queue).</p>
+<p>Here&#8217;s an example of an inner bean (<a class="reference internal" href="config-spring.html#man-config-spring-values-inner"><em>Compound values (inner beans)</em></a>) defining a <tt class="docutils literal"><span class="pre">ThreadPoolExecutor</span></tt>:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;java.util.concurrent.ThreadPoolExecutor&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;1&quot;</span> <span class="na">value=</span><span class="s">&quot;8&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;2&quot;</span> <span class="na">value=</span><span class="s">&quot;5000&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;3&quot;</span> <span class="na">value=</span><span class="s">&quot;MILLISECONDS&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;4&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.common.concurrent.QueueFactory&quot;</span> <span class="na">factory-method=</span><span class="s">&quot;getInstance&quot;</span> <span class="na">c:maxSize=</span><span class="s">&quot;500&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/constructor-arg&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>Galaxy provides a convenience class that is a bit simpler to declare, which can be used instead of <tt class="docutils literal"><span class="pre">java.util.concurrent.ThreadPoolExecutor</span></tt>
+(<strong>but not when a specific subtype is required!</strong>)</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.galaxy.core.ConfigurableThreadPool&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;corePoolSize&quot;</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;maximumPoolSize&quot;</span> <span class="na">value=</span><span class="s">&quot;8&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;keepAliveMillis&quot;</span> <span class="na">value=</span><span class="s">&quot;5000&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;maxQueueSize&quot;</span> <span class="na">value=</span><span class="s">&quot;500&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>Some Galaxy components may ask for a <tt class="docutils literal"><span class="pre">co.paralleluniverse.galaxy.core.NodeOrderedThreadPoolExecutor</span></tt>, which is
+configured so:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.galaxy.core.NodeOrderedThreadPoolExecutor&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;corePoolSize&quot;</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;maximumPoolSize&quot;</span> <span class="na">value=</span><span class="s">&quot;8&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;keepAliveTime&quot;</span> <span class="na">value=</span><span class="s">&quot;5000&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;unit&quot;</span> <span class="na">value=</span><span class="s">&quot;MILLISECONDS&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;maxQueueSize&quot;</span> <span class="na">value=</span><span class="s">&quot;500&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;workQueue&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.common.concurrent.QueueFactory&quot;</span> <span class="na">factory-method=</span><span class="s">&quot;getInstance&quot;</span> <span class="na">c:maxSize=</span><span class="s">&quot;500&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/constructor-arg&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="monitoring-thread-pools">
+<span id="man-config-misc-threadpool-monitor"></span><h3>Monitoring thread-pools<a class="headerlink" href="#monitoring-thread-pools" title="Permalink to this headline">¶</a></h3>
+<p>All of Galaxy&#8217;s thread-pools expose monitoring information using MBeans. All of these MBeans are named
+<tt class="docutils literal"><span class="pre">co.paralleluniverse:type=ThreadPoolExecutor,name=POOL_NAME</span></tt>, and can be found in <strong>VisualVM</strong> or <strong>JConsole</strong> in the
+MBean tree under the <tt class="docutils literal"><span class="pre">co.paralleluniverse/ThreadPoolExecutor</span></tt> node.</p>
+</div>
+</div>
+</div>
+
+
+                </div>
+            </div>
+            <hr/>
+            <footer>
+                &copy; Copyright 2012, Parallel Universe Software Co..
+                Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>
+                1.1.3.
+            </footer>
+        </div>
+    </body>
+</html>
+
+

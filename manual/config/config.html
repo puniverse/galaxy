@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <title>Configuring and Monitoring Galaxy | Galaxy</title>
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css"/>
+        <link rel="stylesheet" href="../../_static/pudoc.css" type="text/css"/>
+        <link rel="top" title="Galaxy" href="../../index.html"/>
+        <link rel="up" title="User Manual" href="../index.html"/>
+        <link rel="next" title="A Spring Primer" href="config-spring.html"/>
+        <link rel="prev" title="Cluster" href="../api/api-cluster.html"/>
+        <style lang="text/css">
+            #top-bar, #top-bar small, #top-bar a {
+                text-shadow: 0px -1px 0px #EAEAEA;
+            color: #000;
+            }
+
+            #top-bar {
+                background-color: #444;
+            background-image: -moz-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -ms-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#FAFAFA), to(#EAEAEA));
+            background-image: -webkit-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -o-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: linear-gradient(top, #FAFAFA, #EAEAEA);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#FAFAFA', endColorstr = '#EAEAEA', GradientType = 0);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0;
+            border-bottom: 1px solid #CACACA;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+
+            .hero-unit {
+                background-image: url("../../_static/xxx.png") !important;
+                background-repeat: no-repeat !important;
+                background-position: 30px 50px;
+            }
+
+            .hero-unit div.section {
+                padding-left: 200px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="https://github.com/puniverse/galaxy">
+            <img style="position: absolute; top: 0; right: 0; border: 0;"
+                 src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"
+                 alt="Fork me on GitHub"></a>
+        <div class="navbar">
+            <div class="navbar-inner container-fluid" id="top-bar">
+                <header class="row-fluid">
+                    <h1 class="span12" id="title">
+                        <a href="../../index.html">Galaxy</a>
+                        <small>a high-performance in-memory data grid</small>
+                    </h1>
+                </header>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span3" id="sidebar">
+                    <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Galaxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../start/getting-started.html">Getting Started With Galaxy</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Introduction to Galaxy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/api.html">Galaxy&#8217;s API</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Configuring and Monitoring Galaxy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-configuration-file-s">The configuration file(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-galaxy-monitoring">Configuring Galaxy monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#monitoring-galaxy-s-components">Monitoring Galaxy&#8217;s components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galaxy-s-components">Galaxy&#8217;s components</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="config-spring.html">A Spring Primer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-cluster.html">Configuring the Cluster Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-cache.html">Configuring and Monitoring the Cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-messenger.html">Configuring and Monitoring the Messenger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-comm.html">Configuring and Monitoring the Comm Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-server.html">Configuring, Running and Monitoring the Server</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-misc.html">Miscellaneous Configurations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+                    <hr/>
+                    <ul>
+                        <li><a href="http://puniverse.github.com/galaxy/javadoc/index.html">Javadocs</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
+                        <li><a href="https://groups.google.com/forum/#!forum/xxxx">Mailing List</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
+                        <li><a href="http://blog.paralleluniverse.co">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="span9" id="body">
+                     
+  <div class="section" id="configuring-and-monitoring-galaxy">
+<span id="man-config"></span><h1>Configuring and Monitoring Galaxy<a class="headerlink" href="#configuring-and-monitoring-galaxy" title="Permalink to this headline">¶</a></h1>
+<p>Configuring the Galaxy grid is just as important as using its API, as the API is designed to be simple, but the actions Galaxy takes under the hood are very much
+determined by the way Galaxy is configured.</p>
+<p>Galaxy uses the <a class="reference external" href="http://www.springsource.org/spring-framework">Spring Framework</a> for its configuration, and is configured from an XML file using Spring Beans. For a short tutorial on
+Spring configuration, see <a class="reference internal" href="config-spring.html#man-config-spring"><em>A Spring Primer</em></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This manual provides detailed instructions to configuring Galaxy. However, for a quicker start, we suggest you take a look at
+<a class="reference internal" href="../../start/getting-started.html#start-config"><em>Using the pre-built configurations</em></a> in the Getting Started guide.</p>
+</div>
+<div class="section" id="the-configuration-file-s">
+<span id="man-config-file"></span><h2>The configuration file(s)<a class="headerlink" href="#the-configuration-file-s" title="Permalink to this headline">¶</a></h2>
+<p>A Galaxy node is configured from one XML file (of course, that file can reference others in accordance with the Spring Beans schema), whose path is passed to
+the <tt class="docutils literal"><span class="pre">getInstance</span></tt> static method of the <tt class="docutils literal"><span class="pre">Grid</span></tt> class (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Grid.html">Javadoc</a>).
+If you pass <tt class="docutils literal"><span class="pre">null</span></tt> (or use the zero-argument version of <tt class="docutils literal"><span class="pre">getInstance</span></tt>), the default configuration file, <tt class="docutils literal"><span class="pre">galaxy.xml</span></tt> is used, if it&#8217;s found somewhere on the
+classpath.</p>
+<p>In addition to the XML file, you may use a Java properties file, and reference those properties in the configuration file like so: <tt class="docutils literal"><span class="pre">${prop.name}</span></tt>. The name
+of the properties file may also be passed to <tt class="docutils literal"><span class="pre">getInstance</span></tt>. If a <tt class="docutils literal"><span class="pre">null</span></tt> name is passed (or the zero-argument version of <tt class="docutils literal"><span class="pre">getInstance</span></tt> is used), no properties
+file gets loaded. The properties file is handy when you want to use the same configuration file for all nodes, with only minor differences (like node ID).
+In this case, you can just set the different properties in the separate properties file. This is the common case so properties files are recommended.</p>
+<p>You define properties in the properties file like so (you can make up your own property names - they have no special meaning for Galaxy):</p>
+<div class="highlight-properties"><div class="highlight"><pre><span class="na">cluster.nodeId</span><span class="o">=</span><span class="s">3</span>
+</pre></div>
+</div>
+<p>and you reference them from the configuration file when setting configuration properties like this:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;nodeId&quot;</span> <span class="na">value=</span><span class="s">&quot;${cluster.nodeId}&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>The configuration file defines which implementation each Galaxy component is to use, as well as implementation specific configuration parameters for each component.</p>
+<p>Galaxy&#8217;s configuration is flexible enough to allow running multiple nodes (even server nodes) in the same physical machine. All it requires is setting IP ports
+and the like carefully, where appropriate.</p>
+<div class="admonition attention">
+<p class="first admonition-title">Attention</p>
+<p class="last">You <em>must</em> use the documented bean ids for each component. You may not assign the beans other names, as Galaxy depends on the components having specific names.
+In addition, Spring&#8217;s <tt class="docutils literal"><span class="pre">default-autowire</span></tt> mode must be set to <tt class="docutils literal"><span class="pre">constructor</span></tt>.</p>
+</div>
+<p>Here&#8217;s how the configuration file should look:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;beans</span> <span class="na">xmlns=</span><span class="s">&quot;http://www.springframework.org/schema/beans&quot;</span>
+       <span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+       <span class="na">xmlns:context=</span><span class="s">&quot;http://www.springframework.org/schema/context&quot;</span>
+       <span class="na">xmlns:util=</span><span class="s">&quot;http://www.springframework.org/schema/util&quot;</span>
+
+       <span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd</span>
+<span class="s">          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd</span>
+<span class="s">          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd&quot;</span>
+       <span class="na">default-lazy-init=</span><span class="s">&quot;false&quot;</span>
+       <span class="na">default-autowire=</span><span class="s">&quot;constructor&quot;</span><span class="nt">&gt;</span>
+
+    <span class="c">&lt;!-- bean definitions ... --&gt;</span>
+<span class="nt">&lt;/beans&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-galaxy-monitoring">
+<span id="man-config-monitoring"></span><h2>Configuring Galaxy monitoring<a class="headerlink" href="#configuring-galaxy-monitoring" title="Permalink to this headline">¶</a></h2>
+<p>Most Galaxy components expose monitoring data, and most of those that do let you choose what monitor to use (in the <tt class="docutils literal"><span class="pre">monitoringType</span></tt> constructor-arg). Currently,
+there are two options:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">METRICS</span></tt> - uses Yammer&#8217;s <a class="reference external" href="http://metrics.codahale.com/">Metrics</a> library. Data can be exported to JMX MBeans, <a class="reference external" href="http://ganglia.sourceforge.net/">Ganglia</a>, or <a class="reference external" href="http://graphite.wikidot.com/">Graphite</a>. This option gives very detailed an high-resolution
+monitoring data, but might be heavy on resources.</li>
+<li><tt class="docutils literal"><span class="pre">JMX</span></tt> - uses simple JMX MBeans to export monitoring data. The data is lower-resolution and cruder than the Metrics option, but might be lighter on resources.</li>
+</ul>
+<p>The best way to view MBeans is with <strong>VisualVM</strong>.</p>
+</div>
+<div class="section" id="monitoring-galaxy-s-components">
+<span id="man-config-component-monitor"></span><h2>Monitoring Galaxy&#8217;s components<a class="headerlink" href="#monitoring-galaxy-s-components" title="Permalink to this headline">¶</a></h2>
+<p>Most Galaxy components expose monitoring data, and the details about which information is exposed is detailed in the component&#8217;s respective manual section.
+Aside from component-specific monitoring, all components expose their configuration properties and basic status as MBeans. These MBeans are named
+<tt class="docutils literal"><span class="pre">co.paralleluniverse.galaxy:type=components,name=COMPONENT_NAME</span></tt>, where <tt class="docutils literal"><span class="pre">COMPONENT_NAME</span></tt> is the Spring Bean id.</p>
+</div>
+<div class="section" id="logging">
+<span id="man-config-logging"></span><h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>Galaxy uses <a class="reference external" href="http://www.slf4j.org/">SLF4J</a> for all its logging.</p>
+</div>
+<div class="section" id="galaxy-s-components">
+<h2>Galaxy&#8217;s components<a class="headerlink" href="#galaxy-s-components" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="config-spring.html">A Spring Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-cluster.html">Configuring the Cluster Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-cache.html">Configuring and Monitoring the Cache</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-messenger.html">Configuring and Monitoring the Messenger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-comm.html">Configuring and Monitoring the Comm Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-server.html">Configuring, Running and Monitoring the Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config-misc.html">Miscellaneous Configurations</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+                </div>
+            </div>
+            <hr/>
+            <footer>
+                &copy; Copyright 2012, Parallel Universe Software Co..
+                Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>
+                1.1.3.
+            </footer>
+        </div>
+    </body>
+</html>
+
+
