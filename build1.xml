@@ -10,7 +10,7 @@
     <property name="status" value="integration"/>
     <property name="vendor" value="Parallel Universe Software Co."/>
     <property name="description" value="A high-performance in-memory data-grid."/>
-    <property name="url" value="http://puniverse.github.com/galaxy/"/>
+    <property name="url" value="http://puniverse.github.com/galaxy"/>
     <property name="license.name" value="The GNU Lesser General Public License, version 3"/>
     <property name="license.url" value="http://www.gnu.org/licenses/lgpl-3.0.txt"/>
     <property name="scm.url" value="https://github.com/puniverse/galaxy"/>

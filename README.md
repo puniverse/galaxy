@@ -51,3 +51,16 @@ Application code runs on the same cluster nodes (called **peer nodes**), and pro
 
 Galaxy's aim is to give the application full control over data location and processing in the grid, and in-order to provide maximal flexibility with a simple API, it is relatively low-level. It provides no query mechanism whatsoever, imposes no structure on the data (which is kept in memory and on disk as byte arrays), and provides no locking of elements to coordinate complex transactions among different threads on a single node (although each operation is atomic by itself). All of that must be provided by the application.
 
+Documentation
+-------------
+
+The Galaxy documentation is found [here](http://puniverse.github.com/galaxy/).
+
+Downloads
+---------
+
+Galaxy releases can be downloaded [here](https://github.com/puniverse/galaxy/downloads).
+
+---
+
+Copyright (C) 2012 Parallel Universe Software Co.
