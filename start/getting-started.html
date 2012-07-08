@@ -139,13 +139,13 @@ directory. It contains three or four XML <tt class="docutils literal"><span clas
 * <tt class="docutils literal"><span class="pre">_jgroups.xml</span></tt> - to use JGroups.<ul>
 <li><tt class="docutils literal"><span class="pre">_zookeeper.xml</span></tt> - to use Apache ZooKeeper. If selected, configure <tt class="docutils literal"><span class="pre">zkConnectString</span></tt> in <tt class="docutils literal"><span class="pre">_zookeeper.xml</span></tt> to
 match your ZooKeeper configuration.</li>
-<li><tt class="docutils literal"><span class="pre">_jgroups_cloud.xml</span></tt> - to use JGroups in a cloud environment that does not allow multicast (like EC2).</li>
 </ul>
 </li>
 <li>One of:<ul>
 <li><tt class="docutils literal"><span class="pre">_with_server.xml</span></tt> - if you&#8217;d like your cluster to have a server node for persistence
 (see <a class="reference internal" href="../manual/config/config-server.html#man-config-server"><em>Configuring, Running and Monitoring the Server</em></a> for an explanation about servers).</li>
-<li><tt class="docutils literal"><span class="pre">_with_cloud_server.xml</span></tt> - if you want a server but are running Galaxy in a cloud environment that does not allow multicast.</li>
+<li><tt class="docutils literal"><span class="pre">_with_cloud_server.xml</span></tt> - if you want a server but are running Galaxy in a cloud environment that does not allow multicast.
+In that case, you must use <tt class="docutils literal"><span class="pre">_zookeeper.xml</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">_with_dumb_server</span></tt> - if you&#8217;d like to use a server that isn&#8217;t a Galaxy node but a simple SQL database for persistence.
 In this case, you must also import <tt class="docutils literal"><span class="pre">_sql.xml</span></tt> as item 4.
 (see <a class="reference internal" href="../manual/config/config-server.html#man-config-server-dumb"><em>Dumb servers</em></a> for an explanation about dumb servers).</li>
@@ -193,7 +193,6 @@ at the <tt class="docutils literal"><span class="pre">server.xml</span></tt> fil
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">_zookeeper.xml</span></tt> - to use ZooKeeper. If selected, configure <tt class="docutils literal"><span class="pre">zkConnectString</span></tt> in <tt class="docutils literal"><span class="pre">_zookeeper.xml</span></tt> to match your
 ZooKeeper configuration.</li>
-<li><tt class="docutils literal"><span class="pre">_jgroups_cloud.xml</span></tt> - to use JGroups in a cloud environment that does not allow multicast (like EC2).</li>
 </ul>
 </li>
 <li><p class="first">Persistence layer. Can be one of:</p>
