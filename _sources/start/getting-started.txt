@@ -70,6 +70,7 @@ directory. It contains three or four XML ``import`` elements:
 1. ``_peer.xml``. This import is required for all peer configurations.
 
 2. Cluster management product. Can be one of:
+
    * ``_jgroups.xml`` - to use JGroups.
 
    * ``_zookeeper.xml`` - to use Apache ZooKeeper. If selected, configure ``zkConnectString`` in ``_zookeeper.xml`` to 
