@@ -75,14 +75,13 @@ directory. It contains three or four XML ``import`` elements:
    * ``_zookeeper.xml`` - to use Apache ZooKeeper. If selected, configure ``zkConnectString`` in ``_zookeeper.xml`` to 
      match your ZooKeeper configuration.
 
-   * ``_jgroups_cloud.xml`` - to use JGroups in a cloud environment that does not allow multicast (like EC2).
-
 3. One of: 
 
    * ``_with_server.xml`` - if you'd like your cluster to have a server node for persistence 
      (see :ref:`man-config-server` for an explanation about servers).
 
    * ``_with_cloud_server.xml`` - if you want a server but are running Galaxy in a cloud environment that does not allow multicast.
+     In that case, you must use ``_zookeeper.xml``.
 
    * ``_with_dumb_server`` - if you'd like to use a server that isn't a Galaxy node but a simple SQL database for persistence.
      In this case, you must also import ``_sql.xml`` as item 4.
@@ -136,8 +135,6 @@ at the ``server.xml`` file that's in the ``config`` directory. It is comprised o
 
    * ``_zookeeper.xml`` - to use ZooKeeper. If selected, configure ``zkConnectString`` in ``_zookeeper.xml`` to match your 
      ZooKeeper configuration.
-
-   * ``_jgroups_cloud.xml`` - to use JGroups in a cloud environment that does not allow multicast (like EC2).
 
 3. Persistence layer. Can be one of:
    
