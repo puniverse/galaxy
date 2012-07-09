@@ -20,7 +20,7 @@ data access patterns, i.e. applications where the data items behave according to
 Galaxy is not a key-value store, though it can be used to build one. It's meant to be used as a low-level platform for 
 building distributed data structures.
 
-Galaxy uses **ZooKeeper** or **JGroups** for cluster management, and **BerkelyDB** or **any SQL database** for optional 
+Galaxy uses **ZooKeeper** or **JGroups** for cluster management, and **BerkeleyDB** or **any SQL database** for optional 
 persistence.
 
 .. attention::
