@@ -4,7 +4,7 @@
 Messenger
 #########
 
-The ``Messenger`` (:javadoc:`Javadoc <co/paralleluniverse/galaxy/Messenger.html>`__)
+The ``Messenger`` (:javadoc:`Javadoc <co/paralleluniverse/galaxy/Messenger.html>`)
 lets you send point-to-point messages to other nodes in the cluster, and is used alongside the
 :ref:`data-store <man-api-store>` to distribute your application in the grid. While Galaxy's data-store moves data around
 the grid to be processed at the appropriate node (moving data to code), messages are used to request nodes to carry out operations
@@ -29,7 +29,7 @@ You register receivers like so:
     messenger.addMessageListener(topic, myListener);
     
 With ``topic`` being either a ``String`` or a ``long``, and ``myListener`` is an object implementing ``MessageListener``
-(:javadoc:`Javadoc <co/paralleluniverse/galaxy/MessageListener.html>`__).
+(:javadoc:`Javadoc <co/paralleluniverse/galaxy/MessageListener.html>`).
 
 When a message sent to ``myTopic`` on the local node is received, ``myListener``'s ``messageReceived`` method
 (:javadoc:`Javadoc <co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])>`)

@@ -5,8 +5,14 @@ News
 #####
 
 
-July 5, 2012
-============
+July 10, 2012
+=============
 
-Today we released Galaxy 1.0-alpha1.
+The first public version of Galaxy, **1.0-alpha1**, has been released.
+
+See the announcement `on our blog <http://blog.paralleluniverse.co/post/26909672264/on-distributed-memory>`__.
+
+
+
+
 
