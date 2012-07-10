@@ -102,7 +102,7 @@
                      
   <div class="section" id="messenger">
 <span id="man-api-messenger"></span><h1>Messenger<a class="headerlink" href="#messenger" title="Permalink to this headline">¶</a></h1>
-<p>The <tt class="docutils literal"><span class="pre">Messenger</span></tt> (<a href="#id1"><span class="problematic" id="id2">:javadoc:`Javadoc &lt;co/paralleluniverse/galaxy/Messenger.html&gt;`__</span></a>)
+<p>The <tt class="docutils literal"><span class="pre">Messenger</span></tt> (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Messenger.html">Javadoc</a>)
 lets you send point-to-point messages to other nodes in the cluster, and is used alongside the
 <a class="reference internal" href="api-store.html#man-api-store"><em>data-store</em></a> to distribute your application in the grid. While Galaxy&#8217;s data-store moves data around
 the grid to be processed at the appropriate node (moving data to code), messages are used to request nodes to carry out operations
@@ -119,7 +119,7 @@ You register receivers like so:</p>
 </pre></div>
 </div>
 <p>With <tt class="docutils literal"><span class="pre">topic</span></tt> being either a <tt class="docutils literal"><span class="pre">String</span></tt> or a <tt class="docutils literal"><span class="pre">long</span></tt>, and <tt class="docutils literal"><span class="pre">myListener</span></tt> is an object implementing <tt class="docutils literal"><span class="pre">MessageListener</span></tt>
-(<a href="#id3"><span class="problematic" id="id4">:javadoc:`Javadoc &lt;co/paralleluniverse/galaxy/MessageListener.html&gt;`__</span></a>).</p>
+(<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/MessageListener.html">Javadoc</a>).</p>
 <p>When a message sent to <tt class="docutils literal"><span class="pre">myTopic</span></tt> on the local node is received, <tt class="docutils literal"><span class="pre">myListener</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">messageReceived</span></tt> method
 (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])">Javadoc</a>)
 will be called, and passed the message payload and the sending node.</p>
