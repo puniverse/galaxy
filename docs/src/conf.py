@@ -109,7 +109,7 @@ html_theme_options = {
     'github_page': u'https://github.com/puniverse/galaxy',
     'javadocs': os.environ['JAVADOC_URL'] + '/index.html',
     'download': u'https://github.com/puniverse/galaxy/downloads',
-    'mailing_list': u'https://groups.google.com/forum/#!forum/xxxx',
+    'mailing_list': u'https://groups.google.com/forum/#!forum/galaxy-user',
     'issue_tracker': u'https://github.com/puniverse/galaxy/issues/',
     'blog': u'http://blog.paralleluniverse.co'
 }
