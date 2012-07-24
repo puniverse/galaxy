@@ -1394,10 +1394,10 @@ public class CacheTest {
     }
 
     /**
-     * Make sure we allow dirty reads as long as there were no PUTs from the same owner.
+     * Make sure we allow stale reads as long as there were no PUTs from the same owner.
      */
     @Test
-    public void testDirtyReads1() {
+    public void testStaleReads1() {
         PUT(101L, sh(10), 1L, "1");
         PUT(102L, sh(10), 1L, "2");
         PUT(103L, sh(10), 1L, "3");
@@ -1415,6 +1415,8 @@ public class CacheTest {
         INV(101L, sh(10));
         INV(103L, sh(10));
         INV(104L, sh(10));
+        INV(201L, sh(10));
+        INV(202L, sh(20));
 
         assertThat(cache.runOp(new Op(GET, 101, null)), is(not(PENDING)));
         assertThat(cache.runOp(new Op(GET, 102, null)), is(not(PENDING)));
@@ -1428,15 +1430,15 @@ public class CacheTest {
         assertThat(cache.runOp(new Op(GET, 102, null)), is(not(PENDING)));
         assertThat(cache.runOp(new Op(GET, 104, null)), is(PENDING));
 
-        assertThat(cache.runOp(new Op(GET, 201, null)), is(not(PENDING)));
+        assertThat(cache.runOp(new Op(GET, 201, null)), is(PENDING));
         assertThat(cache.runOp(new Op(GET, 202, null)), is(not(PENDING)));
     }
 
     /**
-     * Make sure we allow dirty reads as long as there were no PUTs from the same owner.
+     * A PUT of a new line purges all I lines.
      */
     @Test
-    public void testDirtyReads2() {
+    public void testStaleReads2() {
         PUT(101L, sh(10), 1L, "1");
         PUT(102L, sh(10), 1L, "2");
         PUT(103L, sh(10), 1L, "3");
@@ -1454,28 +1456,29 @@ public class CacheTest {
         INV(101L, sh(10));
         INV(103L, sh(10));
         INV(104L, sh(10));
+        INV(201L, sh(20));
 
         assertThat(cache.runOp(new Op(GET, 101, null)), is(not(PENDING)));
         assertThat(cache.runOp(new Op(GET, 102, null)), is(not(PENDING)));
         assertThat(cache.runOp(new Op(GET, 103, null)), is(not(PENDING)));
         assertThat(cache.runOp(new Op(GET, 104, null)), is(not(PENDING)));
 
-        PUT(105L, sh(10), 1L, "5");
+        PUT(105L, sh(30), 1L, "5");
 
         assertThat(cache.runOp(new Op(GET, 103, null)), is(PENDING));
         assertThat(cache.runOp(new Op(GET, 101, null)), is(PENDING));
         assertThat(cache.runOp(new Op(GET, 102, null)), is(not(PENDING)));
         assertThat(cache.runOp(new Op(GET, 104, null)), is(PENDING));
 
-        assertThat(cache.runOp(new Op(GET, 201, null)), is(not(PENDING)));
+        assertThat(cache.runOp(new Op(GET, 201, null)), is(PENDING));
         assertThat(cache.runOp(new Op(GET, 202, null)), is(not(PENDING)));
     }
 
     /**
-     * Eviction does not prevent dirty reads.
+     * Eviction does not prevent stale reads.
      */
     @Test
-    public void testDirtyReads3() {
+    public void testStaleReads4() {
         PUT(101L, sh(10), 1L, "1");
         PUT(102L, sh(10), 1L, "2");
         PUT(103L, sh(10), 1L, "3");

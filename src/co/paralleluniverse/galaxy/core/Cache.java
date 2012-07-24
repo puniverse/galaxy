@@ -88,7 +88,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
      */
 
     static final long MAX_RESERVED_REF_ID = 0xffffffffL;
-    private static final boolean DIRTY_READS = true;
+    private static final boolean STALE_READS = true;
     private static final int SHARER_SET_DEFAULT_SIZE = 10;
     private static final Logger LOG = LoggerFactory.getLogger(Cache.class);
     private long timeout = 200000;
@@ -115,9 +115,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private boolean rollbackSupported = true;
     private boolean synchronous = false;
     private Set<NodeEvent> nodeEvents = new CopyOnWriteArraySet<NodeEvent>();
+    private long maxStaleReadMillis = 500;
     //
     private final IdAllocator idAllocator;
     private final NonBlockingHashMapLong<OwnerClock> ownerClocks;
+    private final OwnerClock globalOwnerClock;
+    private final AtomicLong clock = new AtomicLong();
     private final ThreadLocal<Boolean> recursive = new ThreadLocal<Boolean>();
     private final ThreadLocal<Boolean> inNodeEventHandler = new ThreadLocal<Boolean>();
     private final List<CacheListener> listeners = new CopyOnWriteArrayList<CacheListener>();
@@ -158,10 +161,13 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         this.backup = backup; // new Backup(comm, null);
         this.idAllocator = new IdAllocator(this, (RefAllocator) cluster);
 
-        if (DIRTY_READS)
+        if (STALE_READS) {
             this.ownerClocks = new NonBlockingHashMapLong<OwnerClock>();
-        else
+            this.globalOwnerClock = getOwnerClock((short) -1);
+        } else {
             this.ownerClocks = null;
+            this.globalOwnerClock = null;
+        }
 
         this.monitor.setMonitoredObject(this);
         getCluster().addNodeChangeListener(this);
@@ -265,6 +271,16 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return new DoubleHasher(); // new MessageDigestChecksum("MD5"); // new MessageDigestChecksum("SHA-1"); // new MessageDigestChecksum("SHA-256"); 
     }
 
+    public long getMaxStaleReadMillis() {
+        assertDuringInitialization();
+        return maxStaleReadMillis;
+    }
+
+    @ManagedAttribute
+    public void setMaxStaleReadMillis(long maxStaleReadMillis) {
+        this.maxStaleReadMillis = maxStaleReadMillis;
+    }
+    
     @Override
     public void init() throws Exception {
         super.init();
@@ -279,12 +295,13 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     void allocatorReady() {
         LOG.info("Id allocator is ready");
-        if(getCluster().isOnline() && getCluster().isMaster())
+        if (getCluster().isOnline() && getCluster().isMaster())
             setReady(true);
     }
+
     @Override
     protected void start(boolean master) {
-        if(idAllocator.isReady())
+        if (idAllocator.isReady())
             setReady(true);
     }
 
@@ -335,7 +352,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         private long id;                // 8
         private byte flags;             // 1
         //private short sem;              // 2
-        //long timeAccessed;
+        long timeAccessed;
         private State state;            // 4
         private State nextState;        // 4
         private long version;           // 8 
@@ -657,8 +674,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private Object handleOp(CacheLine line, Op.Type type, Object data, Object extra, Transaction txn, boolean pending, int lineChange) {
         assert line != null || type == Op.Type.PUT || type == Op.Type.ALLOC;
-        accessLine(line);
-
         handleNodeEvents(line);
 
         Object res = null;
@@ -696,6 +711,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     res = handleOpListen(line, extra);
                     break;
             }
+
+            accessLine(line);
         }
 
         if (!pending && type.isOf(HIT_OR_MISS_OPS)) {
@@ -871,8 +888,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private int handleMessage1(LineMessage message, CacheLine line) {
-        accessLine(line);
-
         if (shouldHoldMessage(line, message)) {
             LOG.debug("Adding message to pending {} on line {}", message, line);
             addPendingMessage(line, message);
@@ -881,6 +896,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             return LINE_NO_CHANGE;
         }
 
+        accessLine(line);
         try {
             switch (message.getType()) {
                 case PUT:
@@ -1457,12 +1473,13 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (line.version > msg.getVersion())
             return LINE_NO_CHANGE;
 
+        setOwnerClock(line, msg); // must be called before set owner
+
         int change = LINE_NO_CHANGE;
         change |= setState(line, State.S) ? LINE_STATE_CHANGED : 0;
         change |= setOwner(line, msg.getNode()) ? LINE_OWNER_CHANGED : 0;
         line.version = msg.getVersion();
         writeData(line, msg.getData());
-        setOwnerClock(line, msg);
 
         fireLineReceived(line);
         return change;
@@ -1477,7 +1494,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             if (backup.inv(line.getId(), msg.getNode()))
                 line.set(CacheLine.SLAVE, false);
         }
-        
+
         if (!hasServer && line.is(CacheLine.SLAVE))
             line.sharers.add(myNodeId());
 
@@ -1716,66 +1733,61 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     //</editor-fold>
     //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Dirty Reads">
-    /////////////////////////// Dirty Reads ///////////////////////////////////////////
+    //<editor-fold defaultstate="collapsed" desc="Stale Reads">
+    /////////////////////////// Stale Reads ///////////////////////////////////////////
     private void setOwnerClock(CacheLine line, Message msg) {
-        if (!DIRTY_READS)
+        if (!STALE_READS)
             return;
 
-        final long clock = msg.getMessageId();
-        line.setOwnerClock(clock);
+        final long _clock = clock.incrementAndGet(); // msg.getMessageId();
+        line.setOwnerClock(_clock);
 
-        final short owner = msg.getNode();
-        final OwnerClock oc = getOwnerClock(owner);
-
+        final short owner; // owner is the node that invalidates/invalidated the line
         switch (msg.getType()) {
             case INV:
-                oc.invCounter.incrementAndGet();
+                owner = msg.getNode();
+                getOwnerClock(owner).invCounter.incrementAndGet();
                 break;
 
             case PUT:
             case PUTX:
             case MSG:
-                setOwnerClockPut(oc, clock);
+                owner = line.getOwner();
+                setOwnerClockPut(owner, getOwnerClock(owner), _clock);
                 break;
             default:
                 break;
         }
     }
 
-    private void setOwnerClockInv(CacheLine line, short owner) {
-        final OwnerClock oc = getOwnerClock(owner);
-        final long current = oc.lastPut.get();
-        line.setOwnerClock(current);
-    }
-
     private void setOwnerClockPut(Message msg) {
         final short owner = msg.getNode();
         final OwnerClock oc = getOwnerClock(owner);
-        setOwnerClockPut(oc, msg.getMessageId());
+        final long _clock = clock.incrementAndGet(); // msg.getMessageId();
+        setOwnerClockPut(owner, oc, _clock);
     }
 
-    private void setOwnerClockPut(OwnerClock oc, long clock) {
+    private void setOwnerClockPut(short owner, OwnerClock oc, long clock) {
         for (;;) {
             final long current = oc.lastPut.get();
-            if (current < 0 || clock <= current) // lastPut <=0 is a special case, set in nodeSwitched
+            if (clock <= current)
                 break;
             if (oc.lastPut.compareAndSet(current, clock)) {
-                monitor.addStalePurge(oc.invCounter.get());
-                oc.invCounter.set(0);
+                if (owner >= 0) {
+                    monitor.addStalePurge(oc.invCounter.get());
+                    oc.invCounter.set(0);
+                } else {
+                    int count = 0;
+                    for (OwnerClock oc1 : ownerClocks.values()) { // counting is approximate due to concurrent updates, but it's only used for monitoring.
+                        count += oc1.invCounter.get();
+                        oc1.invCounter.set(0);
+                    }
+                    monitor.addStalePurge(count);
+
+                }
+
                 break;
             }
-        }
-    }
-
-    private void resetOwnerClock(short owner, long value) {
-        OwnerClock oc = ownerClocks.get(owner);
-        if (oc != null) {
-            oc.lastPut.set(value);
-            final int count = oc.invCounter.get();
-            monitor.addStalePurge(count);
-            oc.invCounter.set(0);
-            LOG.debug("Resetting owner clock for {}. Purging {} lines.", owner, count);
         }
     }
 
@@ -1783,7 +1795,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         OwnerClock oc = ownerClocks.get(owner);
         if (oc == null) {
             oc = new OwnerClock();
-            OwnerClock tmp = ownerClocks.putIfAbsent(owner, oc);
+            final OwnerClock tmp = ownerClocks.putIfAbsent(owner, oc);
             if (tmp != null)
                 oc = tmp;
         }
@@ -1791,20 +1803,23 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     /*
-     * The dirty reads mechanism enables reading invalidated data (I lines) as long as this doesn't result in inconsistent views.
+     * The stale reads mechanism enables reading invalidated data (I lines) as long as this doesn't result in inconsistent views.
      *
      * The way this is done is by keeping track of INV and PUT messages from each host. Once an invalidated line has been PUT, we
      * cannot allow any stale (I) lines from the same owner to be read (until they've all been PUT or evicted).
      */
     private boolean isPossibleInconsistencies(CacheLine line) {
+        assert line.getState() == State.I;
         final short owner = line.getOwner();
+        if (System.currentTimeMillis() - line.timeAccessed > maxStaleReadMillis)
+            return true;
         if (owner == -1)
             return false;
         final OwnerClock oc = ownerClocks.get(owner);
         if (oc == null)
             return false;
-        long lastPut = oc.lastPut.get();
-        return lastPut < 0 || line.getOwnerClock() <= lastPut; // lastPut <=0 is a special case, set in nodeSwitched
+        long lastPut = Math.max(oc.lastPut.get(), globalOwnerClock.lastPut.get());
+        return line.getOwnerClock() <= lastPut;
     }
 
     private static class OwnerClock {
@@ -1851,8 +1866,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         inNodeEventHandler.set(Boolean.TRUE);
         nodeEvents.add(event);
         try {
-            resetOwnerClock(node, -1);
-
             processLines(new LinePredicate() {
 
                 @Override
@@ -1864,9 +1877,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 }
 
             });
-
-            resetOwnerClock(node, 1); // now puts can update the clock again
-
         } finally {
             nodeEvents.remove(event);
             inNodeEventHandler.remove();
@@ -1997,10 +2007,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void accessLine(CacheLine line) {
-//        if (line != null) {
-//            if (line.getState().isLessThan(State.O))
-//                line.timeAccessed = System.currentTimeMillis();
-//        }
+        if (line != null) {
+            if (line.getState().isLessThan(State.O))
+                line.timeAccessed = System.currentTimeMillis();
+        }
     }
 
     private boolean writeData(CacheLine line, Object data) {
