@@ -61,6 +61,11 @@ Downloads
 
 Galaxy releases can be downloaded [here](https://github.com/puniverse/galaxy/downloads).
 
+Mailing List / Forum
+--------------------
+
+Galaxy mailing list/forum is found on Goolge Groups [here](https://groups.google.com/forum/#!forum/galaxy-user).
+
 ---
 
 Copyright (C) 2012 Parallel Universe Software Co.
