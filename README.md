@@ -64,7 +64,7 @@ Galaxy releases can be downloaded [here](https://github.com/puniverse/galaxy/dow
 Mailing List / Forum
 --------------------
 
-Galaxy mailing list/forum is found on Goolge Groups [here](https://groups.google.com/forum/#!forum/galaxy-user).
+Galaxy's mailing list/forum is found on Goolge Groups [here](https://groups.google.com/forum/#!forum/galaxy-user).
 
 ---
 
