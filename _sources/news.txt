@@ -4,6 +4,10 @@
 News
 #####
 
+July 26, 2012
+=============
+
+`How Galaxy Maintains Data Consistency in the Grid <http://blog.paralleluniverse.co/post/28062434301/galaxy-internals-part-1>`__
 
 July 10, 2012
 =============

@@ -44,6 +44,10 @@ The cache currently has only one implementation (``co.paralleluniverse.galaxy.co
 ``reuseSharerSets`` (property, ``boolean``, default: ``false``)
   Sets whether or not the cache should pool and reuse the objects used to store data-item sharers.
 
+``maxStaleReadMillis`` (property, ``long``, default: ``500``)
+  The maximum amount of time (in milliseconds) allowed to elapse since an item has been invalidated while still allowing the **get** operation
+  to return the old value. Note that if a **get** could result in any inconsistency, the fresh value will always be retrieved from the owning 
+  node no matter what the value of this property is.
 
 Here's an example:
 
