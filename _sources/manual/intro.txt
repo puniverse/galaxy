@@ -86,6 +86,18 @@ by the application.
 
     Use data-store operations to move data to code; use messages to move code to data.
 
+Galaxy internals
+================
+
+Galaxy Internals
+----------------
+
+A series of blog posts detailing Galaxy's inner workings can be found here: 
+`part 1 <http://blog.paralleluniverse.co/post/28062434301/galaxy-internals-part-1>`__, 
+`part 2 <http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures>`__, 
+`part 3 <http://blog.paralleluniverse.co/post/29085615915/galaxy-internals-part-3>`__.
+
+
 Tips for Achieving High-Performance with Galaxy
 ===============================================
 
