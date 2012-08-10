@@ -56,10 +56,16 @@ Documentation
 
 The Galaxy documentation is found [here](http://puniverse.github.com/galaxy/).
 
+Galaxy Internals
+----------------
+
+A series of blog posts detailing Galaxy's inner workings can be found here: [part 1](http://blog.paralleluniverse.co/post/28062434301/galaxy-internals-part-1), [part 2](http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures), [part 3](http://blog.paralleluniverse.co/post/29085615915/galaxy-internals-part-3).
+
 Downloads
 ---------
 
 Galaxy releases can be downloaded [here](https://github.com/puniverse/galaxy/downloads).
+
 
 Mailing List / Forum
 --------------------
