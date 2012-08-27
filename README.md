@@ -1,4 +1,3 @@
-
 *Galaxy* - a cache-coherent in-memory data grid
 =================================================
 
@@ -60,6 +59,7 @@ Galaxy Internals
 ----------------
 
 A series of blog posts detailing Galaxy's inner workings can be found here: [part 1](http://blog.paralleluniverse.co/post/28062434301/galaxy-internals-part-1), [part 2](http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures), [part 3](http://blog.paralleluniverse.co/post/29085615915/galaxy-internals-part-3).
+This [blog post](http://highscalability.com/blog/2012/8/20/the-performance-of-distributed-data-structures-running-on-a.html) contains an amortized cost analysis, in terms of network roundtrips, of a B+ tree distributed with Galaxy.
 
 Downloads
 ---------
