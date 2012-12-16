@@ -200,7 +200,7 @@ public abstract class PeriodicMonitor extends StandardEmitterMBean implements No
 
     private void collectAndResetCounters1() {
         if (registered) {
-            if (isMonitoredObjectAlive())
+            if (!isMonitoredObjectAlive())
                 unregisterMBean();
             else {
                 collectAndResetCounters();
