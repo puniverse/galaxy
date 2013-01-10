@@ -7,3 +7,4 @@ build/
 /nb-build.xml
 /catalog.xml
 
+/ivy-build.xml
