@@ -6,5 +6,5 @@ build/
 .DS_Store
 /nb-build.xml
 /catalog.xml
-
+/.gradle/
 /ivy-build.xml
