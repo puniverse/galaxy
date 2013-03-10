@@ -1,7 +1,8 @@
 apply plugin: 'java'
-
 sourceCompatibility = '1.7'
+
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
+group               = "co.paralleluniverse"
 version             = "1.0-SNAPSHOT"
 status              = "integration"
 description         = "A high-performance in-memory data-grid."
@@ -20,33 +21,32 @@ repositories {
 }
 
 dependencies {
-        compile "com.google.guava:guava:11.0.1"
-        compile "net.sf.trove4j:trove4j:3.0.2"
-        compile "org.springframework:spring-beans:3.1.0.RELEASE"
-        compile "org.springframework:spring-context:3.1.0.RELEASE"
-        compile "com.yammer.metrics:metrics-core:2.0.3"
-        compile "io.netty:netty:3.5.0.Final"
-        compile "org.jgroups:jgroups:3.1.0.Beta"
-        compile "org.apache.zookeeper:zookeeper:3.4.3"
-        compile "com.netflix.curator:curator-client:1.1.9"
-        compile "com.netflix.curator:curator-framework:1.1.9"
-        compile "com.netflix.curator:curator-recipes:1.1.9"
-        compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3"
-        compile "com.sleepycat:je:5.0.34"
-        compile ":high-scale-lib"
-
-        runtime "org.slf4j:slf4j-api:1.6.4"
-        runtime "org.slf4j:slf4j-jdk14:1.6.4"
-        runtime "org.slf4j:jcl-over-slf4j:1.6.4"
-        runtime "org.slf4j:log4j-over-slf4j:1.6.4"        
-        
-        testCompile "junit:junit:4.10"
-        testCompile "org.apache.ant:ant-junit4:1.8.4"
-        testCompile "org.hamcrest:hamcrest-core:1.3.RC2"
-        testCompile "org.hamcrest:hamcrest-library:1.3.RC2"
-        testCompile "org.mockito:mockito-all:1.9.0"        
+    compile "com.google.guava:guava:11.0.1"
+    compile "net.sf.trove4j:trove4j:3.0.2"
+    compile "org.springframework:spring-beans:3.1.0.RELEASE"
+    compile "org.springframework:spring-context:3.1.0.RELEASE"
+    compile "com.yammer.metrics:metrics-core:2.0.3"
+    compile "io.netty:netty:3.5.0.Final"
+    compile "org.jgroups:jgroups:3.1.0.Beta"
+    compile "org.apache.zookeeper:zookeeper:3.4.3"
+    compile "com.netflix.curator:curator-client:1.1.9"
+    compile "com.netflix.curator:curator-framework:1.1.9"
+    compile "com.netflix.curator:curator-recipes:1.1.9"
+    compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3"
+    compile "com.sleepycat:je:5.0.34"
+    compile "co.parallelunivese:high-scale-lib:" // non-Maven
+    runtime "org.slf4j:slf4j-api:1.6.4"
+    runtime "org.slf4j:slf4j-jdk14:1.6.4"
+    runtime "org.slf4j:jcl-over-slf4j:1.6.4"
+    runtime "org.slf4j:log4j-over-slf4j:1.6.4"                
+    testCompile "junit:junit:4.10"
+    testCompile "org.apache.ant:ant-junit4:1.8.4"
+    testCompile "org.hamcrest:hamcrest-core:1.3.RC2"
+    testCompile "org.hamcrest:hamcrest-library:1.3.RC2"
+    testCompile "org.mockito:mockito-all:1.9.0"        
 }
 
+///////// Doduments
 configure (javadoc) {    
     destinationDir = file("$distDir/javadoc")
     options.links = [    
@@ -85,18 +85,20 @@ configure (javadoc) {
 }
 
 task generateDocs(type:Exec) {
-   workingDir 'docs'
-   environment JAVADOC_URL: "../../javadoc"
-   commandLine 'make','html'
-   outputs.dir "$workingDir/build"
-   inputs.dir "$workingDir/src"
+    workingDir 'docs'
+    environment JAVADOC_URL: "../../javadoc"
+    commandLine 'make','html'
+    outputs.dir "$workingDir/build"
+    inputs.dir "$workingDir/src"
 }
+
+////////// Distribution
 task(copyDocsToDist, dependsOn:'generateDocs', type: Copy) {
     from 'docs/build/html'
     into "$distDir/docs"
 }
 task copyDependenciesToDist(type:Copy) {
-    from sourceSets.main.runtimeClasspath
+    from configurations.runtime
     into "$distDir/lib"
 }
 task srcZip(type:Zip) {
@@ -116,35 +118,114 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 [jar, sourcesJar, javadocJar, srcZip]*.destinationDir = file(distDir)
-jar.manifest = manifest { attributes(
-//        "Built-By"                  :   "Parallel Universe Co.",
-    "Implementation-Title"      :   name,
-    "Implementation-Version"    :   version,
-    "Implementation-Vendor"     :   vendor,
-    "Class-Path"                :   configurations.runtime.collect { "lib/"+it.getName() }.join(',') 
-)}
+jar {
+    from zipTree('baselib/high-scale-lib.jar')  // include non-Maven jars
+    manifest { 
+        attributes(
+            //        "Built-By"                  :   "Parallel Universe Co.",
+            "Implementation-Title"      :   name,
+            "Implementation-Version"    :   version,
+            "Implementation-Vendor"     :   vendor,
+            "Class-Path"                :   configurations.runtime.collect { "lib/"+it.getName() }.join(',') 
+        )
+    }
+}
 task dist {
     dependsOn copyDependenciesToDist,copyConfigToDist,jar,sourcesJar,javadocJar,copyDocsToDist,srcZip,javadoc    
 }
-defaultTasks 'dist' 
-
-    
-artifacts {
-    archives sourcesJar
-    archives javadocJar
+defaultTasks 'dist'
+task distZip(type:Zip, dependsOn: dist) {
+    archiveName name+"-"+version+".zip"
+    from distDir
 }
 
-//task myTest(type: co.paralleluniverse.gradle.Test) {
-//    
-//}
-//
-//buildscript {
-//    repositories {
-//        flatDir {
-//            dirs 'baselib'
-//        }
-//    }
-//    dependencies {
-//        classpath group: '', name: 'gradle-test', version: ''
-//    }
-//}
+assemble.dependsOn dist
+
+///////// Publish Artifacts 
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives javadocJar
+    archives distZip
+}
+
+signing {
+    sign configurations.archives
+}
+
+println "file://" + testReportDir + "/index.html"
+
+
+configure(install.repositories.mavenInstaller) {
+     pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
+          dep -> !dep.artifactId.startsWith('high-scale-lib') } 
+     }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signPom(deployment) }
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                // User and Password are taken from ~/.gradle/gradle.properties
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            } 
+            pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
+                 dep -> !dep.artifactId.startsWith('high-scale-lib') } 
+            }
+            pom.project {
+                name project.name
+                packaging 'jar'
+                description project.description
+                url project.url
+                scm {
+                    url project.scmUrl
+                    connection project.scmConnection
+                    developerConnection project.scmConnection
+                } 
+                licenses {
+                    license {
+                        name project.licenseName
+                        url project.licenseUrl
+                        distribution 'repo'
+                    }
+                }
+            }
+        }
+    }
+}
+
+//////// Javancss
+configurations {
+    javancssConf
+}
+ 
+dependencies {
+    javancssConf 'javancss:javancss:29.50'
+}
+ 
+task javancss << {
+    ext.reportName = "$buildDir/javancss_metrics.txt"
+    println 'Running javancss quality metrics tool to file://'+reportName
+    ant {
+        taskdef(name:'javancss', classname:'javancss.JavancssAntTask', classpath: configurations.javancssConf.asPath)
+        javancss(
+            srcdir:'src/main/java', 
+            abortOnFail:'true', 
+            generateReport:'true', 
+            outputFile: reportName,
+        )
+    }
+}
+/////// Others
+tasks.withType(Test) { useJUnit() }
+
+
+task showResults(type:Exec) {
+    workingDir test.testResultsDir
+    commandLine 'cat','TEST-co.paralleluniverse.common.LinkedHashMap2Test.xml'
+}    
+
