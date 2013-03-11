@@ -17,9 +17,8 @@ Downloading Galaxy
 ==================
 
 You can download the Galaxy distribution from here:
-  * `Release 1.0`__
+  * `Release 1.0` (link TBD)
 
-__ ../_static/galaxy-1.0-SNAPSHOT.zip
 
 .. _start-build:
 
