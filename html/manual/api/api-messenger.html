@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <title>Messenger | Galaxy</title>
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css"/>
+        <link rel="stylesheet" href="../../_static/pudoc.css" type="text/css"/>
+        <link rel="top" title="Galaxy" href="../../index.html"/>
+        <link rel="up" title="Galaxy’s API" href="api.html"/>
+        <link rel="next" title="Cluster" href="api-cluster.html"/>
+        <link rel="prev" title="Data Store" href="api-store.html"/>
+        <style lang="text/css">
+            #top-bar, #top-bar small, #top-bar a {
+                text-shadow: 0px -1px 0px #EAEAEA;
+            color: #000;
+            }
+
+            #top-bar {
+                background-color: #444;
+            background-image: -moz-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -ms-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#FAFAFA), to(#EAEAEA));
+            background-image: -webkit-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -o-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: linear-gradient(top, #FAFAFA, #EAEAEA);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#FAFAFA', endColorstr = '#EAEAEA', GradientType = 0);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0;
+            border-bottom: 1px solid #CACACA;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+
+            .hero-unit {
+                background-image: url("../../_static/xxx.png") !important;
+                background-repeat: no-repeat !important;
+                background-position: 30px 50px;
+            }
+
+            .hero-unit div.section {
+                padding-left: 200px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="https://github.com/puniverse/galaxy">
+            <img style="position: absolute; top: 0; right: 0; border: 0;"
+                 src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"
+                 alt="Fork me on GitHub"></a>
+        <div class="navbar">
+            <div class="navbar-inner container-fluid" id="top-bar">
+                <header class="row-fluid">
+                    <h1 class="span12" id="title">
+                        <a href="../../index.html">Galaxy</a>
+                        <small>a high-performance in-memory data grid</small>
+                    </h1>
+                </header>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span3" id="sidebar">
+                    <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Galaxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../start/getting-started.html">Getting Started With Galaxy</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Introduction to Galaxy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html">Galaxy&#8217;s API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api.html#getting-the-grid-instance">Getting the grid instance</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="api.html#grid-services">Grid services</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="api-store.html">Data Store</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="">Messenger</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#message-topics">Message topics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#routing-messages">Routing messages</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#delivery-guarantees">Delivery guarantees</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="api-cluster.html">Cluster Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../config/config.html">Configuring and Monitoring Galaxy</a></li>
+</ul>
+</li>
+</ul>
+
+                    <hr/>
+                    <ul>
+                        <li><a href="../../javadoc/index.html">Javadocs</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
+                        <li><a href="https://groups.google.com/forum/#!forum/galaxy-user">Mailing List</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
+                        <li><a href="http://blog.paralleluniverse.co">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="span9" id="body">
+                     
+  <div class="section" id="messenger">
+<span id="man-api-messenger"></span><h1>Messenger<a class="headerlink" href="#messenger" title="Permalink to this headline">¶</a></h1>
+<p>The <tt class="docutils literal"><span class="pre">Messenger</span></tt> (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Messenger.html">Javadoc</a>)
+lets you send point-to-point messages to other nodes in the cluster, and is used alongside the
+<a class="reference internal" href="api-store.html#man-api-store"><em>data-store</em></a> to distribute your application in the grid. While Galaxy&#8217;s data-store moves data around
+the grid to be processed at the appropriate node (moving data to code), messages are used to request nodes to carry out operations
+without migrating data (moving code to data).</p>
+<p>There are two ways of routing your messages. You can send a message to a known node, or you can send it to the (unknown) owner
+of a specific data item.</p>
+<div class="section" id="message-topics">
+<span id="man-api-messenger-topics"></span><h2>Message topics<a class="headerlink" href="#message-topics" title="Permalink to this headline">¶</a></h2>
+<p>Messages are sent and received by <strong>topics</strong>. Topics are the mechanism by which messages are delivered to the appropriate
+recipient within the node. There are two kinds of topics you can use. <tt class="docutils literal"><span class="pre">long</span></tt> topics and <tt class="docutils literal"><span class="pre">String</span></tt> topics.</p>
+<p>To receive messages, you register a listener that will receive all incoming messages sent to a specific topic in the local node.
+You register receivers like so:</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="n">messenger</span><span class="o">.</span><span class="na">addMessageListener</span><span class="o">(</span><span class="n">topic</span><span class="o">,</span> <span class="n">myListener</span><span class="o">);</span>
+</pre></div>
+</div>
+<p>With <tt class="docutils literal"><span class="pre">topic</span></tt> being either a <tt class="docutils literal"><span class="pre">String</span></tt> or a <tt class="docutils literal"><span class="pre">long</span></tt>, and <tt class="docutils literal"><span class="pre">myListener</span></tt> is an object implementing <tt class="docutils literal"><span class="pre">MessageListener</span></tt>
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/MessageListener.html">Javadoc</a>).</p>
+<p>When a message sent to <tt class="docutils literal"><span class="pre">myTopic</span></tt> on the local node is received, <tt class="docutils literal"><span class="pre">myListener</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">messageReceived</span></tt> method
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])">Javadoc</a>)
+will be called, and passed the message payload and the sending node.</p>
+<p>You remove a listener by calling <tt class="docutils literal"><span class="pre">removeMessageListener</span></tt>.</p>
+</div>
+<div class="section" id="routing-messages">
+<span id="man-api-messenger-routing"></span><h2>Routing messages<a class="headerlink" href="#routing-messages" title="Permalink to this headline">¶</a></h2>
+<p>One way of addressing messages is sending them to a well known node. You would usually use this option when replying to received
+messages, in which case the original sender is passed to the <tt class="docutils literal"><span class="pre">MessageListener</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">messageReceived</span></tt> method
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])">Javadoc</a>).</p>
+<p>To send a message to a well known node use one of the <tt class="docutils literal"><span class="pre">send</span></tt> methods, and pass it the node id (a <tt class="docutils literal"><span class="pre">short</span></tt>), the topic (either
+a <tt class="docutils literal"><span class="pre">long</span></tt> or a <tt class="docutils literal"><span class="pre">String</span></tt>), and the message payload, like so:</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="n">messenger</span><span class="o">.</span><span class="na">send</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">topic</span><span class="o">,</span> <span class="n">message</span><span class="o">);</span>
+</pre></div>
+</div>
+<p>The other way of addressing messages is sending them to the owner of a known data item. To do that, use one of the <tt class="docutils literal"><span class="pre">sendToOwnerOf</span></tt>
+methods, and pass it the item id, the topic and the message payload, like so:</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="n">messenger</span><span class="o">.</span><span class="na">sendToOwnerOf</span><span class="o">(</span><span class="n">itemId</span><span class="o">,</span> <span class="n">topic</span><span class="o">,</span> <span class="n">message</span><span class="o">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="delivery-guarantees">
+<span id="man-api-messenger-delivery"></span><h2>Delivery guarantees<a class="headerlink" href="#delivery-guarantees" title="Permalink to this headline">¶</a></h2>
+<p>Messages are guaranteed to be delivered, and to arrive in the order they were sent (i.e. two messages M and N that are sent in this
+order from node A to B, will be received by B in the same order, regardless of the messages&#8217; topics).</p>
+<p>Messages are delivered by the same communication channel that delivers Galaxy&#8217;s internal coherence protocol messages used to move
+data items around, so messages are also guaranteed to be ordered with data operations.</p>
+<p>Say that node A updates data item X, and then sends a message M to the owner of data item Y (which happens to be node B),
+and as a result of receiving M, node B reads the value of X.
+In this case node B is guaranteed to read the value of X after the update done by A before sending the message.</p>
+<p>These guarantees make it simple to distribute data processing in the grid.</p>
+</div>
+</div>
+
+
+                </div>
+            </div>
+            <hr/>
+            <footer>
+                &copy; Copyright 2012, Parallel Universe Software Co..
+                Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>
+                1.1.3.
+            </footer>
+        </div>
+    </body>
+</html>
+
+

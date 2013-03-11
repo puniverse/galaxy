@@ -1,0 +1,324 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <title>A Spring Primer | Galaxy</title>
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css"/>
+        <link rel="stylesheet" href="../../_static/pudoc.css" type="text/css"/>
+        <link rel="top" title="Galaxy" href="../../index.html"/>
+        <link rel="up" title="Configuring and Monitoring Galaxy" href="config.html"/>
+        <link rel="next" title="Configuring the Cluster Component" href="config-cluster.html"/>
+        <link rel="prev" title="Configuring and Monitoring Galaxy" href="config.html"/>
+        <style lang="text/css">
+            #top-bar, #top-bar small, #top-bar a {
+                text-shadow: 0px -1px 0px #EAEAEA;
+            color: #000;
+            }
+
+            #top-bar {
+                background-color: #444;
+            background-image: -moz-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -ms-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#FAFAFA), to(#EAEAEA));
+            background-image: -webkit-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -o-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: linear-gradient(top, #FAFAFA, #EAEAEA);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#FAFAFA', endColorstr = '#EAEAEA', GradientType = 0);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0;
+            border-bottom: 1px solid #CACACA;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+
+            .hero-unit {
+                background-image: url("../../_static/xxx.png") !important;
+                background-repeat: no-repeat !important;
+                background-position: 30px 50px;
+            }
+
+            .hero-unit div.section {
+                padding-left: 200px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="https://github.com/puniverse/galaxy">
+            <img style="position: absolute; top: 0; right: 0; border: 0;"
+                 src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"
+                 alt="Fork me on GitHub"></a>
+        <div class="navbar">
+            <div class="navbar-inner container-fluid" id="top-bar">
+                <header class="row-fluid">
+                    <h1 class="span12" id="title">
+                        <a href="../../index.html">Galaxy</a>
+                        <small>a high-performance in-memory data grid</small>
+                    </h1>
+                </header>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span3" id="sidebar">
+                    <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Galaxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../start/getting-started.html">Getting Started With Galaxy</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Introduction to Galaxy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/api.html">Galaxy&#8217;s API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="config.html">Configuring and Monitoring Galaxy</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="config.html#the-configuration-file-s">The configuration file(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#configuring-galaxy-monitoring">Configuring Galaxy monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#monitoring-galaxy-s-components">Monitoring Galaxy&#8217;s components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#logging">Logging</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="config.html#galaxy-s-components">Galaxy&#8217;s components</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="">A Spring Primer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#spring-xml">Spring XML</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#instantiating-beans">Instantiating beans</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuring-beans">Configuring beans</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#constructor-args">constructor-args</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#properties">properties</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#the-p-and-c-namespaces">The p- and c- namespaces</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#values">Values</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#primitives-strings-and-enums">Primitives, strings and enums</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#null-values">Null values</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#referencing-other-beans">Referencing other beans</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#compound-values-inner-beans">Compound values (inner beans)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="config-cluster.html">Configuring the Cluster Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-cache.html">Configuring and Monitoring the Cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-messenger.html">Configuring and Monitoring the Messenger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-comm.html">Configuring and Monitoring the Comm Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-server.html">Configuring, Running and Monitoring the Server</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-misc.html">Miscellaneous Configurations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+                    <hr/>
+                    <ul>
+                        <li><a href="../../javadoc/index.html">Javadocs</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
+                        <li><a href="https://groups.google.com/forum/#!forum/galaxy-user">Mailing List</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
+                        <li><a href="http://blog.paralleluniverse.co">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="span9" id="body">
+                     
+  <div class="section" id="a-spring-primer">
+<span id="man-config-spring"></span><h1>A Spring Primer<a class="headerlink" href="#a-spring-primer" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference external" href="http://www.springsource.org/spring-framework">Spring Framework</a> lets applications configure and wire their components in an XML file (it does many other things as well, but Galaxy only uses Spring for configuration).
+Using Spring or configuration allows very fine-tined control over many aspects of the application, but it can be quite verbose.
+This section is a short tutorial explaining how to configure and wire components using Spring XML.
+For a more detailed reference of Spring configuration please see <a class="reference external" href="http://static.springsource.org/spring/docs/3.1.x/spring-framework-reference/html/beans.html">Spring&#8217;s IoC Container Documentation</a>.</p>
+<div class="section" id="spring-xml">
+<span id="man-config-spring-xml"></span><h2>Spring XML<a class="headerlink" href="#spring-xml" title="Permalink to this headline">¶</a></h2>
+<p>A Spring configuration file is an XML file containing bean definitions (beans are explained in the next section).
+Here&#8217;s the structure of the configuration file, as should be used for Galaxy configuration. It contains some required Spring schemas
+as well as a few optional ones that provide some convenient features:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;beans</span> <span class="na">xmlns=</span><span class="s">&quot;http://www.springframework.org/schema/beans&quot;</span>
+       <span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+       <span class="na">xmlns:context=</span><span class="s">&quot;http://www.springframework.org/schema/context&quot;</span>
+       <span class="na">xmlns:util=</span><span class="s">&quot;http://www.springframework.org/schema/util&quot;</span>
+
+       <span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd</span>
+<span class="s">          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd</span>
+<span class="s">          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd&quot;</span>
+       <span class="na">default-lazy-init=</span><span class="s">&quot;false&quot;</span>
+       <span class="na">default-autowire=</span><span class="s">&quot;constructor&quot;</span><span class="nt">&gt;</span>
+
+    <span class="c">&lt;!-- bean definitions ... --&gt;</span>
+<span class="nt">&lt;/beans&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="instantiating-beans">
+<span id="man-config-spring-beans"></span><h2>Instantiating beans<a class="headerlink" href="#instantiating-beans" title="Permalink to this headline">¶</a></h2>
+<p>Spring <strong>beans</strong> are application components declared, configured in wired in the Spring XML configuration file as <tt class="docutils literal"><span class="pre">bean</span></tt> XML elements.
+Each bean corresponds to an instance of a Java object. A bean has a unique ID, which names the component, and a means to instantiate it.
+Usually, a bean is instantiated by constructing a simple object of a given class, in which case the bean definition would look like this.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;com.mycompany.myClass&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>This would instantiate an instance (called <tt class="docutils literal"><span class="pre">myBean</span></tt>) of the class <tt class="docutils literal"><span class="pre">com.mycompany.myClass</span></tt>.</p>
+<p>Sometimes, beans are constructed not using a simple constructor but by calling a factory static method. In that case, the bean definition
+would look like this:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;com.mycompany.myFactoryClass&quot;</span> <span class="na">factory-method=</span><span class="s">&quot;createInstance&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>This would instantiate a bean (of some unspecified class) by calling the <tt class="docutils literal"><span class="pre">createInstance</span></tt> static method of the <tt class="docutils literal"><span class="pre">com.mycompany.myFactoryClass</span></tt> class.</p>
+</div>
+<div class="section" id="configuring-beans">
+<span id="man-config-spring-config"></span><h2>Configuring beans<a class="headerlink" href="#configuring-beans" title="Permalink to this headline">¶</a></h2>
+<p>Usually, a bean definition includes some configuration of the bean instance.
+There are two kinds of configuration hooks: <strong>constructor-args</strong> and <strong>properties</strong>.
+Each bean definition can include constructor-args as well as properties.</p>
+<div class="section" id="constructor-args">
+<h3>constructor-args<a class="headerlink" href="#constructor-args" title="Permalink to this headline">¶</a></h3>
+<p><strong>constructor-args</strong> are passed as either constructor arguments to the class constructor or as arguments to the static factory method,
+according to the instantiation mechanism used. They are usually required for a successful bean instantiation.</p>
+<p>constructor-args can be passed by name, by index, or by type. Here&#8217;s how we use them to instantiate a bean, using names:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;com.mycompany.myClass&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;myName&quot;</span> <span class="na">value=</span><span class="s">&quot;foo&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;size&quot;</span> <span class="na">value=</span><span class="s">&quot;5&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>Here we&#8217;ve passed the value <tt class="docutils literal"><span class="pre">&quot;foo&quot;</span></tt> to the <tt class="docutils literal"><span class="pre">String</span></tt> parameter <tt class="docutils literal"><span class="pre">myName</span></tt> of the constructor, and the value <tt class="docutils literal"><span class="pre">5</span></tt> to the <tt class="docutils literal"><span class="pre">size</span></tt> parameter
+(in the next section we&#8217;ll see how Spring knows which value type to use).</p>
+<p>Unfortunately, specifying constructor-args by name does not always work - it requires either relevant debug information in the class file or the
+use of a specific annotation by the class&#8217;s author. (Note: all Galaxy components described in this documentation, i.e. those that belong to a
+<tt class="docutils literal"><span class="pre">co.paralleluniverse.*</span></tt> packages, are annotated and allow specifying constructor-args by name). If named constructor-args don&#8217;t work, we can
+specify them using indices like so:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;com.mycompany.myClass&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;foo&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;1&quot;</span> <span class="na">value=</span><span class="s">&quot;5&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>This also passes the String value <tt class="docutils literal"><span class="pre">&quot;foo&quot;</span></tt> as the first argument of the constructor (which is supposedly <tt class="docutils literal"><span class="pre">myName</span></tt>), and the
+value <tt class="docutils literal"><span class="pre">5</span></tt> as the second argument.</p>
+<p>If each parameter is of a different type, we can also pass constructor-args without specifying either name or index, like so:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;com.mycompany.myClass&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">value=</span><span class="s">&quot;foo&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">value=</span><span class="s">&quot;5&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>This will achieve the same effect, but only if Spring can figure out unambiguously the arguments&#8217; types and which parameter they correspond to;
+if not, Spring will issue an error.</p>
+</div>
+<div class="section" id="properties">
+<h3>properties<a class="headerlink" href="#properties" title="Permalink to this headline">¶</a></h3>
+<p><strong>properties</strong> are configurations that are usually optional, and if not included in the bean definition, the bean will use some default values.
+Internally, properties are set by calling Java Bean setter methods, and can therefore always be specified by name, like so:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;otherBean&quot;</span> <span class="na">class=</span><span class="s">&quot;com.mycompany.otherClass&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;foo&quot;</span> <span class="na">value=</span><span class="s">&quot;bar&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;colorName&quot;</span> <span class="na">value=</span><span class="s">&quot;blue&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;width&quot;</span> <span class="na">value=</span><span class="s">&quot;10&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;height&quot;</span> <span class="na">value=</span><span class="s">&quot;100&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>Of course, some beans combine both constructor-args and properties.</p>
+</div>
+</div>
+<div class="section" id="the-p-and-c-namespaces">
+<span id="man-config-spring-p-c"></span><h2>The p- and c- namespaces<a class="headerlink" href="#the-p-and-c-namespaces" title="Permalink to this headline">¶</a></h2>
+<p>Spring provides two special XML namespaces called <tt class="docutils literal"><span class="pre">p</span></tt> and <tt class="docutils literal"><span class="pre">c</span></tt> that allow for a less verbose configuration in many cases.</p>
+<p>Using the <tt class="docutils literal"><span class="pre">p</span></tt> and <tt class="docutils literal"><span class="pre">c</span></tt> namespaces, you can specify configuration values as XML attributes rather than as child elements.
+So the following definition, using the <tt class="docutils literal"><span class="pre">p</span></tt> and <tt class="docutils literal"><span class="pre">c</span></tt> namespaces:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;a.b.Foo&quot;</span> <span class="na">c:text=</span><span class="s">&quot;Hello World!&quot;</span> <span class="na">p:height=</span><span class="s">&quot;300&quot;</span> <span class="na">p:color=</span><span class="s">&quot;blue&quot;</span> <span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>is identical to:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;a.b.Foo&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;text&quot;</span> <span class="na">value=</span><span class="s">&quot;Hello World!&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;height&quot;</span> <span class="na">value=</span><span class="s">&quot;300&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;color&quot;</span> <span class="na">value=</span><span class="s">&quot;blue&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>If constructor-arg names do not work with a given class, you can use indices with the <tt class="docutils literal"><span class="pre">c</span></tt> namespace, with</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;a.b.Bar&quot;</span> <span class="na">c:_0=</span><span class="s">&quot;100&quot;</span> <span class="na">c:_1=</span><span class="s">&quot;200&quot;</span> <span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>being the same as</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBean&quot;</span> <span class="na">class=</span><span class="s">&quot;a.b.Bar&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;100&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;200&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="values">
+<span id="man-config-spring-values"></span><h2>Values<a class="headerlink" href="#values" title="Permalink to this headline">¶</a></h2>
+<p>This section explains how Spring interprets property (or constructor-arg) values.</p>
+<div class="section" id="primitives-strings-and-enums">
+<span id="man-config-spring-values-primitives"></span><h3>Primitives, strings and enums<a class="headerlink" href="#primitives-strings-and-enums" title="Permalink to this headline">¶</a></h3>
+<p>Spring uses Java reflection to figure out the type of the property (or constructor-arg), and it attempts to convert the string
+value in the XML document into the appropriate type. So <tt class="docutils literal"><span class="pre">value=&quot;5&quot;</span></tt> would become the integer <tt class="docutils literal"><span class="pre">5</span></tt> if the property&#8217;s type is
+<tt class="docutils literal"><span class="pre">int</span></tt>,  <tt class="docutils literal"><span class="pre">5.0</span></tt> if it&#8217;s <tt class="docutils literal"><span class="pre">double</span></tt>, or the string <tt class="docutils literal"><span class="pre">&quot;5&quot;</span></tt> if the property is of type <tt class="docutils literal"><span class="pre">String</span></tt>;
+The values <tt class="docutils literal"><span class="pre">true</span></tt> and <tt class="docutils literal"><span class="pre">false</span></tt> are thus converted to <tt class="docutils literal"><span class="pre">boolean</span></tt> if the property is of the <tt class="docutils literal"><span class="pre">boolean</span></tt> type,
+and strings are passed verbatim if the property is of type <tt class="docutils literal"><span class="pre">String</span></tt>.</p>
+<p>If a property&#8217;s type is a Java enum, then its value is converted to the appropriate enum value according to its name,
+so <tt class="docutils literal"><span class="pre">value=&quot;NFC&quot;</span></tt> would become <tt class="docutils literal"><span class="pre">java.text.Normalizer.Form.NFC</span></tt> if the property&#8217;s type is <tt class="docutils literal"><span class="pre">java.text.Normalizer.Form</span></tt>.</p>
+</div>
+<div class="section" id="null-values">
+<span id="man-config-spring-values-null"></span><h3>Null values<a class="headerlink" href="#null-values" title="Permalink to this headline">¶</a></h3>
+<p>If a property (or a constructor-arg), accept a Java reference, then the <tt class="docutils literal"><span class="pre">null</span></tt> value can be passed like this:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;foo&quot;</span><span class="nt">&gt;&lt;null/&gt;&lt;/property&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="referencing-other-beans">
+<span id="man-config-spring-values-ref"></span><h3>Referencing other beans<a class="headerlink" href="#referencing-other-beans" title="Permalink to this headline">¶</a></h3>
+<p>When a property (or constructor-arg) take an object, we can pass it one of the beans we&#8217;ve defined.
+So, if we have this bean:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;fooBean&quot;</span> <span class="na">class=</span><span class="s">&quot;a.b.Foo&quot;</span> <span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>and the <tt class="docutils literal"><span class="pre">Bar</span></tt> class has a property (or constructor-arg) taking a <tt class="docutils literal"><span class="pre">Foo</span></tt>, we can pass it <tt class="docutils literal"><span class="pre">fooBean</span></tt> like so:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;myBar&quot;</span> <span class="na">class=</span><span class="s">&quot;a.b.Bar&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;foo&quot;</span> <span class="na">ref=</span><span class="s">&quot;fooBean&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>Notice the use of the <tt class="docutils literal"><span class="pre">ref</span></tt> attribute rather than <tt class="docutils literal"><span class="pre">value</span></tt>.</p>
+<p>The same could be done with the c/p- namespaces: <tt class="docutils literal"><span class="pre">p:foo-ref=&quot;myFoo&quot;</span></tt>, <tt class="docutils literal"><span class="pre">c:foo-ref=&quot;myFoo&quot;</span></tt> or <tt class="docutils literal"><span class="pre">c:_0-ref=&quot;myFoo&quot;</span></tt>.</p>
+</div>
+<div class="section" id="compound-values-inner-beans">
+<span id="man-config-spring-values-inner"></span><h3>Compound values (inner beans)<a class="headerlink" href="#compound-values-inner-beans" title="Permalink to this headline">¶</a></h3>
+<p>When a property (or a constructor-arg) take an object, we could use a <tt class="docutils literal"><span class="pre">ref</span></tt>, but if the object is to be used only for
+the purpose of setting this particular property, rather than define a new bean and reference it, it is less verbose,
+less cluttered, and generally preferable to use an &#8220;inner bean&#8221;.</p>
+<p>Inner beans are bean definitions local to a single property (or constructor arg), that don&#8217;t have an <tt class="docutils literal"><span class="pre">id</span></tt>, and therefore
+cannot be referenced anywhere else.</p>
+<p>Here&#8217;s an example from a Galaxy configuration file of setting a property that takes a value of type <tt class="docutils literal"><span class="pre">java.net.InetSocketAddress</span></tt>:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;multicastGroup&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;java.net.InetSocketAddress&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;225.0.0.1&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;1&quot;</span> <span class="na">value=</span><span class="s">&quot;7050&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/bean&gt;</span>
+<span class="nt">&lt;/property&gt;</span>
+</pre></div>
+</div>
+<p>Or, more succinctly:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;multicastGroup&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;java.net.InetSocketAddress&quot;</span> <span class="na">c:_0=</span><span class="s">&quot;225.0.0.1&quot;</span> <span class="na">c:_1=</span><span class="s">&quot;7050&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/property&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+                </div>
+            </div>
+            <hr/>
+            <footer>
+                &copy; Copyright 2012, Parallel Universe Software Co..
+                Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>
+                1.1.3.
+            </footer>
+        </div>
+    </body>
+</html>
+
+

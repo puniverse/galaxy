@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <title>Configuring, Running and Monitoring the Server | Galaxy</title>
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css"/>
+        <link rel="stylesheet" href="../../_static/pudoc.css" type="text/css"/>
+        <link rel="top" title="Galaxy" href="../../index.html"/>
+        <link rel="up" title="Configuring and Monitoring Galaxy" href="config.html"/>
+        <link rel="next" title="Miscellaneous Configurations" href="config-misc.html"/>
+        <link rel="prev" title="Configuring and Monitoring the Comm Component" href="config-comm.html"/>
+        <style lang="text/css">
+            #top-bar, #top-bar small, #top-bar a {
+                text-shadow: 0px -1px 0px #EAEAEA;
+            color: #000;
+            }
+
+            #top-bar {
+                background-color: #444;
+            background-image: -moz-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -ms-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#FAFAFA), to(#EAEAEA));
+            background-image: -webkit-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: -o-linear-gradient(top, #FAFAFA, #EAEAEA);
+            background-image: linear-gradient(top, #FAFAFA, #EAEAEA);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#FAFAFA', endColorstr = '#EAEAEA', GradientType = 0);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0;
+            border-bottom: 1px solid #CACACA;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+
+            .hero-unit {
+                background-image: url("../../_static/xxx.png") !important;
+                background-repeat: no-repeat !important;
+                background-position: 30px 50px;
+            }
+
+            .hero-unit div.section {
+                padding-left: 200px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="https://github.com/puniverse/galaxy">
+            <img style="position: absolute; top: 0; right: 0; border: 0;"
+                 src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"
+                 alt="Fork me on GitHub"></a>
+        <div class="navbar">
+            <div class="navbar-inner container-fluid" id="top-bar">
+                <header class="row-fluid">
+                    <h1 class="span12" id="title">
+                        <a href="../../index.html">Galaxy</a>
+                        <small>a high-performance in-memory data grid</small>
+                    </h1>
+                </header>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span3" id="sidebar">
+                    <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About Galaxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../start/getting-started.html">Getting Started With Galaxy</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Introduction to Galaxy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/api.html">Galaxy&#8217;s API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="config.html">Configuring and Monitoring Galaxy</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="config.html#the-configuration-file-s">The configuration file(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#configuring-galaxy-monitoring">Configuring Galaxy monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#monitoring-galaxy-s-components">Monitoring Galaxy&#8217;s components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html#logging">Logging</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="config.html#galaxy-s-components">Galaxy&#8217;s components</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="config-spring.html">A Spring Primer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-cluster.html">Configuring the Cluster Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-cache.html">Configuring and Monitoring the Cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-messenger.html">Configuring and Monitoring the Messenger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="config-comm.html">Configuring and Monitoring the Comm Component</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="">Configuring, Running and Monitoring the Server</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#real-servers">Real servers</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#configuring-real-servers">Configuring real servers</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#running-the-server">Running the server</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#dumb-servers">Dumb servers</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#configuring-the-store">Configuring the store</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#using-berkeleydb">Using BerkeleyDB</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#using-sql">Using SQL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="config-misc.html">Miscellaneous Configurations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+                    <hr/>
+                    <ul>
+                        <li><a href="../../javadoc/index.html">Javadocs</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
+                        <li><a href="https://groups.google.com/forum/#!forum/galaxy-user">Mailing List</a></li>
+                        <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
+                        <li><a href="http://blog.paralleluniverse.co">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="span9" id="body">
+                     
+  <div class="section" id="configuring-running-and-monitoring-the-server">
+<span id="man-config-server"></span><h1>Configuring, Running and Monitoring the Server<a class="headerlink" href="#configuring-running-and-monitoring-the-server" title="Permalink to this headline">¶</a></h1>
+<p>The Galaxy server node (or nodes, if more than one is configured in the backup group) provides two features:</p>
+<ul class="simple">
+<li>Disk persistence</li>
+<li>High availability in case of node failure.</li>
+</ul>
+<p>A Galaxy cluster does not have to be configured to have a server. If disk persistence is not required, you can rely on backup groups
+alone for high-availability (see <a class="reference internal" href="../api/api-cluster.html#man-api-cluster-organization-backup"><em>Backup groups</em></a>). However, in some circumstances, server nodes can provide
+other benefits, such as improved performance.</p>
+<p>There are two kinds of servers a Galaxy cluster can use. The first, which we&#8217;ll call &#8220;real servers&#8221;, and the other we&#8217;ll call &#8220;dumb servers&#8221;.
+We will refer to non-server nodes as &#8220;peer nodes&#8221;.</p>
+<div class="section" id="real-servers">
+<span id="man-config-server-real"></span><h2>Real servers<a class="headerlink" href="#real-servers" title="Permalink to this headline">¶</a></h2>
+<p>Real servers are server nodes that run the Galaxy server software and (usually) access an embedded database.</p>
+<div class="section" id="configuring-real-servers">
+<h3>Configuring real servers<a class="headerlink" href="#configuring-real-servers" title="Permalink to this headline">¶</a></h3>
+<p>A real server has a similar configuration file to that used in peer nodes, but with some shared and some different components:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">cluster</span></tt></dt>
+<dd>This is the same as in the peer nodes. See <a class="reference internal" href="config-cluster.html#man-config-cluster"><em>Configuring the Cluster Component</em></a> for instructions on how to configure this component.</dd>
+<dt><tt class="docutils literal"><span class="pre">comm</span></tt></dt>
+<dd><p class="first">This is the equivalent of the peer nodes&#8217; <tt class="docutils literal"><span class="pre">comm</span></tt> component (see <a class="reference internal" href="config-comm.html#man-config-comm"><em>Configuring and Monitoring the Comm Component</em></a>), but it&#8217;s (currently) sole implementation
+(<tt class="docutils literal"><span class="pre">co.paralleluniverse.galaxy.netty.TcpServerServerComm</span></tt>) - the server side of the peers&#8217; TCP <tt class="docutils literal"><span class="pre">serverComm</span></tt> - takes a <tt class="docutils literal"><span class="pre">port</span></tt>
+property (constructor-arg, <tt class="docutils literal"><span class="pre">int</span></tt>),
+plus, optionally, the <tt class="docutils literal"><span class="pre">bossExecutor</span></tt>, <tt class="docutils literal"><span class="pre">workerExecutor</span></tt> and <tt class="docutils literal"><span class="pre">receiveExecutor</span></tt> properties
+explained in <a class="reference internal" href="config-comm.html#man-config-comm-netty"><em>Configuring Netty Channels</em></a>.</p>
+<p>Here&#8217;s a configuration example:</p>
+<div class="last highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;comm&quot;</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.galaxy.netty.TcpServerServerComm&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;port&quot;</span> <span class="na">value=</span><span class="s">&quot;9675&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;receiveExecutor&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;8&quot;</span><span class="nt">/&gt;</span> <span class="c">&lt;!-- name=&quot;corePoolSize&quot; --&gt;</span>
+            <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;1&quot;</span> <span class="na">value=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span> <span class="c">&lt;!-- name=&quot;maxChannelMemorySize&quot; --&gt;</span>
+            <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;2&quot;</span> <span class="na">value=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span> <span class="c">&lt;!-- name=&quot;maxTotalMemorySize&quot; --&gt;</span>
+            <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;3&quot;</span> <span class="na">value=</span><span class="s">&quot;5000&quot;</span><span class="nt">/&gt;</span> <span class="c">&lt;!-- name=&quot;keepAliveTime&quot; --&gt;</span>
+            <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;4&quot;</span> <span class="na">value=</span><span class="s">&quot;MILLISECONDS&quot;</span><span class="nt">/&gt;</span> <span class="c">&lt;!-- name=&quot;unit&quot; --&gt;</span>
+        <span class="nt">&lt;/bean&gt;</span>
+    <span class="nt">&lt;/property&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+</dd>
+<dt><tt class="docutils literal"><span class="pre">memory</span></tt></dt>
+<dd><p class="first">This is the equivalent of the peers&#8217; <tt class="docutils literal"><span class="pre">cache</span></tt> component, and it&#8217;s responsible for the server&#8217;s data-item logic. It has one implementation
+(<tt class="docutils literal"><span class="pre">co.paralleluniverse.galaxy.core.MainMemory</span></tt>) that takes just a <tt class="docutils literal"><span class="pre">monitoringType</span></tt> property (see <a class="reference internal" href="config.html#man-config-monitoring"><em>Configuring Galaxy monitoring</em></a>).
+Here&#8217;s how it&#8217;s defined:</p>
+<div class="last highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;memory&quot;</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.galaxy.core.MainMemory&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;monitoringType&quot;</span> <span class="na">value=</span><span class="s">&quot;METRICS&quot;</span><span class="nt">/&gt;</span> <span class="c">&lt;!-- METRICS/JMX --&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+</dd>
+<dt><tt class="docutils literal"><span class="pre">store</span></tt></dt>
+<dd>This component is responsible for persisting and retrieving data items using a database.
+It&#8217;s configuration is explained <a class="reference internal" href="#man-config-server-store"><em>below</em></a>.</dd>
+</dl>
+</div>
+<div class="section" id="running-the-server">
+<h3>Running the server<a class="headerlink" href="#running-the-server" title="Permalink to this headline">¶</a></h3>
+<p>To run the server, simply run the executable Java class <tt class="docutils literal"><span class="pre">co.paralleluniverse.galaxy.Server</span></tt>, and optionally pass one or two command line
+arguments specifying the configuration file and, optionally, the properties file, too (see <a class="reference internal" href="config.html#man-config-file"><em>The configuration file(s)</em></a> for an explanation).</p>
+<p>Optionally, if for some reason you&#8217;d like to embed the Galaxy server in your own Java process, you may start the server by calling
+<tt class="docutils literal"><span class="pre">Server</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">start</span></tt> method and optionally pas the configuration and properties files.</p>
+<p>If no configuration file is specified, the server uses the file called <tt class="docutils literal"><span class="pre">galaxy.xml</span></tt> if it&#8217;s found somewhere on the classpath.</p>
+<p>You may refer to the Server class <a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Server.html">Javadoc</a> for more details.</p>
+</div>
+</div>
+<div class="section" id="dumb-servers">
+<span id="man-config-server-dumb"></span><h2>Dumb servers<a class="headerlink" href="#dumb-servers" title="Permalink to this headline">¶</a></h2>
+<p>Dumb servers are machines running some sort of a database server that can be used as Galaxy servers without being Galaxy nodes themselves,
+i.e., they do not run any Galaxy code - just the database server. Databases that provide network access can be used as dumb servers.
+When using a dumb server, the logic for accessing and communicating with them is hosted on the peer nodes.</p>
+<p>To configure a dumb server, you must make some changes and additions to the peers&#8217; components.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">serverPipe</span></tt></dt>
+<dd><p class="first">This simple additional bean is responsible for piping all messages sent to the server to the local server proxy. It&#8217;s defined thus:</p>
+<div class="highlight-xml"><div class="highlight"><pre>
+</pre></div>
+</div>
+<p class="last">&lt;bean id=&#8221;serverPipe&#8221; class=&#8221;co.paralleluniverse.galaxy.server.CommPipe&#8221;/&gt;</p>
+</dd>
+<dt><tt class="docutils literal"><span class="pre">serverComm</span></tt></dt>
+<dd><p class="first">Instead of a TCP connection to a real server, we will now be directing messages to the server through the <tt class="docutils literal"><span class="pre">serverPipe</span></tt> so <tt class="docutils literal"><span class="pre">serverComm</span></tt>
+is now defined so:</p>
+<div class="last highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;serverComm&quot;</span> <span class="na">factory-bean=</span><span class="s">&quot;serverPipe&quot;</span> <span class="na">factory-method=</span><span class="s">&quot;getComm1&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;${grid.nodeId}&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+</dd>
+<dt><tt class="docutils literal"><span class="pre">memory</span></tt></dt>
+<dd><p class="first">The memory component (responsible for server logic) now sits at the peers, so it has to be added to the peer configuration, and it receives
+messages from the other end of the <tt class="docutils literal"><span class="pre">serverPipe</span></tt>:</p>
+<div class="last highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;memory&quot;</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.galaxy.core.MainMemory&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;comm&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;bean</span> <span class="na">factory-bean=</span><span class="s">&quot;serverPipe&quot;</span> <span class="na">factory-method=</span><span class="s">&quot;getComm2&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;constructor-arg</span> <span class="na">index=</span><span class="s">&quot;0&quot;</span> <span class="na">value=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/bean&gt;</span>
+    <span class="nt">&lt;/constructor-arg&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;monitoringType&quot;</span> <span class="na">value=</span><span class="s">&quot;METRICS&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+</dd>
+<dt><tt class="docutils literal"><span class="pre">store</span></tt></dt>
+<dd>The store is now configured at the peers. See <a class="reference internal" href="#man-config-server-store"><em>Configuring the store</em></a> for instructions on how to configure the store.</dd>
+</dl>
+</div>
+<div class="section" id="configuring-the-store">
+<span id="man-config-server-store"></span><h2>Configuring the store<a class="headerlink" href="#configuring-the-store" title="Permalink to this headline">¶</a></h2>
+<p>The store is the component responsible for data-item persistence, and is usually implemented on top of some database.
+At the moment there are two store implementations, one that uses <strong>BerkeleyDB Java Edition</strong>, and that uses any RDBMS with a JDBC driver.</p>
+<div class="section" id="using-berkeleydb">
+<span id="man-config-server-store-bdb"></span><h3>Using BerkeleyDB<a class="headerlink" href="#using-berkeleydb" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="http://www.oracle.com/technetwork/database/berkeleydb/overview/index-093405.html">BerkeleyDB Java Edition</a> (BDB JE) can be used as Galaxy&#8217;s store. Because BDB JE is an embedded database and does not have a network interface,
+it can only be used as a dumb server - only as part of a real server.
+The <tt class="docutils literal"><span class="pre">store</span></tt> implementation that uses BDB JE is <tt class="docutils literal"><span class="pre">co.paralleluniverse.galaxy.berkeleydb.BerkeleyDB</span></tt>, and it has two configuration properties:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">envHome</span></tt> (constructor-arg, <tt class="docutils literal"><span class="pre">String</span></tt>)</dt>
+<dd>The path to the directory which will contain the BDB files.</dd>
+<dt><tt class="docutils literal"><span class="pre">truncate</span></tt> (property, <tt class="docutils literal"><span class="pre">boolean</span></tt>, default: <tt class="docutils literal"><span class="pre">false</span></tt>)</dt>
+<dd>Whether or not the database will be truncated (i.e., all the data-item data be deleted) when the server starts.</dd>
+<dt><tt class="docutils literal"><span class="pre">durability</span></tt> (property, <tt class="docutils literal"><span class="pre">com.sleepycat.je.Durability.SyncPolicy</span></tt>, default: <tt class="docutils literal"><span class="pre">WRITE_NO_SYNC</span></tt>)</dt>
+<dd>Defines the disk synchronization policy to be used when committing a transaction. There are three possible values:
+<tt class="docutils literal"><span class="pre">SYNC</span></tt>, <tt class="docutils literal"><span class="pre">WRITE_NO_SYNC</span></tt>, or <tt class="docutils literal"><span class="pre">NO_SYNC</span></tt>, that are fully explained in the BDB JE Javadocs <a class="reference external" href="http://docs.oracle.com/cd/E17277_02/html/java/index.html">here</a>.</dd>
+</dl>
+<p>Tuning of BerkeleyDB JE is possible by setting properties in the <tt class="docutils literal"><span class="pre">je.properties</span></tt> file, placed at the environment home directory.
+Details about BDB JE tuning can be found in the JE documentation <a class="reference external" href="http://docs.oracle.com/cd/E17277_02/html/GettingStartedGuide/administration.html">here</a>.</p>
+<p>Here&#8217;s a configuration example:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;store&quot;</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.galaxy.berkeleydb.BerkeleyDB&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;envHome&quot;</span> <span class="na">value=</span><span class="s">&quot;/usr/bdb/galaxy&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;truncate&quot;</span> <span class="na">value=</span><span class="s">&quot;true&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-sql">
+<span id="man-config-server-store-jdbc"></span><h3>Using SQL<a class="headerlink" href="#using-sql" title="Permalink to this headline">¶</a></h3>
+<p>Any SQL database that supports transactions and has a JDBC driver can be used as the store. Those that have a network interface can also
+become dumb servers. The <tt class="docutils literal"><span class="pre">store</span></tt> implementation that uses JDBC is <tt class="docutils literal"><span class="pre">co.paralleluniverse.galaxy.jdbc.SQLDB</span></tt> and here are it&#8217;s configuration
+properties:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">dataSource</span></tt> (constructor-arg, <tt class="docutils literal"><span class="pre">javax.sql.DataSource</span></tt>)</dt>
+<dd>The <tt class="docutils literal"><span class="pre">DataSource</span></tt> instance used to construct DB connections. See the example below on how to set this property.</dd>
+<dt><tt class="docutils literal"><span class="pre">maxItemSize</span></tt> (property, <tt class="docutils literal"><span class="pre">int</span></tt>, default: <tt class="docutils literal"><span class="pre">1024</span></tt>)</dt>
+<dd>The maximum size, in bytes, of a data-item. Must be the same as the <tt class="docutils literal"><span class="pre">maxItemSize</span></tt> set in the <tt class="docutils literal"><span class="pre">cache</span></tt> component (see <a class="reference internal" href="config-cache.html#man-config-cache-1"><em>Configuring the cache</em></a>).</dd>
+<dt><tt class="docutils literal"><span class="pre">useUpdateableCursors</span></tt> (property, <tt class="docutils literal"><span class="pre">boolean</span></tt>, default: <tt class="docutils literal"><span class="pre">false</span></tt>)</dt>
+<dd>Whether updateable cursors should be used in some atomic transactions. Might have a positive, or negative performance impact, depending
+on the database and driver implementation.</dd>
+<dt><tt class="docutils literal"><span class="pre">schema</span></tt> (property, <tt class="docutils literal"><span class="pre">String</span></tt>, default: <tt class="docutils literal"><span class="pre">pugalaxy</span></tt>)</dt>
+<dd>The schema that will host the Galaxy table.</dd>
+<dt><tt class="docutils literal"><span class="pre">tableName</span></tt> (property, <tt class="docutils literal"><span class="pre">String</span></tt>, default: <tt class="docutils literal"><span class="pre">memory</span></tt>)</dt>
+<dd>The name of the table that will store the data-items.</dd>
+<dt><tt class="docutils literal"><span class="pre">bigintType</span></tt> (property, <tt class="docutils literal"><span class="pre">String</span></tt>, default: queried with <tt class="docutils literal"><span class="pre">DatabaseMetaData</span></tt> if possible)</dt>
+<dd>The name of the database&#8217;s SQL type for JDBC&#8217;s <tt class="docutils literal"><span class="pre">BIGINT</span></tt>. Should be set if automatic detection does not work.</dd>
+<dt><tt class="docutils literal"><span class="pre">smallintType</span></tt> (property, <tt class="docutils literal"><span class="pre">String</span></tt>, default: queried with <tt class="docutils literal"><span class="pre">DatabaseMetaData</span></tt> if possible)</dt>
+<dd>The name of the database&#8217;s SQL type for JDBC&#8217;s <tt class="docutils literal"><span class="pre">SMALLINT</span></tt>. Should be set if automatic detection does not work.</dd>
+<dt><tt class="docutils literal"><span class="pre">varbinaryType</span></tt> (property, <tt class="docutils literal"><span class="pre">String</span></tt>, default: queried with <tt class="docutils literal"><span class="pre">DatabaseMetaData</span></tt> if possible)</dt>
+<dd>The name of the database&#8217;s SQL type for JDBC&#8217;s <tt class="docutils literal"><span class="pre">VARBINARY</span></tt>. Should be set if automatic detection does not work.</dd>
+</dl>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">&quot;store&quot;</span> <span class="na">class=</span><span class="s">&quot;co.paralleluniverse.galaxy.jdbc.SQLDB&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;constructor-arg</span> <span class="na">name=</span><span class="s">&quot;dataSource&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;bean</span> <span class="na">class=</span><span class="s">&quot;org.apache.derby.jdbc.ClientDataSource40&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;serverName&quot;</span> <span class="na">value=</span><span class="s">&quot;mydbhost&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;portNumber&quot;</span> <span class="na">value=</span><span class="s">&quot;1527&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;databaseName&quot;</span> <span class="na">value=</span><span class="s">&quot;galaxydb&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;createDatabase&quot;</span> <span class="na">value=</span><span class="s">&quot;create&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/bean&gt;</span>
+    <span class="nt">&lt;/constructor-arg&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;maxItemSize&quot;</span> <span class="na">value=</span><span class="s">&quot;1024&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;useUpdateableCursors&quot;</span> <span class="na">value=</span><span class="s">&quot;false&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/bean&gt;</span>
+</pre></div>
+</div>
+<p>When using a SQL database, if the entire grid is taken down, you must manually either clear the Galaxy table (which is called
+<tt class="docutils literal"><span class="pre">pugalaxy.memory</span></tt> by default) if you&#8217;d like to dispose of the data, or, if you&#8217;d like to keep it, you must assign ownership of all
+data items to the server by running the following SQL command:</p>
+<div class="highlight-sql"><div class="highlight"><pre><span class="k">UPDATE</span> <span class="n">pugalaxy</span><span class="p">.</span><span class="n">memory</span> <span class="k">SET</span> <span class="k">owner</span><span class="o">=</span><span class="mi">0</span>
+</pre></div>
+</div>
+<div class="admonition attention">
+<p class="first admonition-title">Attention</p>
+<p class="last"><strong>Do not forget</strong> to clear the database table or set the owner in all rows to <tt class="docutils literal"><span class="pre">0</span></tt> before re-starting the grid.
+If you don&#8217;t, havoc will ensue.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+                </div>
+            </div>
+            <hr/>
+            <footer>
+                &copy; Copyright 2012, Parallel Universe Software Co..
+                Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>
+                1.1.3.
+            </footer>
+        </div>
+    </body>
+</html>
+
+
