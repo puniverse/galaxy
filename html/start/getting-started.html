@@ -104,16 +104,26 @@
 </div>
 <div class="section" id="downloading-galaxy">
 <span id="start-download"></span><h2>Downloading Galaxy<a class="headerlink" href="#downloading-galaxy" title="Permalink to this headline">¶</a></h2>
-<p>You can download the Galaxy distribution from the <a class="reference external" href="https://github.com/puniverse/galaxy/downloads">downloads</a> page.</p>
+<dl class="docutils">
+<dt>You can download the Galaxy distribution from here:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="../_static/galaxy-1.0-SNAPSHOT.zip">Release 1.0</a></li>
+</ul>
+</dd>
+</dl>
 </div>
 <div class="section" id="building-galaxy">
 <span id="start-build"></span><h2>Building Galaxy<a class="headerlink" href="#building-galaxy" title="Permalink to this headline">¶</a></h2>
 <p>To build galaxy, simply <tt class="docutils literal"><span class="pre">cd</span></tt> to the Galaxy directory, then run:</p>
-<div class="highlight-sh"><div class="highlight"><pre>ant
+<div class="highlight-sh"><div class="highlight"><pre>gradle
+</pre></div>
+</div>
+<p>If you don&#8217;t have gradle installed on your machine then run instead:</p>
+<div class="highlight-sh"><div class="highlight"><pre>./gradlew
 </pre></div>
 </div>
 <p>To build the documentation, you need to have <a class="reference external" href="http://sphinx.pocoo.org/">Sphinx</a> and <a class="reference external" href="http://lesscss.org/">lessc</a> installed. Then run:</p>
-<div class="highlight-sh"><div class="highlight"><pre>ant doc-dist
+<div class="highlight-sh"><div class="highlight"><pre>gradle generateDocs
 </pre></div>
 </div>
 </div>
