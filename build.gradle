@@ -115,14 +115,14 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
-    from javadoc.destinationDir
-}
+   from javadoc.destinationDir
+} 
 [jar, sourcesJar, javadocJar, srcZip]*.destinationDir = file(distDir)
 jar {
     from zipTree('baselib/high-scale-lib.jar')  // include non-Maven jars
     manifest { 
         attributes(
-            //        "Built-By"                  :   "Parallel Universe Co.",
+            "Built-By"                  :   System.getProperty("user.name"),
             "Implementation-Title"      :   name,
             "Implementation-Version"    :   version,
             "Implementation-Vendor"     :   vendor,
@@ -130,16 +130,38 @@ jar {
         )
     }
 }
-task dist {
-    dependsOn copyDependenciesToDist,copyConfigToDist,jar,sourcesJar,javadocJar,copyDocsToDist,srcZip,javadoc    
+task distNoDocs {
+    dependsOn copyDependenciesToDist,copyConfigToDist,jar,sourcesJar,javadocJar,srcZip,javadoc    
 }
-defaultTasks 'dist'
+task dist {
+    dependsOn distNoDocs,copyDocsToDist
+}
+defaultTasks 'distNoDocs'
 task distZip(type:Zip, dependsOn: dist) {
-    archiveName name+"-"+version+".zip"
+    archiveName project.name+"-"+project.version+".zip"
     from distDir
 }
 
 assemble.dependsOn dist
+///////// Site
+apply plugin: 'github-pages'
+
+//githubPages { repoUri = 'https://github.com/puniverse/galaxy.git' }
+buildscript {
+  repositories { mavenCentral() }
+  dependencies { classpath 'org.ajoberstar:gradle-git:0.4.0' }
+}
+addGhPages {
+    dependsOn javadoc,generateDocs
+}
+githubPages {
+  repoUri = 'https://github.com/puniverse/galaxy.git'  
+  pages {
+    from(javadoc.destinationDir) { into 'javadoc' }
+    from('docs/build/html')
+//    from(distZip.outputs.files) { into '_static'}
+  }
+}
 
 ///////// Publish Artifacts 
 apply plugin: 'maven'
@@ -149,16 +171,13 @@ artifacts {
     archives jar
     archives sourcesJar
     archives javadocJar
-    archives distZip
+//    archives distZip
 }
 
 signing {
     sign configurations.archives
 }
-
-println "file://" + testReportDir + "/index.html"
-
-
+// remove high scale lib from local install pom
 configure(install.repositories.mavenInstaller) {
      pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
           dep -> !dep.artifactId.startsWith('high-scale-lib') } 
@@ -169,8 +188,11 @@ uploadArchives {
     repositories {
         mavenDeployer {
             beforeDeployment { MavenDeployment deployment -> signPom(deployment) }
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            
+            repository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
+//            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
                 // User and Password are taken from ~/.gradle/gradle.properties
+//                authentication(userName: sonatypeUsername, password: sonatypePassword)
                 authentication(userName: sonatypeUsername, password: sonatypePassword)
             } 
             pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
@@ -211,21 +233,34 @@ task javancss << {
     ext.reportName = "$buildDir/javancss_metrics.txt"
     println 'Running javancss quality metrics tool to file://'+reportName
     ant {
+        logging.level = LogLevel.INFO
         taskdef(name:'javancss', classname:'javancss.JavancssAntTask', classpath: configurations.javancssConf.asPath)
         javancss(
             srcdir:'src/main/java', 
             abortOnFail:'true', 
             generateReport:'true', 
-            outputFile: reportName,
+            packageMetrics:'true',
+            classMetrics:'false',
+            functionMetrics:'false'
+//            outputFile: reportName,
         )
     }
 }
 /////// Others
-tasks.withType(Test) { useJUnit() }
-
+tasks.withType(Test) { 
+    useJUnit()
+    doLast() {
+        println "file://" + testReportDir + "/index.html"    
+    }    
+}
 
 task showResults(type:Exec) {
     workingDir test.testResultsDir
     commandLine 'cat','TEST-co.paralleluniverse.common.LinkedHashMap2Test.xml'
+//    standardOutput = new ByteArrayOutputStream()
+//    ext.output = { return standardOutput.toString() }
+//    doLast {
+//        logger.error(output)
+//    }
 }    
 

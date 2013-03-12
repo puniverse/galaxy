@@ -16,9 +16,9 @@ Galaxy requires that the Java Runtime Environment (JRE) version 7 will be instal
 Downloading Galaxy
 ==================
 
-You can download the Galaxy distribution from the downloads_ page.
+You can download the Galaxy distribution from here:
+  * `Release 1.0` (link TBD)
 
-.. _downloads: https://github.com/puniverse/galaxy/downloads
 
 .. _start-build:
 
@@ -29,13 +29,19 @@ To build galaxy, simply ``cd`` to the Galaxy directory, then run:
 
 .. code-block:: sh
 
-  ant
+  gradle
+
+If you don't have gradle installed on your machine then run instead:
+
+.. code-block:: sh
+
+  ./gradlew
 
 To build the documentation, you need to have Sphinx_ and lessc_ installed. Then run:
 
 .. code-block:: sh
 
-  ant doc-dist
+  gradle generateDocs
 
 .. _Sphinx: http://sphinx.pocoo.org/
 .. _lessc: http://lesscss.org/
