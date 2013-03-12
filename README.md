@@ -61,10 +61,10 @@ Galaxy Internals
 A series of blog posts detailing Galaxy's inner workings can be found here: [part 1](http://blog.paralleluniverse.co/post/28062434301/galaxy-internals-part-1), [part 2](http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures), [part 3](http://blog.paralleluniverse.co/post/29085615915/galaxy-internals-part-3).
 This [blog post](http://highscalability.com/blog/2012/8/20/the-performance-of-distributed-data-structures-running-on-a.html) contains an amortized cost analysis, in terms of network roundtrips, of a B+ tree distributed with Galaxy.
 
-Downloads
----------
+Getting Started
+---------------
 
-Galaxy releases can be downloaded [here](https://github.com/puniverse/galaxy/downloads).
+Galaxy releases can be downloaded [here](http://puniverse.github.com/galaxy/start/getting-started.html).
 
 
 Mailing List / Forum
@@ -74,4 +74,4 @@ Galaxy's mailing list/forum is found on Goolge Groups [here](https://groups.goog
 
 ---
 
-Copyright (C) 2012 Parallel Universe Software Co.
+Copyright (C) 2012-2013 Parallel Universe Software Co.
