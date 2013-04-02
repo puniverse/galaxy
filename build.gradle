@@ -48,7 +48,7 @@ dependencies {
 
 ///////// Doduments
 configure (javadoc) {    
-    destinationDir = file("$distDir/javadoc")
+    destinationDir = file("$distDir/docs/javadoc")
     options.links = [    
         "http://docs.oracle.com/javase/7/docs/api/",
         "http://docs.guava-libraries.googlecode.com/git-history/v12.0/javadoc/"
@@ -86,7 +86,7 @@ configure (javadoc) {
 
 task generateDocs(type:Exec) {
     workingDir 'docs'
-    environment JAVADOC_URL: "../../javadoc"
+    environment JAVADOC_URL: "../javadoc"
     commandLine 'make','html'
     outputs.dir "$workingDir/build"
     inputs.dir "$workingDir/src"
@@ -115,7 +115,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
-   from javadoc.destinationDir
+    from javadoc.destinationDir
 } 
 [jar, sourcesJar, javadocJar, srcZip]*.destinationDir = file(distDir)
 jar {
@@ -148,19 +148,19 @@ apply plugin: 'github-pages'
 
 //githubPages { repoUri = 'https://github.com/puniverse/galaxy.git' }
 buildscript {
-  repositories { mavenCentral() }
-  dependencies { classpath 'org.ajoberstar:gradle-git:0.4.0' }
+    repositories { mavenCentral() }
+    dependencies { classpath 'org.ajoberstar:gradle-git:0.4.0' }
 }
 addGhPages {
-    dependsOn javadoc,generateDocs
+    dependsOn javadoc,copyDocsToDist
 }
 githubPages {
-  repoUri = 'https://github.com/puniverse/galaxy.git'  
-  pages {
-    from(javadoc.destinationDir) { into 'javadoc' }
-    from('docs/build/html')
-//    from(distZip.outputs.files) { into '_static'}
-  }
+    repoUri = 'https://github.com/puniverse/galaxy.git'  
+    pages {
+        from(javadoc.destinationDir) { into 'javadoc' }
+        from('docs/build/html')
+        //    from(distZip.outputs.files) { into '_static'}
+    }
 }
 
 ///////// Publish Artifacts 
@@ -171,7 +171,7 @@ artifacts {
     archives jar
     archives sourcesJar
     archives javadocJar
-//    archives distZip
+    //    archives distZip
 }
 
 signing {
@@ -179,24 +179,25 @@ signing {
 }
 // remove high scale lib from local install pom
 configure(install.repositories.mavenInstaller) {
-     pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
-          dep -> !dep.artifactId.startsWith('high-scale-lib') } 
-     }
+    pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
+            dep -> !dep.artifactId.startsWith('high-scale-lib') } 
+    }
 }
 
 uploadArchives {
     repositories {
         mavenDeployer {
             beforeDeployment { MavenDeployment deployment -> signPom(deployment) }
-            
             repository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
-//            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                //            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
                 // User and Password are taken from ~/.gradle/gradle.properties
-//                authentication(userName: sonatypeUsername, password: sonatypePassword)
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
+                //                authentication(userName: sonatypeUsername, password: sonatypePassword)
+                if (hasProperty("sonatypeUsername") && hasProperty("sonatypePassword")) {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
             } 
             pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
-                 dep -> !dep.artifactId.startsWith('high-scale-lib') } 
+                    dep -> !dep.artifactId.startsWith('high-scale-lib') } 
             }
             pom.project {
                 name project.name
@@ -229,7 +230,7 @@ dependencies {
     javancssConf 'javancss:javancss:29.50'
 }
  
-task javancss << {
+task javancss(dependsOn: 'classes') << {
     ext.reportName = "$buildDir/javancss_metrics.txt"
     println 'Running javancss quality metrics tool to file://'+reportName
     ant {
@@ -242,7 +243,7 @@ task javancss << {
             packageMetrics:'true',
             classMetrics:'false',
             functionMetrics:'false'
-//            outputFile: reportName,
+            //            outputFile: reportName,
         )
     }
 }
@@ -257,10 +258,9 @@ tasks.withType(Test) {
 task showResults(type:Exec) {
     workingDir test.testResultsDir
     commandLine 'cat','TEST-co.paralleluniverse.common.LinkedHashMap2Test.xml'
-//    standardOutput = new ByteArrayOutputStream()
-//    ext.output = { return standardOutput.toString() }
-//    doLast {
-//        logger.error(output)
-//    }
+    //    standardOutput = new ByteArrayOutputStream()
+    //    ext.output = { return standardOutput.toString() }
+    //    doLast {
+    //        logger.error(output)
+    //    }
 }    
-
