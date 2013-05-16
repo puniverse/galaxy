@@ -110,7 +110,7 @@
 
                     <hr/>
                     <ul>
-                        <li><a href="http://puniverse.github.com/galaxy/javadoc/index.html">Javadocs</a></li>
+                        <li><a href="../../javadoc/index.html">Javadocs</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
                         <li><a href="https://groups.google.com/forum/#!forum/galaxy-user">Mailing List</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
@@ -121,7 +121,7 @@
                      
   <div class="section" id="data-store">
 <span id="man-api-store"></span><h1>Data Store<a class="headerlink" href="#data-store" title="Permalink to this headline">¶</a></h1>
-<p>The grid&#8217;s shared data store is accessed through the <tt class="docutils literal"><span class="pre">Store</span></tt> class (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html">Javadoc</a>),
+<p>The grid&#8217;s shared data store is accessed through the <tt class="docutils literal"><span class="pre">Store</span></tt> class (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Store.html">Javadoc</a>),
 which is used for all operations on data items.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -195,7 +195,7 @@ only rarely (usually only when the application starts). Locating a root by its n
 <p>In order to represent application objects, you can use any serialization mechanism, such as
 <tt class="docutils literal"><span class="pre">java.io</span></tt> serialization, <a class="reference external" href="http://code.google.com/p/protobuf/">Protocol Buffers</a>, <a class="reference external" href="http://code.google.com/p/kryo/">Kryo</a> or any other. However, for best serialization performance, it is best to
 have your data objects implement the <tt class="docutils literal"><span class="pre">Persistable</span></tt> interface.</p>
-<p>The <tt class="docutils literal"><span class="pre">Persistable</span></tt> interface (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/common/io/Persistable.html">Javadoc</a>)
+<p>The <tt class="docutils literal"><span class="pre">Persistable</span></tt> interface (<a class="reference external" href="../../javadoc/co/paralleluniverse/common/io/Persistable.html">Javadoc</a>)
 provides direct access to galaxy&#8217;s internal <tt class="docutils literal"><span class="pre">ByteBuffers</span></tt>,
 and eschews copying data to and from byte arrays. All of the <tt class="docutils literal"><span class="pre">Store</span></tt>&#8216;s data methods (<tt class="docutils literal"><span class="pre">get</span></tt>, <tt class="docutils literal"><span class="pre">set</span></tt>, <tt class="docutils literal"><span class="pre">put</span></tt> etc.)
 have versions that work with <tt class="docutils literal"><span class="pre">Persistables</span></tt>.
@@ -206,7 +206,7 @@ Just make sure never to modify the <tt class="docutils literal"><span class="pre
 <span id="man-api-store-items-allocation"></span><h3>Allocating items<a class="headerlink" href="#allocating-items" title="Permalink to this headline">¶</a></h3>
 <p>Root items are allocated automatically. All other items must be allocated explicitly using one of the <tt class="docutils literal"><span class="pre">put</span></tt> methods or with
 the <tt class="docutils literal"><span class="pre">alloc</span></tt> method.</p>
-<p>The <tt class="docutils literal"><span class="pre">alloc</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#alloc(int, co.paralleluniverse.galaxy.StoreTransaction)">Javadoc</a>)
+<p>The <tt class="docutils literal"><span class="pre">alloc</span></tt> method (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Store.html#alloc(int, co.paralleluniverse.galaxy.StoreTransaction)">Javadoc</a>)
 allocates one or more items.
 The items allocated are empty (i.e. contain nulls), and can be set with one of the
 <tt class="docutils literal"><span class="pre">set</span></tt> methods. This method is mostly intended for allocating arrays - a block of items with consecutive ids. The return value is
@@ -248,7 +248,7 @@ found on the local node (and so its owner is already known).</p>
 </div>
 <div class="section" id="deleting-items">
 <h3>Deleting items<a class="headerlink" href="#deleting-items" title="Permalink to this headline">¶</a></h3>
-<p>An item can be deleted with the <tt class="docutils literal"><span class="pre">del</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#del(long, co.paralleluniverse.galaxy.StoreTransaction">Javadoc</a>).</p>
+<p>An item can be deleted with the <tt class="docutils literal"><span class="pre">del</span></tt> method (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Store.html#del(long, co.paralleluniverse.galaxy.StoreTransaction">Javadoc</a>).</p>
 <p>Trying to access (<tt class="docutils literal"><span class="pre">get</span></tt> or <tt class="docutils literal"><span class="pre">set</span></tt>) a deleted item will result in an exception, but you should not rely on that to detect deleted
 items (making sure an item is deleted might be costly). Instead, try to only delete items when they are no longer &#8220;referenced&#8221; by
 any other item (i.e., they are unreachable).</p>
@@ -265,7 +265,7 @@ is then stored in RAM in one of two states: <strong>owned</strong> or <strong>sh
 <p>Every Galaxy data item is <strong>owned</strong> by exactly one node at any point in time, but can be <strong>shared</strong> by many. All nodes
 <strong>sharing</strong> an item can read its value, but only the <strong>owning</strong> node can write it. The owning node and sharing nodes for each
 item change based on the operations the program performs. You can check whether an item is shared, owned or non-existent in
-any particular node by calling the <tt class="docutils literal"><span class="pre">getState</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#getState(long)">Javadoc</a>).</p>
+any particular node by calling the <tt class="docutils literal"><span class="pre">getState</span></tt> method (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Store.html#getState(long)">Javadoc</a>).</p>
 </div>
 <div class="section" id="sharing-an-item">
 <h3>Sharing an item<a class="headerlink" href="#sharing-an-item" title="Permalink to this headline">¶</a></h3>
@@ -276,7 +276,7 @@ the item value is changed). Any further reads (with <tt class="docutils literal"
 until it is explicitly released. In other words, the item is <em>pinned</em> to this node in the shared state. You shouldn&#8217;t keep the
 item pinned for long, because as long as it&#8217;s pinned to the local node, it&#8217;s value cannot be changed by the owning node!
 (this is not exactly true - see <a class="reference internal" href="#man-api-store-ownership-inner"><em>Inner Workings</em></a>)</p>
-<p>To release a pinned item, you must call the <tt class="docutils literal"><span class="pre">release</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#release(long)">Javadoc</a>)
+<p>To release a pinned item, you must call the <tt class="docutils literal"><span class="pre">release</span></tt> method (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Store.html#release(long)">Javadoc</a>)
 or use the <tt class="docutils literal"><span class="pre">gets</span></tt> method in a <a class="reference internal" href="#man-api-store-transactions"><em>transaction</em></a>.</p>
 </div>
 <div class="section" id="owning-an-item">
@@ -289,7 +289,7 @@ In other words, it <em>pins</em> the item to the local node in the <strong>exclu
 <em>read or write</em> the item (this, too, is not exactly true - see <a class="reference internal" href="#man-api-store-ownership-inner"><em>Inner Workings</em></a>), so you
 should release it as soon as possible. <tt class="docutils literal"><span class="pre">getx</span></tt> is essentially a &#8220;get for write&#8221; operation, used to read the the item
 with the intent to soon modify it with <tt class="docutils literal"><span class="pre">set</span></tt>.</p>
-<p>To release a pinned item, you must call the <tt class="docutils literal"><span class="pre">release</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#release(long)">Javadoc</a>)
+<p>To release a pinned item, you must call the <tt class="docutils literal"><span class="pre">release</span></tt> method (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Store.html#release(long)">Javadoc</a>)
 or use the <tt class="docutils literal"><span class="pre">gets</span></tt> method in a <a class="reference internal" href="#man-api-store-transactions"><em>transaction</em></a>.</p>
 </div>
 <div class="section" id="deadlocks">
@@ -324,7 +324,7 @@ consistency.</p>
 <div class="section" id="listeners">
 <span id="man-api-store-listeners"></span><h2>Listeners<a class="headerlink" href="#listeners" title="Permalink to this headline">¶</a></h2>
 <p>You can listen for changes in an item&#8217;s value by providing a listener to the method <tt class="docutils literal"><span class="pre">setListener</span></tt>
-(<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Store.html#setListener(long, co.paralleluniverse.galaxy.CacheListener)">Javadoc</a>),
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Store.html#setListener(long, co.paralleluniverse.galaxy.CacheListener)">Javadoc</a>),
 which will get notified of events pertaining to a specific item. Only one listener can be set for a given item, and it may be removed
 by passing a <tt class="docutils literal"><span class="pre">null</span></tt> listener to <tt class="docutils literal"><span class="pre">setListener</span></tt>.</p>
 <p>A listener may be useful, say, for updating a deserialized representation of the item.</p>

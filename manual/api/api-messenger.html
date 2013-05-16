@@ -91,7 +91,7 @@
 
                     <hr/>
                     <ul>
-                        <li><a href="http://puniverse.github.com/galaxy/javadoc/index.html">Javadocs</a></li>
+                        <li><a href="../../javadoc/index.html">Javadocs</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
                         <li><a href="https://groups.google.com/forum/#!forum/galaxy-user">Mailing List</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
@@ -102,7 +102,7 @@
                      
   <div class="section" id="messenger">
 <span id="man-api-messenger"></span><h1>Messenger<a class="headerlink" href="#messenger" title="Permalink to this headline">¶</a></h1>
-<p>The <tt class="docutils literal"><span class="pre">Messenger</span></tt> (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Messenger.html">Javadoc</a>)
+<p>The <tt class="docutils literal"><span class="pre">Messenger</span></tt> (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Messenger.html">Javadoc</a>)
 lets you send point-to-point messages to other nodes in the cluster, and is used alongside the
 <a class="reference internal" href="api-store.html#man-api-store"><em>data-store</em></a> to distribute your application in the grid. While Galaxy&#8217;s data-store moves data around
 the grid to be processed at the appropriate node (moving data to code), messages are used to request nodes to carry out operations
@@ -119,9 +119,9 @@ You register receivers like so:</p>
 </pre></div>
 </div>
 <p>With <tt class="docutils literal"><span class="pre">topic</span></tt> being either a <tt class="docutils literal"><span class="pre">String</span></tt> or a <tt class="docutils literal"><span class="pre">long</span></tt>, and <tt class="docutils literal"><span class="pre">myListener</span></tt> is an object implementing <tt class="docutils literal"><span class="pre">MessageListener</span></tt>
-(<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/MessageListener.html">Javadoc</a>).</p>
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/MessageListener.html">Javadoc</a>).</p>
 <p>When a message sent to <tt class="docutils literal"><span class="pre">myTopic</span></tt> on the local node is received, <tt class="docutils literal"><span class="pre">myListener</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">messageReceived</span></tt> method
-(<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])">Javadoc</a>)
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])">Javadoc</a>)
 will be called, and passed the message payload and the sending node.</p>
 <p>You remove a listener by calling <tt class="docutils literal"><span class="pre">removeMessageListener</span></tt>.</p>
 </div>
@@ -129,7 +129,7 @@ will be called, and passed the message payload and the sending node.</p>
 <span id="man-api-messenger-routing"></span><h2>Routing messages<a class="headerlink" href="#routing-messages" title="Permalink to this headline">¶</a></h2>
 <p>One way of addressing messages is sending them to a well known node. You would usually use this option when replying to received
 messages, in which case the original sender is passed to the <tt class="docutils literal"><span class="pre">MessageListener</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">messageReceived</span></tt> method
-(<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])">Javadoc</a>).</p>
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/MessageListener.html#messageReceived(short, byte[])">Javadoc</a>).</p>
 <p>To send a message to a well known node use one of the <tt class="docutils literal"><span class="pre">send</span></tt> methods, and pass it the node id (a <tt class="docutils literal"><span class="pre">short</span></tt>), the topic (either
 a <tt class="docutils literal"><span class="pre">long</span></tt> or a <tt class="docutils literal"><span class="pre">String</span></tt>), and the message payload, like so:</p>
 <div class="highlight-java"><div class="highlight"><pre><span class="n">messenger</span><span class="o">.</span><span class="na">send</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">topic</span><span class="o">,</span> <span class="n">message</span><span class="o">);</span>

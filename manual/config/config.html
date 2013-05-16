@@ -93,7 +93,7 @@
 
                     <hr/>
                     <ul>
-                        <li><a href="http://puniverse.github.com/galaxy/javadoc/index.html">Javadocs</a></li>
+                        <li><a href="../../javadoc/index.html">Javadocs</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
                         <li><a href="https://groups.google.com/forum/#!forum/galaxy-user">Mailing List</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
@@ -116,7 +116,7 @@ Spring configuration, see <a class="reference internal" href="config-spring.html
 <div class="section" id="the-configuration-file-s">
 <span id="man-config-file"></span><h2>The configuration file(s)<a class="headerlink" href="#the-configuration-file-s" title="Permalink to this headline">¶</a></h2>
 <p>A Galaxy node is configured from one XML file (of course, that file can reference others in accordance with the Spring Beans schema), whose path is passed to
-the <tt class="docutils literal"><span class="pre">getInstance</span></tt> static method of the <tt class="docutils literal"><span class="pre">Grid</span></tt> class (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Grid.html">Javadoc</a>).
+the <tt class="docutils literal"><span class="pre">getInstance</span></tt> static method of the <tt class="docutils literal"><span class="pre">Grid</span></tt> class (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Grid.html">Javadoc</a>).
 If you pass <tt class="docutils literal"><span class="pre">null</span></tt> (or use the zero-argument version of <tt class="docutils literal"><span class="pre">getInstance</span></tt>), the default configuration file, <tt class="docutils literal"><span class="pre">galaxy.xml</span></tt> is used, if it&#8217;s found somewhere on the
 classpath.</p>
 <p>In addition to the XML file, you may use a Java properties file, and reference those properties in the configuration file like so: <tt class="docutils literal"><span class="pre">${prop.name}</span></tt>. The name

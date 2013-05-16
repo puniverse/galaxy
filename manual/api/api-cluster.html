@@ -101,7 +101,7 @@
 
                     <hr/>
                     <ul>
-                        <li><a href="http://puniverse.github.com/galaxy/javadoc/index.html">Javadocs</a></li>
+                        <li><a href="../../javadoc/index.html">Javadocs</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/downloads">Download</a></li>
                         <li><a href="https://groups.google.com/forum/#!forum/galaxy-user">Mailing List</a></li>
                         <li><a href="https://github.com/puniverse/galaxy/issues/">Issue Tracker</a></li>
@@ -112,7 +112,7 @@
                      
   <div class="section" id="cluster">
 <span id="man-api-cluster"></span><h1>Cluster<a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h1>
-<p>The <tt class="docutils literal"><span class="pre">Cluster</span></tt> interface (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Cluster.html">Javadoc</a>) provides information
+<p>The <tt class="docutils literal"><span class="pre">Cluster</span></tt> interface (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Cluster.html">Javadoc</a>) provides information
 about cluster nodes, and emits cluster events (like nodes joining or leaving the cluster). It also allows for easy configuration
 management.</p>
 <p>While an application employing Galaxy does not have to use this service, it is very useful for all clustered applications. And
@@ -121,7 +121,7 @@ so when this service detects a node going down - that&#8217;s when the data-stor
 <p>Internally, this service employs either <a class="reference external" href="http://zookeeper.apache.org/">Apache ZooKeeper</a> (through Netflix&#8217;s <a class="reference external" href="https://github.com/Netflix/curator">Curator</a> library) or <a class="reference external" href="http://www.jgroups.org/">JGroups</a>
 (see <a class="reference internal" href="../config/config-cluster.html#man-config-cluster"><em>Configuring the Cluster Component</em></a> for configuring Galaxy to use either option).
 You can gain access to the underlying implementation by calling the <tt class="docutils literal"><span class="pre">getUnderlyingResource</span></tt> method
-(<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Cluster.html#getUnderlyingResource()">Javadoc</a>)
+(<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Cluster.html#getUnderlyingResource()">Javadoc</a>)
 which will return the <tt class="docutils literal"><span class="pre">CuratorZookeeperClient</span></tt> used by Galaxy for cluster management (which, in turn, can be further queried for
 the underlying <tt class="docutils literal"><span class="pre">ZooKeeper</span></tt> instance) or the JGroups <tt class="docutils literal"><span class="pre">JChannel</span></tt> used for cluster management.</p>
 <div class="section" id="cluster-organization">
@@ -182,10 +182,10 @@ offline.</li>
 <div class="section" id="cluster-events">
 <span id="man-api-cluster-events"></span><h2>Cluster events<a class="headerlink" href="#cluster-events" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">Cluster</span></tt> service also sends notifications about occuronces in other cluster nodes.</p>
-<p>If you hand a <tt class="docutils literal"><span class="pre">NodeChangeListener</span></tt> (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/cluster/NodeChangeListener.html">Javadoc</a>)
+<p>If you hand a <tt class="docutils literal"><span class="pre">NodeChangeListener</span></tt> (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/cluster/NodeChangeListener.html">Javadoc</a>)
 to <tt class="docutils literal"><span class="pre">addNodeChangeListener</span></tt> you&#8217;ll be notified when a new node (actually, a backup group) comes online, when it goes offline,
 and when it has a master switchover.</p>
-<p>A <tt class="docutils literal"><span class="pre">SlaveConfigurationListener</span></tt> (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/cluster/SlaveConfigurationListener.html">Javadoc</a>)
+<p>A <tt class="docutils literal"><span class="pre">SlaveConfigurationListener</span></tt> (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/cluster/SlaveConfigurationListener.html">Javadoc</a>)
 passed to <tt class="docutils literal"><span class="pre">addSlaveConfigurationListener</span></tt> will notify you when a slave is added to or removed from your local node&#8217;s backup group.</p>
 </div>
 <div class="section" id="node-information">
@@ -195,7 +195,7 @@ passed to <tt class="docutils literal"><span class="pre">addSlaveConfigurationLi
 all online backup groups. Remember, the node id is shared by all nodes in the group).</p>
 <div class="section" id="nodeinfo">
 <h3>NodeInfo<a class="headerlink" href="#nodeinfo" title="Permalink to this headline">¶</a></h3>
-<p>The <tt class="docutils literal"><span class="pre">NodeInfo</span></tt> interface (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/cluster/NodeInfo.html">Javadoc</a>)
+<p>The <tt class="docutils literal"><span class="pre">NodeInfo</span></tt> interface (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/cluster/NodeInfo.html">Javadoc</a>)
 let&#8217;s you access the configuration record published by any node in the cluster.</p>
 <p><tt class="docutils literal"><span class="pre">getMyNodeInfo</span></tt> returns the <tt class="docutils literal"><span class="pre">NodeInfo</span></tt> of the local node, so by calling</p>
 <div class="highlight-java"><div class="highlight"><pre><span class="n">grid</span><span class="o">.</span><span class="na">cluster</span><span class="o">().</span><span class="na">getMyNodeInfo</span><span class="o">().</span><span class="na">getName</span><span class="o">()</span>
@@ -210,18 +210,18 @@ Refer to the Javadoc for more information.</p>
 <p>Other than its name and id, each node&#8217;s configuration record can hold any number of additional properties, which can be accessed
 by <tt class="docutils literal"><span class="pre">NodeInfo</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">get</span></tt> or <tt class="docutils literal"><span class="pre">getProperties</span></tt> methods.</p>
 <p>You can add a custom node property, and additionally require that nodes that have not yet publish a value for the property will not be
-in considered <strong>online</strong> until they do, with the <tt class="docutils literal"><span class="pre">addNodeProperty</span></tt> method (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Cluster.html#addNodeProperty(java.lang.String, boolean, boolean, co.paralleluniverse.galaxy.cluster.ReaderWriter)">Javadoc</a>).
+in considered <strong>online</strong> until they do, with the <tt class="docutils literal"><span class="pre">addNodeProperty</span></tt> method (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Cluster.html#addNodeProperty(java.lang.String, boolean, boolean, co.paralleluniverse.galaxy.cluster.ReaderWriter)">Javadoc</a>).
 Refer to the Javadoc for more information.</p>
 <p>The <tt class="docutils literal"><span class="pre">setNodeProperty</span></tt> method lets you set a property of the local node.</p>
-<p>The <tt class="docutils literal"><span class="pre">addMasterNodePropertyListener</span></tt> (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Cluster.html#addMasterNodePropertyListener(java.lang.String, co.paralleluniverse.galaxy.cluster.NodePropertyListener)">Javadoc</a>)
-and <tt class="docutils literal"><span class="pre">addSlaveNodePropertyListener</span></tt> (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/Cluster.html#addSlaveNodePropertyListener(java.lang.String, co.paralleluniverse.galaxy.cluster.NodePropertyListener)">Javadoc</a>)
+<p>The <tt class="docutils literal"><span class="pre">addMasterNodePropertyListener</span></tt> (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Cluster.html#addMasterNodePropertyListener(java.lang.String, co.paralleluniverse.galaxy.cluster.NodePropertyListener)">Javadoc</a>)
+and <tt class="docutils literal"><span class="pre">addSlaveNodePropertyListener</span></tt> (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/Cluster.html#addSlaveNodePropertyListener(java.lang.String, co.paralleluniverse.galaxy.cluster.NodePropertyListener)">Javadoc</a>)
 methods allow you to listen for changes in the values of configuration record properties of any master node in the cluster
 or any of your slave nodes respectively.</p>
 </div>
 </div>
 <div class="section" id="the-distributed-tree">
 <span id="man-api-cluster-tree"></span><h2>The distributed tree<a class="headerlink" href="#the-distributed-tree" title="Permalink to this headline">¶</a></h2>
-<p>Galaxy nodes publish their configuration record via a service called <tt class="docutils literal"><span class="pre">DistributedTree</span></tt> (<a class="reference external" href="http://puniverse.github.com/galaxy/javadoc/co/paralleluniverse/galaxy/cluster/DistributedTree.html">Javadoc</a>) which implements a distributed filesystem-like tree of information nodes
+<p>Galaxy nodes publish their configuration record via a service called <tt class="docutils literal"><span class="pre">DistributedTree</span></tt> (<a class="reference external" href="../../javadoc/co/paralleluniverse/galaxy/cluster/DistributedTree.html">Javadoc</a>) which implements a distributed filesystem-like tree of information nodes
 (very similar to the way Apache ZooKeeper works, and in fact, when the cluster is configured to use ZooKeeper, the <tt class="docutils literal"><span class="pre">DistributedTree</span></tt> is just a thin layer on top of it).
 <tt class="docutils literal"><span class="pre">DistributedTree</span></tt> makes some strong consistency and ordering guarantees about it&#8217;s data, which make it suitable for sharing critical configuration data and for
 coordination tasks among nodes, such as leader election. Galaxy&#8217;s <tt class="docutils literal"><span class="pre">NodeInfo</span></tt> records simply wrap the <tt class="docutils literal"><span class="pre">DistributedTree</span></tt> nodes in one of its branches (directories).</p>
