@@ -30,6 +30,9 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -111,6 +114,18 @@ public class StoreImpl implements Store {
     @Override
     public byte[] get(long id) throws TimeoutException {
         return get(GET, id, null);
+    }
+
+    @Override
+    public <T> T invoke(long lineId, InvokeOnLine<T> function) throws TimeoutException {
+        try {
+            //                            System.out.println("SENDING INVOKE to owner of " + root + " from node " + myNodeId + "op: " + curOpId);
+            return (T) cache.doOpAsync(Op.Type.INVOKE, lineId, (Object) function, null, null).get();
+        } catch (InterruptedException | ExecutionException ex) {
+            Logger.getLogger(StoreImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return null;
     }
 
     @Override

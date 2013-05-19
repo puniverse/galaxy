@@ -25,17 +25,23 @@ import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.util.Enums;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -44,6 +50,7 @@ import java.util.List;
 public class Message implements Streamable, Externalizable, Cloneable {
     public static enum Type {
         GET, GETX, INV, INVACK, PUT, PUTX, DEL, CHNGD_OWNR, NOT_FOUND, TIMEOUT,
+        INVOKE, INVRES,
         BACKUP, BACKUPACK,
         BACKUP_PACKET, BACKUP_PACKETACK,
         MSG, MSGACK,
@@ -54,7 +61,25 @@ public class Message implements Streamable, Externalizable, Cloneable {
         public boolean isOf(long set) {
             return Enums.isIn(this, set);
         }
-        public final static long REQUIRES_RESPONSE = Enums.setOf(GET, GETX, INV, BACKUP_PACKET);
+        public final static long REQUIRES_RESPONSE = Enums.setOf(GET, GETX, INV, BACKUP_PACKET, INVOKE);
+    }
+
+    public static INVOKE INVOKE(short node, long line, Object data) {
+        try {
+            return new INVOKE(Type.INVOKE, node, line, data);
+        } catch (IOException ex) {
+            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public static INVRES INVRES(LineMessage responseTo, long line, Object result) {
+        try {
+            return new INVRES(responseTo, line, result);
+        } catch (IOException ex) {
+            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     public static GET GET(short node, long line) {
@@ -212,6 +237,10 @@ public class Message implements Streamable, Externalizable, Cloneable {
             case MSGACK:
             case TIMEOUT:
                 return new LineMessage(type);
+            case INVOKE:
+                return new INVOKE(type);
+            case INVRES:
+                return new INVRES(type);
             default:
                 throw new RuntimeException("Unrecognized message: " + type);
         }
@@ -337,7 +366,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
             sb.append(" BCAST");
         sb.append(' ').append(incoming ? "FROM " : "TO ");
         sb.append(node);
-        if(!isResponse() && !isReplyRequired())
+        if (!isResponse() && !isReplyRequired())
             sb.append(' ').append("(NO REP REQ)");
         return sb.toString();
     }
@@ -694,6 +723,118 @@ public class Message implements Streamable, Externalizable, Cloneable {
         public GET(Type type, short node, long line) {
             super(node, type, line);
             assert type == Type.GET || type == Type.GETX;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    public static class INVOKE extends LineMessage {
+        private byte[] function;
+
+        INVOKE(Type type) {
+            super(type);
+        }
+
+        public INVOKE(Type type, short node, long line, Object function) throws IOException {
+            super(node, type, line);
+            byte[] ba = null;
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    ObjectOutputStream out = new ObjectOutputStream(bos)) {
+                out.writeObject(function);
+                ba = bos.toByteArray();
+            }
+            this.function = ba;
+            assert type == Type.INVOKE;
+        }
+
+        public Object getFunction() {
+            try (ByteArrayInputStream bis = new ByteArrayInputStream(function);
+                    ObjectInput in = new ObjectInputStream(bis)) {
+                return (Object) in.readObject();
+            } catch (ClassNotFoundException | IOException ex) {
+                Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return null;
+
+        }
+
+        @Override
+        public int sizeNoHeader() {
+            return super.sizeNoHeader() + 2 + (function != null ? function.length : 0);
+        }
+
+        @Override
+        public void writeNoHeader(DataOutput out) throws IOException {
+            super.writeNoHeader(out);
+            out.writeShort(function != null ? (short) function.length : 0);
+            if (function != null)
+                out.write(function);
+        }
+
+        @Override
+        public void readNoHeader(DataInput in) throws IOException {
+            super.readNoHeader(in);
+            final int dataLen = in.readUnsignedShort();
+            if (dataLen == 0)
+                function = null;
+            else {
+                function = new byte[dataLen];
+                in.readFully(function);
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    public static class INVRES extends LineMessage {
+        private byte[] result;
+
+        INVRES(Type type) {
+            super(type);
+        }
+
+        public INVRES(LineMessage responseTo, long line, Object result) throws IOException {
+            super(responseTo, Type.INVRES, line);
+            byte[] ba = null;
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    ObjectOutputStream out = new ObjectOutputStream(bos)) {
+                out.writeObject(result);
+                ba = bos.toByteArray();
+            }
+            this.result = ba;
+        }
+
+        public Object getResult() {
+            try (ByteArrayInputStream bis = new ByteArrayInputStream(result);
+                    ObjectInput in = new ObjectInputStream(bis)) {
+                return (Object) in.readObject();
+            } catch (ClassNotFoundException | IOException ex) {
+                Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return null;
+        }
+
+        @Override
+        public int sizeNoHeader() {
+            return super.sizeNoHeader() + 2 + (result != null ? result.length : 0);
+        }
+
+        @Override
+        public void writeNoHeader(DataOutput out) throws IOException {
+            super.writeNoHeader(out);
+            out.writeShort(result != null ? (short) result.length : 0);
+            if (result != null)
+                out.write(result);
+        }
+
+        @Override
+        public void readNoHeader(DataInput in) throws IOException {
+            super.readNoHeader(in);
+            final int dataLen = in.readUnsignedShort();
+            if (dataLen == 0)
+                result = null;
+            else {
+                result = new byte[dataLen];
+                in.readFully(result);
+            }
         }
     }
 

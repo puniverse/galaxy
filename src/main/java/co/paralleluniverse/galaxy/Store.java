@@ -21,6 +21,7 @@ package co.paralleluniverse.galaxy;
 
 import co.paralleluniverse.common.io.Persistable;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 /**
@@ -160,6 +161,7 @@ public interface Store {
      */
     byte[] get(long id) throws TimeoutException;
 
+    <T> T invoke(long id, InvokeOnLine<T> function) throws TimeoutException;
     /**
      * Retrieves a given data item into a {@link Persistable}.
      *
@@ -829,4 +831,8 @@ public interface Store {
      * @return The item's state.
      */
     ItemState getState(long id);
+
+    public interface InvokeOnLine<T> extends Serializable {
+        T invoke(ByteBuffer line); 
+    }
 }

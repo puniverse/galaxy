@@ -185,7 +185,7 @@ should release it as soon as possible. ``getx`` is essentially a "get for write"
 with the intent to soon modify it with ``set``.
 
 To release a pinned item, you must call the ``release`` method (:javadoc:`Javadoc <co/paralleluniverse/galaxy/Store.html#release(long)>`)
-or use the ``gets`` method in a :ref:`transaction <man-api-store-transactions>`.
+or use the ``getx`` method in a :ref:`transaction <man-api-store-transactions>`.
 
 .. _man-api-store-ownership-deadlock:
 

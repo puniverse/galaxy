@@ -28,6 +28,7 @@ import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import static co.paralleluniverse.galaxy.core.Cache.isReserved;
 import co.paralleluniverse.galaxy.core.Message.BACKUP;
 import co.paralleluniverse.galaxy.core.Message.BACKUP_PACKET;
+import co.paralleluniverse.galaxy.core.Message.INVOKE;
 import co.paralleluniverse.galaxy.core.Message.LineMessage;
 import co.paralleluniverse.galaxy.server.MainMemoryDB;
 import co.paralleluniverse.galaxy.server.MainMemoryEntry;
@@ -43,7 +44,6 @@ import org.slf4j.LoggerFactory;
  * @author pron
  */
 public class MainMemory extends ClusterService implements MessageReceiver, NodeChangeListener {
-
     private static final Logger LOG = LoggerFactory.getLogger(MainMemory.class);
     private static final short SERVER = 0;
     private final Comm comm;
@@ -126,6 +126,9 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
             case BACKUP_PACKET:
                 handleMessageBackup((BACKUP_PACKET) message);
                 break;
+            case INVOKE:
+                handleMessageInvoke((LineMessage) message);
+                break;
         }
     }
 
@@ -174,6 +177,10 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
             }
             LOG.debug("casOwner returned {}", owner);
         }
+    }
+
+    private boolean handleMessageInvoke(LineMessage msg) {
+        return handleMessageGet(msg); // Server cant invoke, return putx, chnged_owner or notFound.
     }
 
     private void handleMessageInvalidate(Message.INV msg) {
@@ -255,5 +262,4 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
     @Override
     public void nodeSwitched(short id) {
     }
-
 }

@@ -36,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 class Op {
     public enum Type {
         GET,
+        INVOKE,
         GETS,
         GETX,
         GET_FROM_OWNER,

@@ -6,7 +6,6 @@ package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.concurrent.WithExecutor;
 import co.paralleluniverse.common.collection.ConcurrentMultimap;
-import co.paralleluniverse.common.concurrent.CurrentThreadExecutor;
 import co.paralleluniverse.common.io.Streamable;
 import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.spring.Component;

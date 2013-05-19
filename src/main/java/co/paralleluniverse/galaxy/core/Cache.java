@@ -31,8 +31,10 @@ import co.paralleluniverse.common.util.Enums;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.RefNotFoundException;
+import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
+import co.paralleluniverse.galaxy.core.Message.INVRES;
 import co.paralleluniverse.galaxy.core.Message.LineMessage;
 import co.paralleluniverse.galaxy.core.Transaction.RollbackInfo;
 import com.google.common.base.Throwables;
@@ -86,12 +88,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
      * To preserve memory ordering semantics, all messages from node N must be received and processed in the order in which they
      * were sent.
      */
-
     static final long MAX_RESERVED_REF_ID = 0xffffffffL;
     private static final boolean STALE_READS = true;
     private static final int SHARER_SET_DEFAULT_SIZE = 10;
     private static final Logger LOG = LoggerFactory.getLogger(Cache.class);
-    private long timeout = 200000;
+    private long timeout = 10000;
     private int maxItemSize = 1024;
     private boolean compareBeforeWrite = true;
     //
@@ -126,12 +127,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private final List<CacheListener> listeners = new CopyOnWriteArrayList<CacheListener>();
     //
     static final Object PENDING = new Object() {
-
         @Override
         public String toString() {
             return "PENDING";
         }
-
     };
     static final Object DIDNT_HANDLE = new Object();
     //
@@ -142,7 +141,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private static final int LINE_EVERYTHING_CHANGED = -1;
     //
     private static final long HIT_OR_MISS_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL);
-    private static final long FAST_TRACK_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL, Op.Type.LSTN);
+    private static final long FAST_TRACK_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL, Op.Type.LSTN, Op.Type.INVOKE);
     private static final long LOCKING_OPS = Enums.setOf(Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL);
     private static final long PUSH_OPS = Enums.setOf(Op.Type.PUSH, Op.Type.PUSHX);
 
@@ -182,19 +181,15 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private ConcurrentMap<Long, CacheLine> buildSharedCache(long maxCapacity) {
         return new ConcurrentLinkedHashMap.Builder<Long, CacheLine>().initialCapacity(1000).maximumWeightedCapacity(maxCapacity).weigher(new Weigher<CacheLine>() {
-
             @Override
             public int weightOf(CacheLine line) {
                 return 1 + line.size();
             }
-
         }).listener(new EvictionListener<Long, CacheLine>() {
-
             @Override
             public void onEviction(Long id, CacheLine line) {
                 evictLine(line, true);
             }
-
         }).build();
     }
 
@@ -280,7 +275,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     public void setMaxStaleReadMillis(long maxStaleReadMillis) {
         this.maxStaleReadMillis = maxStaleReadMillis;
     }
-    
+
     @Override
     public void init() throws Exception {
         super.init();
@@ -334,17 +329,14 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     //<editor-fold defaultstate="collapsed" desc="Types">
     /////////////////////////// Types ///////////////////////////////////////////
     enum State {
-
         I, S, O, E; // Order matters! (used by setNextState)
 
         public boolean isLessThan(State other) {
             return compareTo(other) < 0;
         }
-
     }
 
     static class CacheLine {
-
         private static final byte LOCKED = 1;
         public static final byte MODIFIED = 1 << 1;
         public static final byte SLAVE = 1 << 2; // true when slave(s) think line is owned by us
@@ -465,7 +457,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 sb.append(" DELETED");
             return sb.toString();
         }
-
     }
     //</editor-fold>
 
@@ -710,6 +701,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 case LSTN:
                     res = handleOpListen(line, extra);
                     break;
+                case INVOKE:
+                    res = handleOpInvoke(line, data, nodeHint(extra), lineChange);
+                    break;
             }
 
             accessLine(line);
@@ -812,6 +806,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void receive1(Message message) {
+        LOG.info("POPOPOP " + message.getType());
         switch (message.getType()) {
             case MSG:
                 handleMessageMsg((Message.MSG) message);
@@ -923,6 +918,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     return handleMessageBackupAck((Message.BACKUPACK) message, line);
                 case TIMEOUT:
                     return handleMessageTimeout(message, line);
+                case INVOKE:
+                    return handleMessageInvoke((Message.INVOKE) message, line);
+                case INVRES:
+                    return handleMessageInvRes((Message.INVRES) message, line);
                 default:
                     LOG.warn("Unhandled message {}", message);
                     return LINE_NO_CHANGE;
@@ -1015,7 +1014,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
         return change;
     }
-
     private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(Message.Type.GET, Message.Type.GETX, Message.Type.INV, Message.Type.PUT, Message.Type.PUTX);
 
     private boolean shouldHoldMessage(CacheLine line, Message message) {
@@ -1058,7 +1056,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             throw new IllegalStateException("Cache nconfigured to not support rollbacks");
 
         txn.forEachRollback(new TLongObjectProcedure<RollbackInfo>() {
-
             @Override
             public boolean execute(long id, RollbackInfo r) {
                 final CacheLine line = getLine(id);
@@ -1071,7 +1068,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     return true;
                 }
             }
-
         });
     }
 
@@ -1153,6 +1149,37 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             backup.flush();
     }
     //</editor-fold>
+
+    private Object handleOpInvoke(CacheLine line, Object data, short nodeHint, int lineChange) {
+        if ((lineChange & (LINE_STATE_CHANGED | LINE_OWNER_CHANGED)) == 0)
+            return PENDING;
+
+        if (line.is(CacheLine.DELETED))
+            handleDeleted(line);
+
+        if (line.state.isLessThan(State.O)) {
+            send(Message.INVOKE(getTarget(line, nodeHint), line.id, data));
+//            throw new UnsupportedOperationException("rmote handle op invoke");
+            return PENDING;
+        } else {
+            if (!transitionToE(line, nodeHint))
+                return PENDING; //changing to E
+            // were are E
+            Store.InvokeOnLine iol = (Store.InvokeOnLine) data;
+            byte[] readData = readData(line);
+            ByteBuffer bb = ByteBuffer.wrap(readData);
+            Object invoke = iol.invoke(bb);
+            setData(line, bb, null);
+            return invoke;
+        }
+//        return true;
+
+        //TODO: handle deleted
+        //TODO: handle INVs before writing the line
+
+//        Store.InvokeOnLine function = (Store.InvokeOnLine) data;
+//        return function.invoke(line.getData());
+    }
 
     //<editor-fold defaultstate="collapsed" desc="Op handling">
     /////////////////////////// Op handling ///////////////////////////////////////////
@@ -1453,6 +1480,44 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     //<editor-fold defaultstate="collapsed" desc="Message handling">
     /////////////////////////// Message handling ///////////////////////////////////////////
+    private int handleMessageInvRes(INVRES msg, CacheLine line) {
+        Op invokeOp = null;
+        final Collection<Op> pending = getPendingOps(line);
+        for (Iterator<Op> it = pending.iterator(); it.hasNext();) {
+            final Op op = it.next();
+            if (op.type == Op.Type.INVOKE) {
+                if (msg.getLine()== op.line) {
+                    invokeOp = op;
+                    break;
+                }
+            }
+        }
+        if (invokeOp != null) {
+            completeOp(line, invokeOp, msg.getResult(), true);
+            removePendingOp(line, invokeOp);
+        }
+        return LINE_NO_CHANGE;
+    }
+
+    private int handleMessageInvoke(Message.INVOKE msg, CacheLine line) throws IrrelevantStateException {
+        if (handleNotOwner(msg, line))
+            return LINE_NO_CHANGE;
+        relevantStates(line, State.E, State.O);
+
+        if (!transitionToE(line, (short) -1)) {
+            addPendingMessage(line, msg);
+            return LINE_NO_CHANGE;
+        }
+        //TODO handle transition from o to e;
+        Store.InvokeOnLine iol = (Store.InvokeOnLine) msg.getFunction();
+        byte[] readData = readData(line);
+        ByteBuffer bb = ByteBuffer.wrap(readData);
+        Object invokeRes = iol.invoke(bb);
+        setData(line, bb, null);
+        send(Message.INVRES(msg, line.id, invokeRes));
+        return LINE_EVERYTHING_CHANGED;
+    }
+
     private int handleMessageGet(Message.GET msg, CacheLine line) throws IrrelevantStateException {
         if (handleNotOwner(msg, line))
             return LINE_NO_CHANGE;
@@ -1823,7 +1888,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private static class OwnerClock {
-
         public final AtomicLong lastPut = new AtomicLong();
         public final AtomicInteger invCounter = new AtomicInteger();
     }
@@ -1840,7 +1904,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         nodeEvents.add(event);
         try {
             processLines(new LinePredicate() {
-
                 @Override
                 public boolean processLine(CacheLine line) {
                     // remove pending messages from node
@@ -1852,7 +1915,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     processLineOnNodeEvent(line, node, newOwner);
                     return true;
                 }
-
             });
         } finally {
             nodeEvents.remove(event);
@@ -1867,7 +1929,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         nodeEvents.add(event);
         try {
             processLines(new LinePredicate() {
-
                 @Override
                 public boolean processLine(CacheLine line) {
                     // we don't inform slave of sharers, so it assumes its lines are E, therefore we must INV shared
@@ -1875,7 +1936,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     processLineOnNodeEvent(line, node, node);
                     return true;
                 }
-
             });
         } finally {
             nodeEvents.remove(event);
@@ -1918,7 +1978,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private static final class NodeEvent {
-
         public final short node;
         public final short newOwner;
 
@@ -1942,7 +2001,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         public int hashCode() {
             return node;
         }
-
     }
     //</editor-fold>
 
@@ -2270,7 +2328,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         message.setNode(node);
         return message;
     }
-
     private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
 
     // visible for testing
@@ -2366,9 +2423,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     interface LinePredicate {
-
         boolean processLine(CacheLine line);
-
     }
 
     private void processLines(LinePredicate lp) {
@@ -2507,7 +2562,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private static class IrrelevantStateException extends Exception {
     }
-
     private static final IrrelevantStateException IRRELEVANT_STATE = new IrrelevantStateException();
 
     private void relevantStates(CacheLine line, State... states) throws IrrelevantStateException {
