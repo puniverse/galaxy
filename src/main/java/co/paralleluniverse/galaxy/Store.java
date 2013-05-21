@@ -832,7 +832,11 @@ public interface Store {
      */
     ItemState getState(long id);
 
+    public interface LineAccess extends Serializable {
+        ByteBuffer getForRead();
+        ByteBuffer getForWrite(int size);
+    }
     public interface InvokeOnLine<T> extends Serializable {
-        T invoke(ByteBuffer line); 
+        T invoke(LineAccess lineAccess); 
     }
 }

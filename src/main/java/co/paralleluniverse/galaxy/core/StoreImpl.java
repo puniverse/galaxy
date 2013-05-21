@@ -117,15 +117,8 @@ public class StoreImpl implements Store {
     }
 
     @Override
-    public <T> T invoke(long lineId, InvokeOnLine<T> function) throws TimeoutException {
-        try {
-            //                            System.out.println("SENDING INVOKE to owner of " + root + " from node " + myNodeId + "op: " + curOpId);
-            return (T) cache.doOpAsync(Op.Type.INVOKE, lineId, (Object) function, null, null).get();
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(StoreImpl.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return null;
+    public <T> T invoke(long lineId, InvokeOnLine<T> function) throws TimeoutException {        
+        return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null); 
     }
 
     @Override

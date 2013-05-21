@@ -127,7 +127,7 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
                 handleMessageBackup((BACKUP_PACKET) message);
                 break;
             case INVOKE:
-                handleMessageInvoke((LineMessage) message);
+                handleMessageGet((LineMessage) message); // Server cant invoke, return putx, chnged_owner or notFound.
                 break;
         }
     }
@@ -177,10 +177,6 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
             }
             LOG.debug("casOwner returned {}", owner);
         }
-    }
-
-    private boolean handleMessageInvoke(LineMessage msg) {
-        return handleMessageGet(msg); // Server cant invoke, return putx, chnged_owner or notFound.
     }
 
     private void handleMessageInvalidate(Message.INV msg) {

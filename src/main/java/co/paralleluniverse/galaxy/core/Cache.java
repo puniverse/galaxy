@@ -32,6 +32,7 @@ import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.RefNotFoundException;
 import co.paralleluniverse.galaxy.Store;
+import co.paralleluniverse.galaxy.Store.InvokeOnLine;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import co.paralleluniverse.galaxy.core.Message.INVRES;
@@ -92,7 +93,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private static final boolean STALE_READS = true;
     private static final int SHARER_SET_DEFAULT_SIZE = 10;
     private static final Logger LOG = LoggerFactory.getLogger(Cache.class);
-    private long timeout = 10000;
+    private long timeout = 200000;
     private int maxItemSize = 1024;
     private boolean compareBeforeWrite = true;
     //
@@ -141,7 +142,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private static final int LINE_EVERYTHING_CHANGED = -1;
     //
     private static final long HIT_OR_MISS_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL);
-    private static final long FAST_TRACK_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL, Op.Type.LSTN, Op.Type.INVOKE);
+    private static final long FAST_TRACK_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL, Op.Type.LSTN);
     private static final long LOCKING_OPS = Enums.setOf(Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL);
     private static final long PUSH_OPS = Enums.setOf(Op.Type.PUSH, Op.Type.PUSHX);
 
@@ -806,7 +807,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void receive1(Message message) {
-        LOG.info("POPOPOP " + message.getType());
         switch (message.getType()) {
             case MSG:
                 handleMessageMsg((Message.MSG) message);
@@ -1158,27 +1158,31 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             handleDeleted(line);
 
         if (line.state.isLessThan(State.O)) {
-            send(Message.INVOKE(getTarget(line, nodeHint), line.id, data));
-//            throw new UnsupportedOperationException("rmote handle op invoke");
+            send(Message.INVOKE(getTarget(line, nodeHint), line.id, (Store.InvokeOnLine) data));
             return PENDING;
         } else {
             if (!transitionToE(line, nodeHint))
-                return PENDING; //changing to E
-            // were are E
-            Store.InvokeOnLine iol = (Store.InvokeOnLine) data;
-            byte[] readData = readData(line);
-            ByteBuffer bb = ByteBuffer.wrap(readData);
-            Object invoke = iol.invoke(bb);
-            setData(line, bb, null);
-            return invoke;
+                return PENDING;
+            return execInvoke(line, (Store.InvokeOnLine) data);
         }
-//        return true;
+    }
 
-        //TODO: handle deleted
-        //TODO: handle INVs before writing the line
+    // Called from handleOp and from handleMessageInvoke
+    private Object execInvoke(final CacheLine line, InvokeOnLine iol) {
+        return iol.invoke(new Store.LineAccess() {
+            @Override
+            public ByteBuffer getForRead() {
+                return line.getData().asReadOnlyBuffer();
+            }
 
-//        Store.InvokeOnLine function = (Store.InvokeOnLine) data;
-//        return function.invoke(line.getData());
+            @Override
+            public ByteBuffer getForWrite(int size) {
+                allocateLineData(line, size);
+                line.version++;
+                line.set(CacheLine.MODIFIED, true);
+                return line.getData();
+            }
+        });
     }
 
     //<editor-fold defaultstate="collapsed" desc="Op handling">
@@ -1486,7 +1490,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         for (Iterator<Op> it = pending.iterator(); it.hasNext();) {
             final Op op = it.next();
             if (op.type == Op.Type.INVOKE) {
-                if (msg.getLine()== op.line) {
+                if (msg.getLine() == op.line) {
                     invokeOp = op;
                     break;
                 }
@@ -1508,12 +1512,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             addPendingMessage(line, msg);
             return LINE_NO_CHANGE;
         }
-        //TODO handle transition from o to e;
-        Store.InvokeOnLine iol = (Store.InvokeOnLine) msg.getFunction();
-        byte[] readData = readData(line);
-        ByteBuffer bb = ByteBuffer.wrap(readData);
-        Object invokeRes = iol.invoke(bb);
-        setData(line, bb, null);
+
+        final Object invokeRes = execInvoke(line, msg.getFunction());
         send(Message.INVRES(msg, line.id, invokeRes));
         return LINE_EVERYTHING_CHANGED;
     }

@@ -30,6 +30,9 @@ import co.paralleluniverse.galaxy.core.Backup;
 import co.paralleluniverse.galaxy.core.Comm;
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.RefNotFoundException;
+import co.paralleluniverse.galaxy.Store;
+import co.paralleluniverse.galaxy.Store.InvokeOnLine;
+import co.paralleluniverse.galaxy.Store.LineAccess;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeInfo;
 import com.google.common.base.Charsets;
@@ -80,6 +83,11 @@ import co.paralleluniverse.galaxy.core.Message.LineMessage;
 import co.paralleluniverse.galaxy.core.Message.MSG;
 import co.paralleluniverse.galaxy.core.Message.Type;
 import static co.paralleluniverse.galaxy.core.Op.Type.*;
+import com.google.common.util.concurrent.ListenableFuture;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -90,7 +98,6 @@ import org.junit.runners.Parameterized;
  */
 //@RunWith(Parameterized.class)
 public class CacheTest {
-
     Cache cache;
     FullCluster cluster;
     AbstractComm comm;
@@ -368,6 +375,118 @@ public class CacheTest {
         assertState(1234L, O, null);
         verify(comm).send(argThat(equalTo(Message.PUT(get1, 1234L, 2, toBuffer("hello")))));
         verify(comm).send(argThat(equalTo(Message.PUT(get2, 1234L, 2, toBuffer("hello")))));
+    }
+
+    public static Store.InvokeOnLine<Long> storefunc(final long set) {
+        return new Store.InvokeOnLine<Long>() {
+            @Override
+            public Long invoke(LineAccess lineAccess) {
+                try {
+                    ByteBuffer get = lineAccess.getForRead();
+                    if (!Charset.forName("ISO-8859-1").newDecoder().decode(get).toString().equals("hello"))
+                        return 0L;
+                    ByteBuffer bb = lineAccess.getForWrite(8);
+                    bb.putLong(set);
+                    bb.flip();
+                    return set;
+                } catch (CharacterCodingException ex) {
+                    Logger.getLogger(CacheTest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return 0L;
+            }
+        };
+    }
+
+    @Test
+    public void whenInvokeLocalAndOThenInvokeAndSendINVAndBecomeE() throws Exception {
+        PUTX(1234L, sh(10), 2, "hello", 20);
+        if (hasServer())
+            cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
+        assertState(1234L, O, null);
+        long l = (Long) cache.doOp(Op.Type.INVOKE, 1234L, storefunc(45L), null, null);
+        assertModified(1234L, true);
+        verify(comm).send(argThat(equalTo(Message.INV(sh(20), 1234L, sh(10)))));
+        assertState(1234L, O, E);
+        assertThat(l, equalTo(45L));
+    }
+
+    @Test
+    public void testInvokeNotOwnerInI() throws Exception {
+        if (hasServer())
+            cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
+        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
+        final Message.INVOKE msg = Message.INVOKE(sh(-1), 1234L, storefunc);
+        verify(comm).send(argThat(equalTo(msg)));
+        assertState(1234L, I, null);
+        cache.receive(Message.INVRES(msg, 1234L, 45L));
+        assertThat((long)future.get(), equalTo(45L));
+    }
+
+    @Test
+    public void testInvokeNotOwnerInS() throws Exception {
+        PUT(1234L, sh(10), 2, "hello");
+        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        assertState(1234L, S, null);
+        ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
+        final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
+        verify(comm).send(argThat(equalTo(msg)));
+        assertState(1234L, S, null);
+        cache.receive(Message.INVRES(msg, 1234L, 45L));
+        assertThat((long)future.get(), equalTo(45L));
+    }
+
+    @Test
+    public void testInvokeWhenServerIsOwner() throws Exception {
+        PUT(1234L, sh(10), 2, "hello");
+        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        assertState(1234L, S, null);
+        ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
+        final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
+        verify(comm).send(argThat(equalTo(msg)));
+        assertState(1234L, S, null);
+        // Server reply with putx
+        PUTX(1234L,sh(10),2, "hello");
+        assertState(1234L, E, null);
+        assertThat((long)future.get(), equalTo(45L));
+    }
+
+    @Test
+    public void testInvokeLocalWhenOwnerIsE() throws Exception {
+        PUTX(1234L, sh(10), 2, "hello");
+        if (hasServer())
+            cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
+        assertState(1234L, E, null);
+        long l = (Long) cache.doOp(Op.Type.INVOKE, 1234L, storefunc(45L), null, null);
+        assertState(1234L, E, null);
+        assertThat(l, equalTo(45L));
+    }
+
+    @Test
+    public void testHandleInvokeWhenE() throws Exception {
+        PUTX(1234L, sh(10), 2, "hello");
+        if (hasServer())
+            cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
+        assertState(1234L, E, null);
+        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
+        cache.receive(msg);
+        verify(comm).send(argThat(equalTo(Message.INVRES(msg, 1234L, 45L))));
+    }
+
+    @Test
+    public void testHandleInvokeWhenO() throws Exception {
+        PUTX(1234L, sh(10), 2, "hello",20);
+        if (hasServer())
+            cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
+        assertState(1234L, O, null);
+        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
+        cache.receive(msg);
+        assertModified(1234L, true);
+        assertState(1234L, O, E);
+        verify(comm).send(argThat(equalTo(Message.INV(sh(20), 1234L, sh(10)))));
+        verify(comm).send(argThat(equalTo(Message.INVRES(msg, 1234L, 45L))));
     }
 
     /**
@@ -1589,7 +1708,6 @@ public class CacheTest {
     public void testSetLineListenerInCacheListener() throws Exception {
         final CacheListener lineListener = mock(CacheListener.class);
         cache.addCacheListener(new CacheListener() {
-
             @Override
             public void received(long id, long version, ByteBuffer data) {
                 try {
@@ -1606,7 +1724,6 @@ public class CacheTest {
             @Override
             public void evicted(long id) {
             }
-
         });
 
         PUT(100L, sh(10), 1L, "hello");
@@ -1646,6 +1763,7 @@ public class CacheTest {
         assertState(1234L, I, null);
     }
 
+    @Ignore
     @Test
     public void whenDeletedAndGETThenNOT_FOUND() {
         pending();
@@ -2024,6 +2142,7 @@ public class CacheTest {
         assertThat((Long) res, is(400L));
     }
 
+    @Ignore
     @Test
     public void testTransactions() {
         pending();
@@ -2064,6 +2183,10 @@ public class CacheTest {
             ssharers[i] = (short) sharers[i];
         cache.receive(Message.PUTX(Message.GETX(owner, id), id, ssharers, version, toBuffer(obj)).setMessageId(++messageId));
         //cache.receive(Message.BACKUPACK(sh(-1), id, version));
+    }
+
+    void INVOKE(long id, short owner, long version, InvokeOnLine function) {
+        cache.receive(Message.INVOKE(owner, id, function));
     }
 
     void PUTX(long id, short owner, long version, String obj) {
@@ -2118,7 +2241,6 @@ public class CacheTest {
 
     private NodeInfo makeNodeInfo(final short node) {
         return new NodeInfo() {
-
             @Override
             public String getName() {
                 return "NODE-" + node;
@@ -2138,7 +2260,6 @@ public class CacheTest {
             public Collection<String> getProperties() {
                 throw new UnsupportedOperationException();
             }
-
         };
     }
 
@@ -2279,5 +2400,4 @@ public class CacheTest {
     public Object doOp(Op.Type type, long line, Persistable data, Transaction txn) throws TimeoutException {
         return doOp(type, line, data, null, txn);
     }
-
 }

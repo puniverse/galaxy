@@ -23,6 +23,8 @@ import co.paralleluniverse.common.io.Persistables;
 import co.paralleluniverse.common.io.Streamable;
 import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.util.Enums;
+import co.paralleluniverse.galaxy.Store;
+import co.paralleluniverse.galaxy.Store.InvokeOnLine;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import java.io.ByteArrayInputStream;
@@ -64,22 +66,12 @@ public class Message implements Streamable, Externalizable, Cloneable {
         public final static long REQUIRES_RESPONSE = Enums.setOf(GET, GETX, INV, BACKUP_PACKET, INVOKE);
     }
 
-    public static INVOKE INVOKE(short node, long line, Object data) {
-        try {
-            return new INVOKE(Type.INVOKE, node, line, data);
-        } catch (IOException ex) {
-            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+    public static INVOKE INVOKE(short node, long line, InvokeOnLine data) {
+        return new INVOKE(Type.INVOKE, node, line, data);
     }
 
     public static INVRES INVRES(LineMessage responseTo, long line, Object result) {
-        try {
-            return new INVRES(responseTo, line, result);
-        } catch (IOException ex) {
-            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+        return new INVRES(responseTo, line, result);
     }
 
     public static GET GET(short node, long line) {
@@ -734,27 +726,29 @@ public class Message implements Streamable, Externalizable, Cloneable {
             super(type);
         }
 
-        public INVOKE(Type type, short node, long line, Object function) throws IOException {
+        public INVOKE(Type type, short node, long line, InvokeOnLine function) {
             super(node, type, line);
             byte[] ba = null;
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     ObjectOutputStream out = new ObjectOutputStream(bos)) {
                 out.writeObject(function);
                 ba = bos.toByteArray();
+            } catch (IOException e) {
+                throw new AssertionError("IOException can't happen here", e);
             }
             this.function = ba;
             assert type == Type.INVOKE;
         }
 
-        public Object getFunction() {
+        public InvokeOnLine getFunction() {
             try (ByteArrayInputStream bis = new ByteArrayInputStream(function);
                     ObjectInput in = new ObjectInputStream(bis)) {
-                return (Object) in.readObject();
-            } catch (ClassNotFoundException | IOException ex) {
-                Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+                return (InvokeOnLine) in.readObject();
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException("Can't read object from Invoke message "+ex);
+            } catch (IOException ex) {
+                throw new AssertionError("IOException shouldn't happen here");
             }
-            return null;
-
         }
 
         @Override
@@ -791,13 +785,15 @@ public class Message implements Streamable, Externalizable, Cloneable {
             super(type);
         }
 
-        public INVRES(LineMessage responseTo, long line, Object result) throws IOException {
+        public INVRES(LineMessage responseTo, long line, Object result) {
             super(responseTo, Type.INVRES, line);
             byte[] ba = null;
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     ObjectOutputStream out = new ObjectOutputStream(bos)) {
                 out.writeObject(result);
                 ba = bos.toByteArray();
+            } catch (IOException e) {
+                throw new AssertionError("IOException can't happen here", e);
             }
             this.result = ba;
         }
