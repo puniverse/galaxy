@@ -24,6 +24,8 @@ import co.paralleluniverse.galaxy.core.Message;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -35,6 +37,7 @@ public class MessagePacket implements Iterable<Message>, Cloneable {
     private transient boolean multicast;
     private transient long timestamp;
     private ArrayList<Message> messages = new ArrayList<Message>();
+    private static final Logger LOG = LoggerFactory.getLogger(MessagePacket.class);
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
@@ -178,8 +181,11 @@ public class MessagePacket implements Iterable<Message>, Cloneable {
     }
 
     public void fromByteBuffer(ByteBuffer buffer) {
-        while (buffer.hasRemaining())
-            addMessage(Message.fromByteBuffer(buffer));
+        while (buffer.hasRemaining()) {
+            final Message fromByteBuffer = Message.fromByteBuffer(buffer);
+            LOG.debug("decoded "+fromByteBuffer);
+            addMessage(fromByteBuffer);
+        }
     }
 
     public short getNode() {

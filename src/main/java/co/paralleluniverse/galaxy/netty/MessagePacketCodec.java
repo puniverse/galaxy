@@ -19,11 +19,14 @@
  */
 package co.paralleluniverse.galaxy.netty;
 
+import java.nio.ByteBuffer;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -31,17 +34,27 @@ import org.jboss.netty.channel.ChannelHandlerContext;
  */
 @ChannelHandler.Sharable
 public class MessagePacketCodec extends OneToOneCodec {
+    private static final Logger LOG = LoggerFactory.getLogger(MessagePacketCodec.class);
+
     @Override
     protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {
         final MessagePacket packet = (MessagePacket) msg;
-        return ChannelBuffers.wrappedBuffer(packet.toByteBuffers());
+        final ByteBuffer[] toByteBuffers = packet.toByteBuffers();
+        int size=0;
+        for (ByteBuffer byteBuffer : toByteBuffers) {
+            size+=byteBuffer.remaining();
+        }
+        LOG.info("encoding size "+size+ " "+packet);
+        return ChannelBuffers.wrappedBuffer(toByteBuffers);
     }
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {
         final ChannelBuffer buffer = (ChannelBuffer) msg;
         final MessagePacket packet = new MessagePacket();
-        packet.fromByteBuffer(buffer.toByteBuffer());
+        final ByteBuffer toByteBuffer = buffer.toByteBuffer();
+        LOG.info("decoding size "+toByteBuffer.remaining());
+        packet.fromByteBuffer(toByteBuffer);
         return packet;
     }
 }

@@ -25,6 +25,7 @@ import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.util.Enums;
 import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.Store.InvokeOnLine;
+import co.paralleluniverse.galaxy.netty.MessagePacketCodec;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import java.io.ByteArrayInputStream;
@@ -44,12 +45,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author pron
  */
 public class Message implements Streamable, Externalizable, Cloneable {
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Message.class);
     public static enum Type {
         GET, GETX, INV, INVACK, PUT, PUTX, DEL, CHNGD_OWNR, NOT_FOUND, TIMEOUT,
         INVOKE, INVRES,
@@ -193,6 +196,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
     public static Message fromByteBuffer(ByteBuffer buffer) {
         final Type type = Type.values()[buffer.get()];
+        LOG.debug("from bb type:" +type.name());
         final Message message = newMessage(type);
         message.read(buffer);
         return message;
@@ -506,6 +510,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
      * @return
      */
     public ByteBuffer[] toByteBuffers() {
+        LOG.debug("to bb type "+type.name());
         final ByteBuffer buffer0 = ByteBuffer.allocate(size1() + 2 * getNumDataBuffers());
         Persistables.persistable(streamableNoBuffers()).write(buffer0);
         for (int i = 0; i < getNumDataBuffers(); i++)
