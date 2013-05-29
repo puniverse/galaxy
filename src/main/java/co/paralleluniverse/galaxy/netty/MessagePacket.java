@@ -182,9 +182,9 @@ public class MessagePacket implements Iterable<Message>, Cloneable {
 
     public void fromByteBuffer(ByteBuffer buffer) {
         while (buffer.hasRemaining()) {
-            LOG.debug("decoding. remaining "+buffer.remaining());
+            LOG.info("decoding. remaining "+buffer.remaining());
             final Message fromByteBuffer = Message.fromByteBuffer(buffer);
-            LOG.debug("decoded "+fromByteBuffer);
+            LOG.info("decoded "+fromByteBuffer);
             addMessage(fromByteBuffer);
         }
     }
