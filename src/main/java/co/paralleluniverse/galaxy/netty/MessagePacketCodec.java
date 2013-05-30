@@ -40,11 +40,13 @@ public class MessagePacketCodec extends OneToOneCodec {
     protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {
         final MessagePacket packet = (MessagePacket) msg;
         final ByteBuffer[] toByteBuffers = packet.toByteBuffers();
-        int size=0;
-        for (ByteBuffer byteBuffer : toByteBuffers) {
-            size+=byteBuffer.remaining();
+        if (LOG.isDebugEnabled()) {
+            int size=0;
+            for (ByteBuffer byteBuffer : toByteBuffers) {
+                size+=byteBuffer.remaining();
+            }
+            LOG.debug("encoding size "+size+ " "+packet);
         }
-        LOG.info("encoding size "+size+ " "+packet);
         return ChannelBuffers.wrappedBuffer(toByteBuffers);
     }
 
@@ -53,7 +55,8 @@ public class MessagePacketCodec extends OneToOneCodec {
         final ChannelBuffer buffer = (ChannelBuffer) msg;
         final MessagePacket packet = new MessagePacket();
         final ByteBuffer toByteBuffer = buffer.toByteBuffer();
-        LOG.info("decoding size "+toByteBuffer.remaining());
+        if (LOG.isDebugEnabled())
+            LOG.debug("decoding size "+toByteBuffer.remaining());
         packet.fromByteBuffer(toByteBuffer);
         return packet;
     }

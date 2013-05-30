@@ -196,7 +196,8 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
     public static Message fromByteBuffer(ByteBuffer buffer) {
         final Type type = Type.values()[buffer.get()];
-        LOG.debug("from bb type:" +type.name());
+        if (LOG.isDebugEnabled())
+            LOG.debug("from bb type:" +type.name());
         final Message message = newMessage(type);
         message.read(buffer);
         return message;
@@ -510,7 +511,8 @@ public class Message implements Streamable, Externalizable, Cloneable {
      * @return
      */
     public ByteBuffer[] toByteBuffers() {
-        LOG.debug("to bb type "+type.name());
+        if (LOG.isDebugEnabled())
+            LOG.debug("to bb type "+type.name());
         final ByteBuffer buffer0 = ByteBuffer.allocate(size1() + 2 * getNumDataBuffers());
         Persistables.persistable(streamableNoBuffers()).write(buffer0);
         for (int i = 0; i < getNumDataBuffers(); i++)
