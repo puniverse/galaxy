@@ -60,6 +60,7 @@ import org.jboss.netty.bootstrap.ConnectionlessBootstrap;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.FixedReceiveBufferSizePredictorFactory;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.channel.socket.DatagramChannel;
@@ -287,6 +288,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
         this.channelFactory = isSendToServerInsteadOfMulticast() ? new NioDatagramChannelFactory(workerExecutor) : new OioDatagramChannelFactory(workerExecutor);
         this.bootstrap = new ConnectionlessBootstrap(channelFactory);
+        this.bootstrap.setOption("receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(4096));
 
         bootstrap.setPipelineFactory(new UdpMessagePipelineFactory(LOG, new ChannelNodeAddressResolver(addressResolver), receiveExecutor) {
 
