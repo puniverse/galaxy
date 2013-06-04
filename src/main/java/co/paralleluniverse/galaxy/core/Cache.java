@@ -1405,6 +1405,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         // so changing the target node might cause trouble.
         final Message.MSG msg1 = Message.MSG(line.getOwner(), msg.getLine(), msg.getData());
         send((Message) msg1);
+        // We have to remember the message ID in order to process MSGACKs later
+        assert msg1.getMessageId() > 0;
+        msg.setMessageId(msg1.getMessageId());
+        
         return PENDING; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
     }
 

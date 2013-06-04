@@ -715,7 +715,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 for (Iterator<Message> it = receivedPacket.iterator(); it.hasNext();) {
                     final Message message = it.next();
                     if (message.getMessageId() < lastReceivedBroadcastId) {
-                        LOG.debug("Peer {} received an out-of-bound multicast message {} which has already been seen.", this, message);
+                        LOG.debug("Peer {} received an out-of-band multicast message {} which has already been seen.", this, message);
                         oobMulticast = true;
                         it.remove();
                     }
@@ -1076,7 +1076,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 } else {
                     if (LOG.isDebugEnabled())
                         LOG.debug("Got ACK from {} to message {}", message.getNode(), entry.message);
-                    final int numNodes = entry.nodes.size();
+                final int numNodes = entry.nodes.size();
                     if (done) {
                         if (entry.message instanceof LineMessage) {
                             LOG.debug("Got all ACKs for message {}, but no response - sending NOT_FOUND to cache!", entry.message);

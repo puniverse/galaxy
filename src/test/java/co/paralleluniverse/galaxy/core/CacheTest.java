@@ -420,7 +420,7 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(msg)));
         assertState(1234L, I, null);
         cache.receive(Message.INVRES(msg, 1234L, 45L));
-        assertThat((long)future.get(), equalTo(45L));
+        assertThat((long) future.get(), equalTo(45L));
     }
 
     @Test
@@ -433,7 +433,7 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(msg)));
         assertState(1234L, S, null);
         cache.receive(Message.INVRES(msg, 1234L, 45L));
-        assertThat((long)future.get(), equalTo(45L));
+        assertThat((long) future.get(), equalTo(45L));
     }
 
     @Test
@@ -446,9 +446,9 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(msg)));
         assertState(1234L, S, null);
         // Server reply with putx
-        PUTX(1234L,sh(10),2, "hello");
+        PUTX(1234L, sh(10), 2, "hello");
         assertState(1234L, E, null);
-        assertThat((long)future.get(), equalTo(45L));
+        assertThat((long) future.get(), equalTo(45L));
     }
 
     @Test
@@ -476,7 +476,7 @@ public class CacheTest {
 
     @Test
     public void testHandleInvokeWhenO() throws Exception {
-        PUTX(1234L, sh(10), 2, "hello",20);
+        PUTX(1234L, sh(10), 2, "hello", 20);
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
         assertState(1234L, O, null);
@@ -597,6 +597,53 @@ public class CacheTest {
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(20), true));
 
         verify(comm).send(argThat(equalTo(Message.GETX(sh(20), 1234L))));
+    }
+
+    /**
+     * When CHNGD_OWNR is received as a response to a GETX, then re-send GETX to the new owner.
+     */
+    @Test
+    public void whenGetxAndCHNGD_OWNRToYou() throws Exception {
+        ListenableFuture<Object> future = cache.doOpAsync(GETX, 1234L, null, null, null);
+        LineMessage msg = (LineMessage) captureMessage();
+        cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(10), true));
+        assertThat(future.isDone(), is(false));        
+        cache.receive(Message.PUTX(msg, 1234L, null, 1L, toBuffer("foo")));
+        assertThat(future.isDone(), is(true));        
+        assertThat(deserialize(future.get()), equalTo("foo"));
+    }
+
+    @Test
+    public void whenSendToOwnerOfAndCHNGD_OWNRToYou() throws Exception {
+    /**
+     * When CHNGD_OWNR is received, resend message to new owner
+     */
+        PUT(1234L, sh(10), 1L, "xxx");
+        INV(1234L, sh(10));
+
+        MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
+        Op send = new Op(SEND, 1234, msg, null);
+        Object res = cache.runOp(send);
+
+        assertThat(res, is(PENDING));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")))));
+        assertThat(send.getFuture().isDone(), is(false));
+
+        //when(cluster.getMaster(sh(20))).thenReturn(makeNodeInfo(sh(20)));
+
+        cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(10), true));
+        cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(10), true)); // twice, but only resend once
+        cache.receive(Message.TIMEOUT(msg));
+        cache.receive(Message.PUTX(msg, 1234L, null, 1L, toBuffer("xxx")));
+
+        assertThat(send.getFuture().isDone(), is(true));
+
+        try {
+            send.getResult();
+            fail("TimeoutException not thrown");
+        } catch (InterruptedException | ExecutionException e) {
+            assertThat(e.getCause(), is(instanceOf(TimeoutException.class)));
+        }
     }
 
     /**
