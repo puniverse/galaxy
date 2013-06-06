@@ -99,7 +99,7 @@ public abstract class DistributedBranchHelper {
         });
     }
 
-    public void init() {
+    public final void init() {
         synchronized (nodes) {
             final List<String> children = tree.getChildren(branchRoot);
             LOG.error("!!!!!! {}", children);
@@ -116,6 +116,7 @@ public abstract class DistributedBranchHelper {
                     first.predecessorsComplete();
             }
             doneInit = true;
+            nodes.notifyAll();
         }
     }
 
@@ -182,37 +183,51 @@ public abstract class DistributedBranchHelper {
     }
 
     private void nodeUpdated(String name) {
-        final Node node;
-        synchronized (nodes) {
-            node = nodes.get(name);
-        }
-        assert node != null;
-        LOG.debug("Node {} updated. ({})", name, node.isComplete() ? "complete" : "incomplete");
-        if (node.isComplete()) {
-            for (Listener listener : listeners)
-                listener.nodeChildUpdated(branchRoot, name);
+        try {
+            final Node node;
+            synchronized (nodes) {
+                while (!doneInit)
+                    nodes.wait();
+
+                node = nodes.get(name);
+            }
+            assert node != null;
+            LOG.debug("Node {} updated. ({})", name, node.isComplete() ? "complete" : "incomplete");
+            if (node.isComplete()) {
+                for (Listener listener : listeners)
+                    listener.nodeChildUpdated(branchRoot, name);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException();
         }
     }
 
     private void nodeRemoved(String name) {
-        boolean _doneInit;
-        final Node node;
-        Node previous = null, next = null;
-        synchronized (nodes) {
-            if (ordered) {
-                previous = nodes.previousValue(name);
-                next = nodes.nextValue(name);
+        try {
+            boolean _doneInit;
+            final Node node;
+            Node previous = null, next = null;
+            synchronized (nodes) {
+                while (!doneInit)
+                    nodes.wait();
+
+                if (ordered) {
+                    previous = nodes.previousValue(name);
+                    next = nodes.nextValue(name);
+                }
+                node = nodes.remove(name);
+                _doneInit = this.doneInit;
             }
-            node = nodes.remove(name);
-            _doneInit = this.doneInit;
-        }
-        if (node.isComplete()) {
-            for (Listener listener : listeners)
-                listener.nodeChildDeleted(branchRoot, name);
-        }
-        if (ordered) {
-            if (_doneInit && next != null && (previous == null || previous.isComplete()))
-                next.predecessorsComplete();
+            if (node.isComplete()) {
+                for (Listener listener : listeners)
+                    listener.nodeChildDeleted(branchRoot, name);
+            }
+            if (ordered) {
+                if (_doneInit && next != null && (previous == null || previous.isComplete()))
+                    next.predecessorsComplete();
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException();
         }
     }
 
