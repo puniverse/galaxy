@@ -99,6 +99,7 @@ public abstract class DistributedBranchHelper {
 
         synchronized (nodes) {
             final List<String> children = tree.getChildren(branchRoot);
+            LOG.error("!!!!!! {}", children);
             if (children != null) {
                 for (String nodeName : children)
                     nodeAdded(nodeName);
