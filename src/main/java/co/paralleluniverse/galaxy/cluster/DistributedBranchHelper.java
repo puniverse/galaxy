@@ -97,7 +97,9 @@ public abstract class DistributedBranchHelper {
                     listener.nodeDeleted(node);
             }
         });
+    }
 
+    public void init(DistributedTree tree, final String branchRoot, boolean ordered) {
         synchronized (nodes) {
             final List<String> children = tree.getChildren(branchRoot);
             LOG.error("!!!!!! {}", children);

@@ -203,6 +203,8 @@ public abstract class AbstractCluster extends Service implements Cluster {
             }
         }
 
+        /// the calls in the demarcated section need to be in this specific order to avoid a possible race between nodes and leaders
+        // `>>>> BEGIN CAREFULLY ORDERED SECTION
         branch = new DistributedBranchHelper(controlTree, NODES, false) {
 
             @Override
@@ -245,10 +247,16 @@ public abstract class AbstractCluster extends Service implements Cluster {
             }
 
         });
+        
+        // We want to read the leaders first. Otherwise we can may have leaders without node data in the nodes.
+        final List<String> leaders = controlTree.getChildren(LEADERS);
+        // This read and handles the nodes.
+        branch.init();
 
-        for (String leader : controlTree.getChildren(LEADERS))
+        for (String leader : leaders)
             AbstractCluster.this.leaderAdded(leader);
-
+        // `>>>> END CAREFULLY ORDERED SECTION
+        
         myNodeInfo.writeToTree();
 
         setReady(true);
