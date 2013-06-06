@@ -231,6 +231,8 @@ public abstract class AbstractCluster extends Service implements Cluster {
             }
 
         });
+        
+        controlTree.print(ROOT, System.out);
 
         controlTree.addListener(LEADERS, new DistributedTree.ListenerAdapter() {
 
