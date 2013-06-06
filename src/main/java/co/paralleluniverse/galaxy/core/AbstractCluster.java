@@ -437,6 +437,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
         Thread.dumpStack();
         final NodeInfoImpl node = createNodeInfo(nodeName, true);
         nodes.put(nodeName, node);
+        LOG.info("nodes: {}",nodes);
     }
 
     private void nodeRemoved(String nodeName) {
@@ -452,7 +453,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
     }
 
     private void leaderAdded(String nodeName) {
-        LOG.info("New leader added: {}", nodeName);
+        LOG.info("New leader added: {},{}", nodeName,nodes);
         Thread.dumpStack();
 
         final NodeInfoImpl node = nodes.get(nodeName);
