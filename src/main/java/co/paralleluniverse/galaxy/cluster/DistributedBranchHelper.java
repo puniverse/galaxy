@@ -116,9 +116,10 @@ public abstract class DistributedBranchHelper {
     public void addListener(Listener listener) {
         synchronized (nodes) {
             for (Node node : nodes.values()) {
-                if (!node.isComplete())
+                if (node.isComplete())
+                    listener.nodeChildAdded(branchRoot, node.name);
+                else if (ordered)
                     break;
-                listener.nodeChildAdded(branchRoot, node.name);
             }
             listeners.add(listener);
         }
