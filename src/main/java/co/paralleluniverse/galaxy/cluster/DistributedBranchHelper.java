@@ -99,7 +99,7 @@ public abstract class DistributedBranchHelper {
         });
     }
 
-    public void init(DistributedTree tree, final String branchRoot, boolean ordered) {
+    public void init() {
         synchronized (nodes) {
             final List<String> children = tree.getChildren(branchRoot);
             LOG.error("!!!!!! {}", children);
