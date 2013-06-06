@@ -21,6 +21,7 @@ package co.paralleluniverse.galaxy.cluster;
 
 import co.paralleluniverse.common.collection.LinkedHashMap2;
 import co.paralleluniverse.galaxy.cluster.DistributedTree.Listener;
+import co.paralleluniverse.galaxy.core.AbstractCluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -100,6 +101,8 @@ public abstract class DistributedBranchHelper {
         synchronized (nodes) {
             final List<String> children = tree.getChildren(branchRoot);
             LOG.error("!!!!!! {}", children);
+            LOG.error("????? {}", tree.getChildren("/co.paralleluniverse.galaxy/leaders"));
+            LOG.error("!!222!!!! {}", tree.getChildren(branchRoot));
             if (children != null) {
                 for (String nodeName : children)
                     nodeAdded(nodeName);
