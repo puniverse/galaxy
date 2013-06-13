@@ -175,8 +175,10 @@ public class ZooKeeperDistributedTree implements DistributedTree {
             final EphemeralChildren ec = getEphemeralChildren(parent(node));
             if (ec != null) {
                 try {
+                    LOG.info("in set ec is {}",ec);
                     ec.setChildData(child(node), data);
                     client.setData().forPath(possiblyWithSequence(parent(node)), ec.toByteArray());
+                    LOG.info("in set ec is {}",ec);
                     return;
                 } catch (Exception e) {
                     ex = e;
@@ -595,6 +597,11 @@ public class ZooKeeperDistributedTree implements DistributedTree {
 
         public synchronized Map<String, byte[]> getChildrenData() {
             return children != null ? children : Collections.<String, byte[]>emptyMap();
+        }
+
+        @Override
+        public String toString() {
+            return "EphemeralChildren{" + "children=" + children.keySet() + '}';
         }
 
         public synchronized byte[] toByteArray() {
