@@ -444,7 +444,7 @@ public class ZooKeeperDistributedTree implements DistributedTree {
                     i++;
                     j++;
                 } else if (c > 0) {
-                    LOG.info("Node child added: {} ({})", nodeName(n), n);
+                    LOG.info("Node child added: {} {} (" + n + ")", nodeName(n), path);
                     rememberIfOrdered(event.getPath() + '/' + n);
                     listener.nodeChildAdded(node, nodeName(n));
                     if (!ephemeral)

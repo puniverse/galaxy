@@ -916,6 +916,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
             } else {
                 properties.put(property, value);
                 if (isInitialized()) {
+                    LOG.info("Publishing additional node info: {} = {}", property, value);
                     controlTree.set(treeNodePath + '/' + property, writeProperty(property, value));
                 }
             }
