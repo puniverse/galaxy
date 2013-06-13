@@ -62,7 +62,7 @@ public interface DistributedTree {
      * @return A list of the simple names (without the full path) of all of the given node's children.
      */
     List<String> getChildren(String node);
-
+    
     /**
      * Returns {@code true} if the given node exists in the tree.
      * @param node The full path of the node to test.
@@ -99,6 +99,7 @@ public interface DistributedTree {
     
     /**
      * Adds a {@link Listener listener} listening for modifications on the given node.
+     * As soon as the listener is added, {@link Listener#nodeAdded(String) nodeAdded} is called for each child of {@code node}.
      * @param node The full path of the node to observe.
      * @param listener The listener.
      */

@@ -25,6 +25,8 @@ import static co.paralleluniverse.galaxy.cluster.DistributedTreeUtil.correctForR
 import static co.paralleluniverse.galaxy.cluster.DistributedTreeUtil.parent;
 import com.google.common.base.Throwables;
 import com.netflix.curator.framework.CuratorFramework;
+import com.netflix.curator.framework.api.BackgroundCallback;
+import com.netflix.curator.framework.api.CuratorEvent;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -74,6 +76,18 @@ public class ZooKeeperDistributedTree implements DistributedTree {
             watcher.checkEphemeral();
             watcher.setChildren();
             client.checkExists().usingWatcher(watcher).forPath(watcher.path);
+            
+            client.getChildren().inBackground(new BackgroundCallback() {
+
+                @Override
+                public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
+                    final List<String> children = event.getChildren();
+                    if(children != null) {
+                        for(String child : children)
+                            listener.nodeChildAdded(node, child);
+                    }
+                }
+            }).forPath(node);
         } catch (Exception ex) {
             LOG.error("Adding listener on node " + node + " has failed!", ex);
             throw Throwables.propagate(ex);

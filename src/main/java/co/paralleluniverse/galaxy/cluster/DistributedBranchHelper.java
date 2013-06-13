@@ -101,14 +101,14 @@ public abstract class DistributedBranchHelper {
 
     public final void init() {
         synchronized (nodes) {
-            final List<String> children = tree.getChildren(branchRoot);
-            LOG.error("!!!!!! {}", children);
-            LOG.error("????? {}", tree.getChildren("/co.paralleluniverse.galaxy/leaders"));
-            LOG.error("!!222!!!! {}", tree.getChildren(branchRoot));
-            if (children != null) {
-                for (String nodeName : children)
-                    nodeAdded(nodeName);
-            }
+//            final List<String> children = tree.getChildren(branchRoot);
+//            LOG.error("!!!!!! {}", children);
+//            LOG.error("????? {}", tree.getChildren("/co.paralleluniverse.galaxy/leaders"));
+//            LOG.error("!!222!!!! {}", tree.getChildren(branchRoot));
+//            if (children != null) {
+//                for (String nodeName : children)
+//                    nodeAdded(nodeName);
+//            }
 
             if (ordered) {
                 final Node first = getFirstNode();
