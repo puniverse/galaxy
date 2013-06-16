@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory;
  * @author pron
  */
 public abstract class AbstractCluster extends Service implements Cluster {
-
     private static final Logger LOG = LoggerFactory.getLogger(AbstractCluster.class);
     protected static final String ROOT = "/co.paralleluniverse.galaxy";
     protected static final String NODES = ROOT + "/nodes";
@@ -66,6 +65,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
     private final Map<String, ReaderWriter> readerWriters = new ConcurrentHashMap<String, ReaderWriter>();
     //
     private final Map<String, NodeInfoImpl> nodes = new ConcurrentHashMap<String, NodeInfoImpl>();
+    private final Set<String> leaders = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     private DistributedTree controlTree;
     private DistributedTree protectedTree;
     private DistributedBranchHelper branch;
@@ -146,7 +146,6 @@ public abstract class AbstractCluster extends Service implements Cluster {
         assertDuringInitialization();
         this.controlTree = controlTree;
         this.protectedTree = new DistributedTreeAdapter(controlTree) {
-
             @Override
             public void create(String node, boolean ephemeral) {
                 super.create(protect(node), ephemeral);
@@ -168,7 +167,6 @@ public abstract class AbstractCluster extends Service implements Cluster {
                 }
                 return node;
             }
-
         };
     }
 
@@ -206,7 +204,6 @@ public abstract class AbstractCluster extends Service implements Cluster {
         /// the calls in the demarcated section need to be in this specific order to avoid a possible race between nodes and leaders
         // `>>>> BEGIN CAREFULLY ORDERED SECTION
         branch = new DistributedBranchHelper(controlTree, NODES, false) {
-
             @Override
             protected boolean isNodeComplete(String node, Set<String> properties) {
                 if (!properties.contains("id")) {
@@ -217,11 +214,9 @@ public abstract class AbstractCluster extends Service implements Cluster {
                 final boolean success = properties.containsAll(requiredProperties);
                 return success;
             }
-
         };
 
         branch.addListener(new DistributedTree.ListenerAdapter() {
-
             @Override
             public void nodeChildAdded(String parentPath, String childName) {
                 AbstractCluster.this.nodeAdded(childName);
@@ -231,11 +226,9 @@ public abstract class AbstractCluster extends Service implements Cluster {
             public void nodeChildDeleted(String parentPath, String childName) {
                 AbstractCluster.this.nodeRemoved(childName);
             }
-
         });
-        
-        controlTree.addListener(LEADERS, new DistributedTree.ListenerAdapter() {
 
+        controlTree.addListener(LEADERS, new DistributedTree.ListenerAdapter() {
             @Override
             public void nodeChildAdded(String parentPath, String childName) {
                 AbstractCluster.this.leaderAdded(childName);
@@ -245,9 +238,8 @@ public abstract class AbstractCluster extends Service implements Cluster {
             public void nodeChildDeleted(String parentPath, String childName) {
                 AbstractCluster.this.leaderRemoved(childName);
             }
-
         });
-        
+
         // We want to read the leaders first. Otherwise we can may have leaders without node data in the nodes.
 //        final List<String> leaders = controlTree.getChildren(LEADERS);
         // This read and handles the nodes.
@@ -256,7 +248,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
 //        for (String leader : leaders)
 //            AbstractCluster.this.leaderAdded(leader);
         // `>>>> END CAREFULLY ORDERED SECTION
-        
+
         myNodeInfo.writeToTree();
 
         setReady(true);
@@ -445,7 +437,9 @@ public abstract class AbstractCluster extends Service implements Cluster {
         Thread.dumpStack();
         final NodeInfoImpl node = createNodeInfo(nodeName, true);
         nodes.put(nodeName, node);
-        LOG.info("nodes: {}",nodes);
+        LOG.info("nodes: {}", nodes);
+        if (leaders.contains(nodeName)) // leader event waited for node data
+            finish_leader_added(node);
     }
 
     private void nodeRemoved(String nodeName) {
@@ -461,14 +455,21 @@ public abstract class AbstractCluster extends Service implements Cluster {
     }
 
     private void leaderAdded(String nodeName) {
-        LOG.info("New leader added: {},{}", nodeName,nodes);
+        leaders.add(nodeName);
+        LOG.info("New leader added: {},{}", nodeName, nodes);
         Thread.dumpStack();
 
         final NodeInfoImpl node = nodes.get(nodeName);
         if (node == null) {
-            LOG.warn("Node {} does not have a complete node info in the control tree.", nodeName);
+            LOG.warn("Node {} does not have a complete node info in the control tree. Waiting for node data completition", nodeName);
+            // finish_leader_add will be called after node data is completed
             return;
         }
+        finish_leader_added(node);
+    }
+
+    private void finish_leader_added(final NodeInfoImpl node) {
+        LOG.info("Finishing leader addition: {},{}", node.getName(), nodes);
         final NodeInfoImpl nodesMaster = findMaster(node.getNodeId(), null);
         final boolean nodeIsServer = (node.getNodeId() == 0);
         if (node.getNodeId() == myId) {
@@ -840,7 +841,6 @@ public abstract class AbstractCluster extends Service implements Cluster {
     }
 
     protected class NodeInfoImpl extends DistributedTree.ListenerAdapter implements NodeInfo {
-
         private String name;
         private String treeNodePath;
         private short nodeId = -1;
@@ -1023,7 +1023,5 @@ public abstract class AbstractCluster extends Service implements Cluster {
 
             return sb.toString();
         }
-
     }
-
 }
