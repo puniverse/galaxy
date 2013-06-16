@@ -84,7 +84,7 @@ public class ZooKeeperDistributedTree implements DistributedTree {
                     final List<String> children = event.getChildren();
                     if(children != null) {
                         for(String child : children)
-                            listener.nodeChildAdded(getName(node), child);
+                            listener.nodeChildAdded(nodeName(node), child);
                     }
                 }
             }).forPath(node);
