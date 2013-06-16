@@ -227,6 +227,8 @@ public abstract class AbstractCluster extends Service implements Cluster {
                 AbstractCluster.this.nodeRemoved(childName);
             }
         });
+        // This read and handles the nodes.
+        branch.init();
 
         controlTree.addListener(LEADERS, new DistributedTree.ListenerAdapter() {
             @Override
@@ -240,14 +242,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
             }
         });
 
-        // We want to read the leaders first. Otherwise we can may have leaders without node data in the nodes.
-//        final List<String> leaders = controlTree.getChildren(LEADERS);
-        // This read and handles the nodes.
-        branch.init();
 
-//        for (String leader : leaders)
-//            AbstractCluster.this.leaderAdded(leader);
-        // `>>>> END CAREFULLY ORDERED SECTION
 
         myNodeInfo.writeToTree();
 
