@@ -429,10 +429,10 @@ public abstract class AbstractCluster extends Service implements Cluster {
 
     private void nodeAdded(String nodeName) {
         LOG.info("New node added: {}", nodeName);
-        Thread.dumpStack();
+//        Thread.dumpStack();
         final NodeInfoImpl node = createNodeInfo(nodeName, true);
         nodes.put(nodeName, node);
-        LOG.info("nodes: {}", nodes);
+        LOG.debug("nodes: {}", nodes);
         if (leaders.contains(nodeName)) // leader event waited for node data
             finish_leader_added(node);
     }
@@ -451,12 +451,12 @@ public abstract class AbstractCluster extends Service implements Cluster {
 
     private void leaderAdded(String nodeName) {
         leaders.add(nodeName);
-        LOG.info("New leader added: {},{}", nodeName, nodes);
-        Thread.dumpStack();
+        LOG.info("New leader added: {}", nodeName);
+        //Thread.dumpStack();
 
         final NodeInfoImpl node = nodes.get(nodeName);
         if (node == null) {
-            LOG.warn("Node {} does not have a complete node info in the control tree. Waiting for node data completition", nodeName);
+            LOG.info("Node {} does not have a complete node info in the control tree. Waiting for node data completition", nodeName);
             // finish_leader_add will be called after node data is completed
             return;
         }
@@ -464,7 +464,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
     }
 
     private void finish_leader_added(final NodeInfoImpl node) {
-        LOG.info("Finishing leader addition: {},{}", node.getName(), nodes);
+        LOG.info("Finishing leader addition: {}", node.getName());
         final NodeInfoImpl nodesMaster = findMaster(node.getNodeId(), null);
         final boolean nodeIsServer = (node.getNodeId() == 0);
         if (node.getNodeId() == myId) {
