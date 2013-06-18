@@ -3,7 +3,7 @@ sourceCompatibility = '1.7'
 
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 group               = "co.paralleluniverse"
-version             = "1.0-SNAPSHOT"
+version             = "1.1-SNAPSHOT"
 status              = "integration"
 description         = "A high-performance in-memory data-grid."
 ext.url             = "http://puniverse.github.com/galaxy"
@@ -13,6 +13,13 @@ ext.licenseUrl      = "http://www.gnu.org/licenses/lgpl-3.0.txt"
 ext.scmUrl          = "https://github.com/puniverse/galaxy"
 ext.scmConnection   = "https://github.com/puniverse/galaxy.git"
 ext.distDir         = "$buildDir/dist"
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+if (!project.hasProperty("sonatypeUsername") || !project.hasProperty("sonatypePassword")) {
+    println "sonatype username or password not set"
+    sonatypeUsername = ""
+    sonatypePassword = ""
+}
 
 repositories {
     flatDir         { dirs 'baselib' }
@@ -187,14 +194,13 @@ configure(install.repositories.mavenInstaller) {
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signPom(deployment) }
-            repository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
-                //            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
-                // User and Password are taken from ~/.gradle/gradle.properties
-                //                authentication(userName: sonatypeUsername, password: sonatypePassword)
-                if (hasProperty("sonatypeUsername") && hasProperty("sonatypePassword")) {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            repository(
+                url: (isReleaseVersion ? 
+                        "https://oss.sonatype.org/service/local/staging/deploy/maven2" : 
+                        "https://oss.sonatype.org/content/repositories/snapshots")) {
+                    // User and Password are taken from ~/.gradle/gradle.properties
                     authentication(userName: sonatypeUsername, password: sonatypePassword)
-                }
             } 
             pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
                     dep -> !dep.artifactId.startsWith('high-scale-lib') } 

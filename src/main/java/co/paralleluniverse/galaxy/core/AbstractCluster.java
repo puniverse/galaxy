@@ -434,7 +434,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
         nodes.put(nodeName, node);
         LOG.debug("nodes: {}", nodes);
         if (leaders.contains(nodeName)) // leader event waited for node data
-            finish_leader_added(node);
+            finishLeaderAdded(node);
     }
 
     private void nodeRemoved(String nodeName) {
@@ -452,7 +452,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
     private void leaderAdded(String nodeName) {
         leaders.add(nodeName);
         LOG.info("New leader added: {}", nodeName);
-        //Thread.dumpStack();
+        //Thread.dumpStack();   
 
         final NodeInfoImpl node = nodes.get(nodeName);
         if (node == null) {
@@ -460,10 +460,10 @@ public abstract class AbstractCluster extends Service implements Cluster {
             // finish_leader_add will be called after node data is completed
             return;
         }
-        finish_leader_added(node);
+        finishLeaderAdded(node);
     }
 
-    private void finish_leader_added(final NodeInfoImpl node) {
+    private void finishLeaderAdded(final NodeInfoImpl node) {
         LOG.info("Finishing leader addition: {}", node.getName());
         final NodeInfoImpl nodesMaster = findMaster(node.getNodeId(), null);
         final boolean nodeIsServer = (node.getNodeId() == 0);
@@ -944,21 +944,32 @@ public abstract class AbstractCluster extends Service implements Cluster {
 
         protected void readChild(String childName, byte[] value) {
             if ("id".equals(childName)) {
-                if (this.nodeId >= 0)
-                    throw new RuntimeException("Id for node " + name + " is already set to " + nodeId);
-
-                this.nodeId = Short.parseShort(new String(value, Charsets.UTF_8));
+                final short nodeValue = Short.parseShort(new String(value, Charsets.UTF_8));
+                if (this.nodeId >= 0) {
+                    if (this.nodeId != nodeValue)
+                        throw new RuntimeException("Id for node " + name + " is already set to " + nodeId);
+                    return;
+                }
+                this.nodeId = nodeValue;
             } else {
                 if (value == null)
                     return;
-
-                if ((requiredPeerNodeProperties.contains(childName) || requiredServerProperties.contains(childName)) && properties.get(childName) != null)
-                    throw new RuntimeException("Required property " + childName + " for node " + name + " is already set to " + properties.get(childName));
-
-                if (readerWriters.get(childName) != null)
-                    properties.put(childName, readProperty(childName, value));
-                else
+                if (readerWriters.get(childName) == null) {
                     LOG.warn("No reader set for property {} (found in node {})", childName, name);
+                    return;
+                }
+                
+                final Object currentProperty = properties.get(childName);
+                final Object newValProperty = readProperty(childName, value);
+                // required properties shouldn't be changed
+                if ((requiredPeerNodeProperties.contains(childName) || requiredServerProperties.contains(childName)) && currentProperty != null) {
+                    if (!currentProperty.equals(newValProperty))
+                        throw new RuntimeException("Required property " + childName + " for node " + name + " is already set to " + properties.get(childName));
+                    else
+                        return;
+                }
+
+                properties.put(childName, newValProperty);
             }
         }
 

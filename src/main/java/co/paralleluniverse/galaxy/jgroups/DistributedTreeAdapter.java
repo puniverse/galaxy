@@ -38,6 +38,12 @@ class DistributedTreeAdapter implements DistributedTree {
     @Override
     public void addListener(String node, final Listener listener) {
         tree.addListener(node, new ListenerAdapter(listener));
+        List<String> children = tree.getChildren(node);
+        if (children == null)
+            return;
+        for (String child : children) {
+            listener.nodeChildAdded(node, child);
+        }
     }
 
     @Override
