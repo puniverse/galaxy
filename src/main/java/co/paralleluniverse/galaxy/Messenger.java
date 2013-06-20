@@ -90,7 +90,7 @@ public interface Messenger {
      * @param data The message.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
-    void sendToNode(short node, long topic, byte[] data) throws TimeoutException;
+    void send(short node, long topic, byte[] data) throws TimeoutException;
 
     /**
      * Sends a message to a the owner of a known grid object node, on a {@code long} topic.
