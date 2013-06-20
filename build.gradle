@@ -3,7 +3,7 @@ sourceCompatibility = '1.7'
 
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 group               = "co.paralleluniverse"
-version             = "1.1-SNAPSHOT"
+version             = "1.1"
 status              = "integration"
 description         = "A high-performance in-memory data-grid."
 ext.url             = "http://puniverse.github.com/galaxy"
@@ -199,8 +199,8 @@ uploadArchives {
                 url: (isReleaseVersion ? 
                         "https://oss.sonatype.org/service/local/staging/deploy/maven2" : 
                         "https://oss.sonatype.org/content/repositories/snapshots")) {
-                    // User and Password are taken from ~/.gradle/gradle.properties
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                // User and Password are taken from ~/.gradle/gradle.properties
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
             } 
             pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
                     dep -> !dep.artifactId.startsWith('high-scale-lib') } 
@@ -222,6 +222,17 @@ uploadArchives {
                         distribution 'repo'
                     }
                 }
+                developers {
+                    developer {
+                        id 'pron'
+                        name 'Ron Pressler'
+                    }
+                    developer {
+                        id 'eitan'
+                        name 'Eitan Yarden'
+                    }
+                }
+                
             }
         }
     }
