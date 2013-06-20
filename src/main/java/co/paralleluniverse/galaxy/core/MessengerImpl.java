@@ -92,7 +92,7 @@ public class MessengerImpl extends Component implements Messenger {
     }
 
     @Override
-    public void sendToNode(short node, long topic, byte[] data) {
+    public void send(short node, long topic, byte[] data) {
         sendToNode(node, new Msg(topic, null, data));
     }
 
