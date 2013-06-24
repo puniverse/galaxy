@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 public interface Messenger {
     /**
      * Adds a message listener on a {@code lonng} topic.
+     *
      * @param topic The topic.
      * @param listener The listener.
      */
@@ -35,6 +36,7 @@ public interface Messenger {
 
     /**
      * Adds a message listener on a {@code String} topic.
+     *
      * @param topic The topic.
      * @param listener The listener.
      */
@@ -42,6 +44,7 @@ public interface Messenger {
 
     /**
      * Removes a message listener from a {@code lonng} topic.
+     *
      * @param topic The topic.
      * @param listener The listener.
      */
@@ -49,6 +52,7 @@ public interface Messenger {
 
     /**
      * Removes a message listener from a {@code String} topic.
+     *
      * @param topic The topic.
      * @param listener The listener.
      */
@@ -62,7 +66,7 @@ public interface Messenger {
      * @param data The message.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
-    void send(short node, String topic, byte[] data) throws TimeoutException;
+    void send(short node, String topic, byte[] data);
 
     /**
      * Sends a message to a known node, on a {@code long} topic.
@@ -72,7 +76,7 @@ public interface Messenger {
      * @param data The message.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
-    void send(short node, long topic, Streamable data) throws TimeoutException;
+    void send(short node, long topic, Streamable data);
 
     /**
      * Sends a message to a known node, on a {@code String} topic.
@@ -81,7 +85,7 @@ public interface Messenger {
      * @param topic The message's topic.
      * @param data The message.
      */
-    void send(short node, String topic, Streamable data) throws TimeoutException;
+    void send(short node, String topic, Streamable data);
 
     /**
      * Sends a message to a known node, on a {@code long} topic.
@@ -91,7 +95,7 @@ public interface Messenger {
      * @param data The message.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
-    void send(short node, long topic, byte[] data) throws TimeoutException;
+    void send(short node, long topic, byte[] data);
 
     /**
      * Sends a message to a the owner of a known grid object node, on a {@code long} topic.
@@ -132,8 +136,8 @@ public interface Messenger {
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     void sendToOwnerOf(long ref, String topic, Streamable data) throws TimeoutException;
-    
-        /**
+
+    /**
      * Sends a message to a the owner of a known grid object node, on a {@code long} topic.
      *
      * @param ref The grid ref to whose owner the message is to be sent.
