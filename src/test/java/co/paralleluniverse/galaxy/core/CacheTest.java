@@ -29,10 +29,9 @@ import co.paralleluniverse.galaxy.core.NodeNotFoundException;
 import co.paralleluniverse.galaxy.core.Backup;
 import co.paralleluniverse.galaxy.core.Comm;
 import co.paralleluniverse.common.io.Persistable;
+import co.paralleluniverse.galaxy.InvokeOnLine;
 import co.paralleluniverse.galaxy.RefNotFoundException;
 import co.paralleluniverse.galaxy.Store;
-import co.paralleluniverse.galaxy.Store.InvokeOnLine;
-import co.paralleluniverse.galaxy.Store.LineAccess;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeInfo;
 import com.google.common.base.Charsets;
@@ -377,8 +376,8 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(Message.PUT(get2, 1234L, 2, toBuffer("hello")))));
     }
 
-    public static Store.InvokeOnLine<Long> storefunc(final long set) {
-        return new Store.InvokeOnLine<Long>() {
+    public static InvokeOnLine<Long> storefunc(final long set) {
+        return new InvokeOnLine<Long>() {
             @Override
             public Long invoke(LineAccess lineAccess) {
                 try {

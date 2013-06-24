@@ -4,8 +4,8 @@
  */
 package co.paralleluniverse.galaxy.core;
 
-import co.paralleluniverse.common.concurrent.WithExecutor;
 import co.paralleluniverse.common.collection.ConcurrentMultimap;
+import co.paralleluniverse.common.concurrent.WithExecutor;
 import co.paralleluniverse.common.io.Streamable;
 import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.spring.Component;
@@ -15,6 +15,7 @@ import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.core.Message.LineMessage;
 import co.paralleluniverse.galaxy.core.Message.MSG;
 import co.paralleluniverse.galaxy.core.Op.Type;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.beans.ConstructorProperties;
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -33,18 +34,15 @@ import org.slf4j.LoggerFactory;
  * @author pron
  */
 public class MessengerImpl extends Component implements Messenger {
-
     private static final Logger LOG = LoggerFactory.getLogger(MessengerImpl.class);
     private final Cache cache;
     private final ConcurrentMultimap<Long, MessageListener, List<MessageListener>> longTopicListeners = new ConcurrentMultimap<Long, MessageListener, List<MessageListener>>(new NonBlockingHashMapLong<List<MessageListener>>(), (List<MessageListener>) Collections.EMPTY_LIST) {
-
         @Override
         protected List<MessageListener> allocateElement() {
             return new CopyOnWriteArrayList<MessageListener>();
         }
     };
     private final ConcurrentMultimap<String, MessageListener, List<MessageListener>> stringTopicListeners = new ConcurrentMultimap<String, MessageListener, List<MessageListener>>(new NonBlockingHashMap<String, List<MessageListener>>(), (List<MessageListener>) Collections.EMPTY_LIST) {
-
         @Override
         protected List<MessageListener> allocateElement() {
             return new CopyOnWriteArrayList<MessageListener>();
@@ -56,11 +54,10 @@ public class MessengerImpl extends Component implements Messenger {
     MessengerImpl(String name, Cache cache, NodeOrderedThreadPoolExecutor threadPool) {
         super(name);
         this.executor = threadPool;
-        if(executor == null)
+        if (executor == null)
             throw new RuntimeException("The executor must be set!");
         this.cache = cache;
         cache.setReceiver(new MessageReceiver() {
-
             @Override
             public void receive(Message message) {
                 if (message.getType() == Message.Type.MSGACK) {
@@ -139,6 +136,30 @@ public class MessengerImpl extends Component implements Messenger {
         sendToOwnerOf(ref, new Msg(-1, topic, data));
     }
 
+    @Override
+    public ListenableFuture<Void> sendToOwnerOfAsync(long ref, long topic, byte[] data) {
+        return sendToOwnerOfAsync(ref, new Msg(topic, null, data));
+    }
+
+    @Override
+    public ListenableFuture<Void> sendToOwnerOfAsync(long ref, String topic, byte[] data) {
+        if (topic == null)
+            throw new IllegalArgumentException("Topic must not be null");
+        return sendToOwnerOfAsync(ref, new Msg(-1, topic, data));
+    }
+
+    @Override
+    public ListenableFuture<Void> sendToOwnerOfAsync(long ref, long topic, Streamable data) {
+        return sendToOwnerOfAsync(ref, new Msg(topic, null, data));
+    }
+
+    @Override
+    public ListenableFuture<Void> sendToOwnerOfAsync(long ref, String topic, Streamable data) {
+        if (topic == null)
+            throw new IllegalArgumentException("Topic must not be null");
+        return sendToOwnerOfAsync(ref, new Msg(-1, topic, data));
+    }
+
     private void sendToNode(short node, Msg msg) {
         if (LOG.isDebugEnabled())
             LOG.debug("Sending to node {}: {}", node, msg);
@@ -149,7 +170,14 @@ public class MessengerImpl extends Component implements Messenger {
         if (LOG.isDebugEnabled())
             LOG.debug("Sending to owner of {}: {}", Long.toHexString(line), msg);
         final LineMessage message = Message.MSG((short) -1, line, Streamables.toByteArray(msg));
-        cache.doOpAsync(Type.SEND, line, null, message, null);
+        cache.doOp(Type.SEND, line, null, message, null);
+    }
+
+    private ListenableFuture<Void> sendToOwnerOfAsync(long line, Msg msg) {
+        if (LOG.isDebugEnabled())
+            LOG.debug("Sending to owner of {}: {}", Long.toHexString(line), msg);
+        final LineMessage message = Message.MSG((short) -1, line, Streamables.toByteArray(msg));
+        return (ListenableFuture<Void>) (Object) cache.doOpAsync(Type.SEND, line, null, message, null);
     }
 
     private void receive(MSG message) {
@@ -163,7 +191,6 @@ public class MessengerImpl extends Component implements Messenger {
 
     private void notifyListeners(final Collection<MessageListener> listeners, final short node, final Msg msg) {
         executor.execute(new NodeTask() {
-
             @Override
             public short getNode() {
                 return node;
@@ -181,7 +208,6 @@ public class MessengerImpl extends Component implements Messenger {
                             }
                         } else {
                             ((WithExecutor) listener).getExecutor().execute(new Runnable() {
-
                                 @Override
                                 public void run() {
                                     try {
@@ -199,7 +225,6 @@ public class MessengerImpl extends Component implements Messenger {
     }
 
     private static class Msg implements Streamable {
-
         private long lTopic = -1;
         private String sTopic = null;
         private byte[] data;

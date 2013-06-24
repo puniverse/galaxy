@@ -21,6 +21,7 @@ package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.CacheListener;
+import co.paralleluniverse.galaxy.InvokeOnLine;
 import co.paralleluniverse.galaxy.ItemState;
 import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.StoreTransaction;
@@ -30,9 +31,6 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -117,8 +115,8 @@ public class StoreImpl implements Store {
     }
 
     @Override
-    public <T> T invoke(long lineId, InvokeOnLine<T> function) throws TimeoutException {        
-        return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null); 
+    public <T> T invoke(long lineId, InvokeOnLine<T> function) throws TimeoutException {
+        return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null);
     }
 
     @Override
@@ -225,6 +223,26 @@ public class StoreImpl implements Store {
     public void del(long id, StoreTransaction txn) throws TimeoutException {
         cache.doOp(DEL, nonReserved(id), null, null, (Transaction) txn);
     }
+    
+    @Override
+    public ListenableFuture<Long> allocAsync(int count, StoreTransaction txn) {
+        return (ListenableFuture<Long>) (Object) cache.doOpAsync(ALLOC, -1L, null, count, (Transaction) verifyNonNull(txn));
+    }
+
+    @Override
+    public ListenableFuture<Long> putAsync(byte[] data, StoreTransaction txn) {
+        return (ListenableFuture<Long>) (Object) cache.doOpAsync(PUT, -1L, copyOf(data), null, (Transaction) txn);
+    }
+
+    @Override
+    public ListenableFuture<Long> putAsync(ByteBuffer data, StoreTransaction txn) {
+        return (ListenableFuture<Long>) (Object) cache.doOpAsync(PUT, -1L, data, null, (Transaction) txn);
+    }
+
+    @Override
+    public ListenableFuture<Long> putAsync(Persistable object, StoreTransaction txn) {
+        return (ListenableFuture<Long>) (Object) cache.doOpAsync(PUT, -1L, object, null, (Transaction) txn);
+    }
 
     @Override
     public ListenableFuture<byte[]> getAsync(long id) {
@@ -329,6 +347,16 @@ public class StoreImpl implements Store {
     @Override
     public ListenableFuture<Void> setAsync(long id, Persistable object, StoreTransaction txn) {
         return (ListenableFuture<Void>) (Object) cache.doOpAsync(SET, nonReserved(id), object, null, (Transaction) txn);
+    }
+
+    @Override
+    public <T> ListenableFuture<T> invokeAsync(long id, InvokeOnLine<T> function) {
+        return (ListenableFuture<T>) cache.doOpAsync(Op.Type.INVOKE, id, (Object) function, null, null);
+    }
+
+    @Override
+    public ListenableFuture<Void> delAsync(long id, StoreTransaction txn) {
+        return (ListenableFuture<Void>) (Object) cache.doOpAsync(DEL, nonReserved(id), null, null, (Transaction) txn);
     }
 
     @Override

@@ -30,9 +30,9 @@ import co.paralleluniverse.common.util.DegenerateInvocationHandler;
 import co.paralleluniverse.common.util.Enums;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Cluster;
+import co.paralleluniverse.galaxy.InvokeOnLine;
 import co.paralleluniverse.galaxy.RefNotFoundException;
 import co.paralleluniverse.galaxy.Store;
-import co.paralleluniverse.galaxy.Store.InvokeOnLine;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import co.paralleluniverse.galaxy.core.Message.INVRES;
@@ -1150,41 +1150,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
     //</editor-fold>
 
-    private Object handleOpInvoke(CacheLine line, Object data, short nodeHint, int lineChange) {
-        if ((lineChange & (LINE_STATE_CHANGED | LINE_OWNER_CHANGED)) == 0)
-            return PENDING;
-
-        if (line.is(CacheLine.DELETED))
-            handleDeleted(line);
-
-        if (line.state.isLessThan(State.O)) {
-            send(Message.INVOKE(getTarget(line, nodeHint), line.id, (Store.InvokeOnLine) data));
-            return PENDING;
-        } else {
-            if (!transitionToE(line, nodeHint))
-                return PENDING;
-            return execInvoke(line, (Store.InvokeOnLine) data);
-        }
-    }
-
-    // Called from handleOp and from handleMessageInvoke
-    private Object execInvoke(final CacheLine line, InvokeOnLine iol) {
-        return iol.invoke(new Store.LineAccess() {
-            @Override
-            public ByteBuffer getForRead() {
-                return line.getData().asReadOnlyBuffer();
-            }
-
-            @Override
-            public ByteBuffer getForWrite(int size) {
-                allocateLineData(line, size);
-                line.version++;
-                line.set(CacheLine.MODIFIED, true);
-                return line.getData();
-            }
-        });
-    }
-
     //<editor-fold defaultstate="collapsed" desc="Op handling">
     /////////////////////////// Op handling ///////////////////////////////////////////
     private Object handleOpGet(CacheLine line, Op.Type type, Object data, short nodeHint, Transaction txn, int change) {
@@ -1408,7 +1373,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         // We have to remember the message ID in order to process MSGACKs later
         assert msg1.getMessageId() > 0;
         msg.setMessageId(msg1.getMessageId());
-        
+
         return PENDING; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
     }
 
@@ -1461,6 +1426,41 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return null;
     }
 
+    private Object handleOpInvoke(CacheLine line, Object data, short nodeHint, int lineChange) {
+        if ((lineChange & (LINE_STATE_CHANGED | LINE_OWNER_CHANGED)) == 0)
+            return PENDING;
+
+        if (line.is(CacheLine.DELETED))
+            handleDeleted(line);
+
+        if (line.state.isLessThan(State.O)) {
+            send(Message.INVOKE(getTarget(line, nodeHint), line.id, (InvokeOnLine) data));
+            return PENDING;
+        } else {
+            if (!transitionToE(line, nodeHint))
+                return PENDING;
+            return execInvoke(line, (InvokeOnLine) data);
+        }
+    }
+
+    // Called from handleOp and from handleMessageInvoke
+    private Object execInvoke(final CacheLine line, InvokeOnLine iol) {
+        return iol.invoke(new InvokeOnLine.LineAccess() {
+            @Override
+            public ByteBuffer getForRead() {
+                return line.getData().asReadOnlyBuffer();
+            }
+
+            @Override
+            public ByteBuffer getForWrite(int size) {
+                allocateLineData(line, size);
+                line.version++;
+                line.set(CacheLine.MODIFIED, true);
+                return line.getData();
+            }
+        });
+    }
+
     private static short nodeHint(Object obj) {
         return obj != null ? (Short) obj : -1;
     }
@@ -1488,40 +1488,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     //<editor-fold defaultstate="collapsed" desc="Message handling">
     /////////////////////////// Message handling ///////////////////////////////////////////
-    private int handleMessageInvRes(INVRES msg, CacheLine line) {
-        Op invokeOp = null;
-        final Collection<Op> pending = getPendingOps(line);
-        for (Iterator<Op> it = pending.iterator(); it.hasNext();) {
-            final Op op = it.next();
-            if (op.type == Op.Type.INVOKE) {
-                if (msg.getLine() == op.line) {
-                    invokeOp = op;
-                    break;
-                }
-            }
-        }
-        if (invokeOp != null) {
-            completeOp(line, invokeOp, msg.getResult(), true);
-            removePendingOp(line, invokeOp);
-        }
-        return LINE_NO_CHANGE;
-    }
-
-    private int handleMessageInvoke(Message.INVOKE msg, CacheLine line) throws IrrelevantStateException {
-        if (handleNotOwner(msg, line))
-            return LINE_NO_CHANGE;
-        relevantStates(line, State.E, State.O);
-
-        if (!transitionToE(line, (short) -1)) {
-            addPendingMessage(line, msg);
-            return LINE_NO_CHANGE;
-        }
-
-        final Object invokeRes = execInvoke(line, msg.getFunction());
-        send(Message.INVRES(msg, line.id, invokeRes));
-        return LINE_EVERYTHING_CHANGED;
-    }
-
     private int handleMessageGet(Message.GET msg, CacheLine line) throws IrrelevantStateException {
         if (handleNotOwner(msg, line))
             return LINE_NO_CHANGE;
@@ -1798,6 +1764,40 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             change |= LINE_MODIFIED_CHANGED;
         }
         return change;
+    }
+
+    private int handleMessageInvRes(INVRES msg, CacheLine line) {
+        Op invokeOp = null;
+        final Collection<Op> pending = getPendingOps(line);
+        for (Iterator<Op> it = pending.iterator(); it.hasNext();) {
+            final Op op = it.next();
+            if (op.type == Op.Type.INVOKE) {
+                if (msg.getLine() == op.line) {
+                    invokeOp = op;
+                    break;
+                }
+            }
+        }
+        if (invokeOp != null) {
+            completeOp(line, invokeOp, msg.getResult(), true);
+            removePendingOp(line, invokeOp);
+        }
+        return LINE_NO_CHANGE;
+    }
+
+    private int handleMessageInvoke(Message.INVOKE msg, CacheLine line) throws IrrelevantStateException {
+        if (handleNotOwner(msg, line))
+            return LINE_NO_CHANGE;
+        relevantStates(line, State.E, State.O);
+
+        if (!transitionToE(line, (short) -1)) {
+            addPendingMessage(line, msg);
+            return LINE_NO_CHANGE;
+        }
+
+        final Object invokeRes = execInvoke(line, msg.getFunction());
+        send(Message.INVRES(msg, line.id, invokeRes));
+        return LINE_EVERYTHING_CHANGED;
     }
     //</editor-fold>
     //</editor-fold>

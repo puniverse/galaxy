@@ -20,6 +20,7 @@
 package co.paralleluniverse.galaxy;
 
 import co.paralleluniverse.common.io.Streamable;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * The grid's messaging service. All messages are guaranteed delivery in the order they've been sent.
@@ -131,4 +132,44 @@ public interface Messenger {
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     void sendToOwnerOf(long ref, String topic, Streamable data) throws TimeoutException;
+    
+        /**
+     * Sends a message to a the owner of a known grid object node, on a {@code long} topic.
+     *
+     * @param ref The grid ref to whose owner the message is to be sent.
+     * @param topic The message's topic.
+     * @param data The message.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    ListenableFuture<Void> sendToOwnerOfAsync(long ref, long topic, byte[] data);
+
+    /**
+     * Sends a message to a the owner of a known grid object node, on a {@code String} topic.
+     *
+     * @param ref The grid ref to whose owner the message is to be sent.
+     * @param topic The message's topic.
+     * @param data The message.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    ListenableFuture<Void> sendToOwnerOfAsync(long ref, String topic, byte[] data);
+
+    /**
+     * Sends a message to a the owner of a known grid object node, on a {@code long} topic.
+     *
+     * @param ref The grid ref to whose owner the message is to be sent.
+     * @param topic The message's topic.
+     * @param data The message.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    ListenableFuture<Void> sendToOwnerOfAsync(long ref, long topic, Streamable data);
+
+    /**
+     * Sends a message to a the owner of a known grid object node, on a {@code String} topic.
+     *
+     * @param ref The grid ref to whose owner the message is to be sent.
+     * @param topic The message's topic.
+     * @param data The message.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    ListenableFuture<Void> sendToOwnerOfAsync(long ref, String topic, Streamable data);
 }

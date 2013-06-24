@@ -630,7 +630,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
         @Override
         public void sendMessage(Message message) throws InterruptedException {
-            synchronized (queue) {
+            synchronized (queue) { // syncrhonization ensures message id is in the order of messages put in the queue
                 assignMessageId(message);
                 super.sendMessage(message);
             }

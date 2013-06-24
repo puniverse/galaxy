@@ -21,7 +21,6 @@ package co.paralleluniverse.galaxy;
 
 import co.paralleluniverse.common.io.Persistable;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 /**
@@ -30,7 +29,6 @@ import java.nio.ByteBuffer;
  * over it.
  */
 public interface Store {
-
     /**
      * Returns the maximum size, in bytes, of a data item in the grid. Attempts to store larger items will result in an
      * exception. This limit is set in the cache spring-bean configuration.
@@ -161,7 +159,6 @@ public interface Store {
      */
     byte[] get(long id) throws TimeoutException;
 
-    <T> T invoke(long id, InvokeOnLine<T> function) throws TimeoutException;
     /**
      * Retrieves a given data item into a {@link Persistable}.
      *
@@ -463,9 +460,54 @@ public interface Store {
      */
     void del(long id, StoreTransaction txn) throws TimeoutException;
 
+    <T> T invoke(long id, InvokeOnLine<T> function) throws TimeoutException;
+
     /**
-     * Retrieves a given data item asynchronously. 
-     * 
+     * Allocates one or more new (and empty) items in the store.<p/>
+     * When allocating a single item, it's better to use {@link #put(byte[], StoreTransaction) put()}, but some data
+     * structures might require allocating an array of items.<br/>
+     *
+     * @param count The number of items to allocate.
+     * @param txn The current transaction. May not be null.
+     * @return The id of the first item in the allocated array. The following {@code count - 1} IDs belong to the
+     * following elements of the array.
+     * @throws TimeoutException
+     */
+    ListenableFuture<Long> allocAsync(int count, StoreTransaction txn);
+
+    /**
+     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     *
+     * @param data The item's contents.
+     * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
+     * @return The item's (newly allocated) ID.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    ListenableFuture<Long> putAsync(byte[] data, StoreTransaction txn);
+
+    /**
+     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     *
+     * @param data The item's contents.
+     * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
+     * @return The item's (newly allocated) ID.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    ListenableFuture<Long> putAsync(ByteBuffer data, StoreTransaction txn);
+
+    /**
+     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     *
+     * @param object The item's contents.
+     * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
+     * @return The item's (newly allocated) ID.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    ListenableFuture<Long> putAsync(Persistable object, StoreTransaction txn);
+
+    /**
+     * Retrieves a given data item asynchronously.
+     *
      * <p>The asynchronous version of {@link #get(long) get(long)}.
      *
      * @param id The item's ID.
@@ -474,8 +516,8 @@ public interface Store {
     ListenableFuture<byte[]> getAsync(long id);
 
     /**
-     * Retrieves a given data item into a {@link Persistable} asynchronously. 
-     * 
+     * Retrieves a given data item into a {@link Persistable} asynchronously.
+     *
      * <p>The asynchronous version of {@link #get(long, co.paralleluniverse.common.io.Persistable) get(long, Persistable)}.
      *
      * @param id The item's ID.
@@ -562,7 +604,7 @@ public interface Store {
      * it.
      *
      * <p>The asynchronous version of {@link #gets(long, co.paralleluniverse.common.io.Persistable, co.paralleluniverse.galaxy.StoreTransaction) gets(long, Persistable, StoreTransaction)}
-     * 
+     *
      * @param id The item's ID.
      * @param object The object into which the contents of the item will be written.
      * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -580,7 +622,7 @@ public interface Store {
      * will still work, but performance may be worse.
      *
      * <p>The asynchronous version of {@link #gets(long, short, co.paralleluniverse.galaxy.StoreTransaction) gets(long, short, StoreTransaction)}
-     * 
+     *
      * @param id The item's ID.
      * @param nodeHint The ID of the node the data item is probably owned by.
      * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -598,7 +640,7 @@ public interface Store {
      * will still work, but performance may be worse.
      *
      * <p>The asynchronous version of {@link #gets(long, short, co.paralleluniverse.common.io.Persistable, co.paralleluniverse.galaxy.StoreTransaction) gets(long, short, Persistable, StoreTransaction)}
-     * 
+     *
      * @param id The item's ID.
      * @param nodeHint The ID of the node the data item is probably owned by.
      * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -701,7 +743,7 @@ public interface Store {
      * will still work, but performance may be worse.
      *
      * <p>The asynchronous version of {@link #getx(long, short, co.paralleluniverse.common.io.Persistable, co.paralleluniverse.galaxy.StoreTransaction) getx(long, short, Persistable, StoreTransaction)}
-     * 
+     *
      * @param id The item's ID.
      * @param nodeHint The ID of the node the data item is probably owned by.
      * @param object The object into which the contents of the item will be written.
@@ -792,6 +834,10 @@ public interface Store {
      */
     ListenableFuture<Void> setAsync(long id, Persistable object, StoreTransaction txn);
 
+    <T> ListenableFuture<T> invokeAsync(long id, InvokeOnLine<T> function);
+
+    ListenableFuture<Void> delAsync(long id, StoreTransaction txn);
+
     /**
      * Makes the given item available in the given nodes' cache. <br/>
      *
@@ -831,12 +877,4 @@ public interface Store {
      * @return The item's state.
      */
     ItemState getState(long id);
-
-    public interface LineAccess extends Serializable {
-        ByteBuffer getForRead();
-        ByteBuffer getForWrite(int size);
-    }
-    public interface InvokeOnLine<T> extends Serializable {
-        T invoke(LineAccess lineAccess); 
-    }
 }
