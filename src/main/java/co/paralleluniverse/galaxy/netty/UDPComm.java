@@ -895,8 +895,11 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 }
 
                 if (!next.isResponse()) {
-                    if (requestsOnly && next.size() + sentPacketSizeInBytes() > maxRequestOnlyPacketSize)
-                        break;
+                    if (requestsOnly && next.size() + sentPacketSizeInBytes() > maxRequestOnlyPacketSize && sentPacketSizeInBytes() > 0) {
+                        // check if packet consists of requestOnly message unless it is only one message.
+                        LOG.warn("NOT Sending requests only {}. can't add to packet {} bytes long.", next, sentPacketSizeInBytes());
+                        break;                        
+                    }
                     hasRequests = true;
                 } else
                     requestsOnly = false;

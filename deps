@@ -1,0 +1,312 @@
+:dependencies
+
+------------------------------------------------------------
+Root project - A high-performance in-memory data-grid.
+------------------------------------------------------------
+
+archives - Configuration for archive artifacts.
+No dependencies
+
+compile - Classpath for compiling the main sources.
++--- com.google.guava:guava:11.0.1
+|    \--- com.google.code.findbugs:jsr305:1.3.9
++--- net.sf.trove4j:trove4j:3.0.2
++--- org.springframework:spring-beans:3.1.0.RELEASE
+|    \--- org.springframework:spring-core:3.1.0.RELEASE
+|         +--- org.springframework:spring-asm:3.1.0.RELEASE
+|         \--- commons-logging:commons-logging:1.1.1
++--- org.springframework:spring-context:3.1.0.RELEASE
+|    +--- org.springframework:spring-aop:3.1.0.RELEASE
+|    |    +--- aopalliance:aopalliance:1.0
+|    |    +--- org.springframework:spring-asm:3.1.0.RELEASE
+|    |    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-expression:3.1.0.RELEASE
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    \--- org.springframework:spring-asm:3.1.0.RELEASE
++--- com.yammer.metrics:metrics-core:2.0.3
+|    \--- org.slf4j:slf4j-api:1.6.4
++--- io.netty:netty:3.5.0.Final
++--- org.jgroups:jgroups:3.1.0.Beta
++--- com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3
++--- com.sleepycat:je:5.0.34
++--- co.parallelunivese:high-scale-lib:
++--- com.netflix.curator:curator-recipes:1.1.9
+|    +--- com.netflix.curator:curator-framework:1.1.9
+|    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    +--- com.netflix.curator:curator-client:1.1.9
+|    |    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    |    \--- org.apache.zookeeper:zookeeper:3.4.3
+|    |    |         +--- log4j:log4j:1.2.15
+|    |    |         |    \--- javax.mail:mail:1.4
+|    |    |         |         \--- javax.activation:activation:1.1
+|    |    |         +--- jline:jline:0.9.94
+|    |    |         |    \--- junit:junit:3.8.1
+|    |    |         \--- org.jboss.netty:netty:3.2.2.Final
+|    |    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
+|    +--- com.google.guava:guava:11.0.1 (*)
+|    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- com.netflix.curator:curator-client:1.1.9 (*)
++--- com.netflix.curator:curator-framework:1.1.9 (*)
+\--- org.apache.zookeeper:zookeeper:3.4.3 (*)
+
+default - Configuration for default artifacts.
++--- com.google.guava:guava:11.0.1
+|    \--- com.google.code.findbugs:jsr305:1.3.9
++--- net.sf.trove4j:trove4j:3.0.2
++--- org.springframework:spring-beans:3.1.0.RELEASE
+|    \--- org.springframework:spring-core:3.1.0.RELEASE
+|         +--- org.springframework:spring-asm:3.1.0.RELEASE
+|         \--- commons-logging:commons-logging:1.1.1
++--- org.springframework:spring-context:3.1.0.RELEASE
+|    +--- org.springframework:spring-aop:3.1.0.RELEASE
+|    |    +--- aopalliance:aopalliance:1.0
+|    |    +--- org.springframework:spring-asm:3.1.0.RELEASE
+|    |    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-expression:3.1.0.RELEASE
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    \--- org.springframework:spring-asm:3.1.0.RELEASE
++--- com.yammer.metrics:metrics-core:2.0.3
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- io.netty:netty:3.5.0.Final
++--- org.jgroups:jgroups:3.1.0.Beta
++--- com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3
++--- com.sleepycat:je:5.0.34
++--- co.parallelunivese:high-scale-lib:
++--- com.netflix.curator:curator-recipes:1.1.9
+|    +--- com.netflix.curator:curator-framework:1.1.9
+|    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    +--- com.netflix.curator:curator-client:1.1.9
+|    |    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    |    \--- org.apache.zookeeper:zookeeper:3.4.3
+|    |    |         +--- log4j:log4j:1.2.15
+|    |    |         |    \--- javax.mail:mail:1.4
+|    |    |         |         \--- javax.activation:activation:1.1
+|    |    |         +--- jline:jline:0.9.94
+|    |    |         |    \--- junit:junit:3.8.1
+|    |    |         \--- org.jboss.netty:netty:3.2.2.Final
+|    |    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
+|    +--- com.google.guava:guava:11.0.1 (*)
+|    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- com.netflix.curator:curator-client:1.1.9 (*)
++--- com.netflix.curator:curator-framework:1.1.9 (*)
++--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.slf4j:jcl-over-slf4j:1.6.4
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.slf4j:log4j-over-slf4j:1.6.4
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.apache.logging.log4j:log4j-slf4j-impl:2.0-beta6
+|    +--- org.slf4j:slf4j-api:1.7.2
+|    +--- org.slf4j:slf4j-ext:1.7.2
+|    |    +--- org.slf4j:slf4j-api:1.7.2
+|    |    \--- ch.qos.cal10n:cal10n-api:0.7.4
+|    \--- org.apache.logging.log4j:log4j-api:2.0-beta6
++--- org.apache.logging.log4j:log4j-api:2.0-beta6
++--- org.apache.logging.log4j:log4j-core:2.0-beta6
+|    \--- org.apache.logging.log4j:log4j-api:2.0-beta6
+\--- com.lmax:disruptor:3.0.1
+
+javancssConf
+\--- javancss:javancss:29.50
+     +--- javancss:ccl:29.50
+     \--- javancss:jhbasic:29.50
+
+runtime - Classpath for running the compiled main classes.
++--- com.google.guava:guava:11.0.1
+|    \--- com.google.code.findbugs:jsr305:1.3.9
++--- net.sf.trove4j:trove4j:3.0.2
++--- org.springframework:spring-beans:3.1.0.RELEASE
+|    \--- org.springframework:spring-core:3.1.0.RELEASE
+|         +--- org.springframework:spring-asm:3.1.0.RELEASE
+|         \--- commons-logging:commons-logging:1.1.1
++--- org.springframework:spring-context:3.1.0.RELEASE
+|    +--- org.springframework:spring-aop:3.1.0.RELEASE
+|    |    +--- aopalliance:aopalliance:1.0
+|    |    +--- org.springframework:spring-asm:3.1.0.RELEASE
+|    |    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-expression:3.1.0.RELEASE
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    \--- org.springframework:spring-asm:3.1.0.RELEASE
++--- com.yammer.metrics:metrics-core:2.0.3
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- io.netty:netty:3.5.0.Final
++--- org.jgroups:jgroups:3.1.0.Beta
++--- com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3
++--- com.sleepycat:je:5.0.34
++--- co.parallelunivese:high-scale-lib:
++--- com.netflix.curator:curator-recipes:1.1.9
+|    +--- com.netflix.curator:curator-framework:1.1.9
+|    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    +--- com.netflix.curator:curator-client:1.1.9
+|    |    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    |    \--- org.apache.zookeeper:zookeeper:3.4.3
+|    |    |         +--- log4j:log4j:1.2.15
+|    |    |         |    \--- javax.mail:mail:1.4
+|    |    |         |         \--- javax.activation:activation:1.1
+|    |    |         +--- jline:jline:0.9.94
+|    |    |         |    \--- junit:junit:3.8.1
+|    |    |         \--- org.jboss.netty:netty:3.2.2.Final
+|    |    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
+|    +--- com.google.guava:guava:11.0.1 (*)
+|    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- com.netflix.curator:curator-client:1.1.9 (*)
++--- com.netflix.curator:curator-framework:1.1.9 (*)
++--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.slf4j:jcl-over-slf4j:1.6.4
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.slf4j:log4j-over-slf4j:1.6.4
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.apache.logging.log4j:log4j-slf4j-impl:2.0-beta6
+|    +--- org.slf4j:slf4j-api:1.7.2
+|    +--- org.slf4j:slf4j-ext:1.7.2
+|    |    +--- org.slf4j:slf4j-api:1.7.2
+|    |    \--- ch.qos.cal10n:cal10n-api:0.7.4
+|    \--- org.apache.logging.log4j:log4j-api:2.0-beta6
++--- org.apache.logging.log4j:log4j-api:2.0-beta6
++--- org.apache.logging.log4j:log4j-core:2.0-beta6
+|    \--- org.apache.logging.log4j:log4j-api:2.0-beta6
+\--- com.lmax:disruptor:3.0.1
+
+signatures
+No dependencies
+
+testCompile - Classpath for compiling the test sources.
++--- com.google.guava:guava:11.0.1
+|    \--- com.google.code.findbugs:jsr305:1.3.9
++--- net.sf.trove4j:trove4j:3.0.2
++--- org.springframework:spring-beans:3.1.0.RELEASE
+|    \--- org.springframework:spring-core:3.1.0.RELEASE
+|         +--- org.springframework:spring-asm:3.1.0.RELEASE
+|         \--- commons-logging:commons-logging:1.1.1
++--- org.springframework:spring-context:3.1.0.RELEASE
+|    +--- org.springframework:spring-aop:3.1.0.RELEASE
+|    |    +--- aopalliance:aopalliance:1.0
+|    |    +--- org.springframework:spring-asm:3.1.0.RELEASE
+|    |    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-expression:3.1.0.RELEASE
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    \--- org.springframework:spring-asm:3.1.0.RELEASE
++--- com.yammer.metrics:metrics-core:2.0.3
+|    \--- org.slf4j:slf4j-api:1.6.4
++--- io.netty:netty:3.5.0.Final
++--- org.jgroups:jgroups:3.1.0.Beta
++--- com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3
++--- com.sleepycat:je:5.0.34
++--- co.parallelunivese:high-scale-lib:
++--- com.netflix.curator:curator-recipes:1.1.9
+|    +--- com.netflix.curator:curator-framework:1.1.9
+|    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    +--- com.netflix.curator:curator-client:1.1.9
+|    |    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    |    \--- org.apache.zookeeper:zookeeper:3.4.3
+|    |    |         +--- log4j:log4j:1.2.15
+|    |    |         |    \--- javax.mail:mail:1.4
+|    |    |         |         \--- javax.activation:activation:1.1
+|    |    |         +--- jline:jline:0.9.94
+|    |    |         |    \--- junit:junit:3.8.1 -> 4.10
+|    |    |         |         \--- org.hamcrest:hamcrest-core:1.1 -> 1.3.RC2
+|    |    |         \--- org.jboss.netty:netty:3.2.2.Final
+|    |    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
+|    +--- com.google.guava:guava:11.0.1 (*)
+|    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- com.netflix.curator:curator-client:1.1.9 (*)
++--- com.netflix.curator:curator-framework:1.1.9 (*)
++--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- junit:junit:4.10 (*)
++--- org.apache.ant:ant-junit4:1.8.4
+|    +--- org.apache.ant:ant:1.8.4
+|    |    \--- org.apache.ant:ant-launcher:1.8.4
+|    \--- junit:junit:4.8.1 -> 4.10 (*)
++--- org.hamcrest:hamcrest-core:1.3.RC2
++--- org.hamcrest:hamcrest-library:1.3.RC2
+|    \--- org.hamcrest:hamcrest-core:1.3.RC2
+\--- org.mockito:mockito-all:1.9.0
+
+testRuntime - Classpath for running the compiled test classes.
++--- com.google.guava:guava:11.0.1
+|    \--- com.google.code.findbugs:jsr305:1.3.9
++--- net.sf.trove4j:trove4j:3.0.2
++--- org.springframework:spring-beans:3.1.0.RELEASE
+|    \--- org.springframework:spring-core:3.1.0.RELEASE
+|         +--- org.springframework:spring-asm:3.1.0.RELEASE
+|         \--- commons-logging:commons-logging:1.1.1
++--- org.springframework:spring-context:3.1.0.RELEASE
+|    +--- org.springframework:spring-aop:3.1.0.RELEASE
+|    |    +--- aopalliance:aopalliance:1.0
+|    |    +--- org.springframework:spring-asm:3.1.0.RELEASE
+|    |    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-beans:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    +--- org.springframework:spring-expression:3.1.0.RELEASE
+|    |    \--- org.springframework:spring-core:3.1.0.RELEASE (*)
+|    \--- org.springframework:spring-asm:3.1.0.RELEASE
++--- com.yammer.metrics:metrics-core:2.0.3
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- io.netty:netty:3.5.0.Final
++--- org.jgroups:jgroups:3.1.0.Beta
++--- com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3
++--- com.sleepycat:je:5.0.34
++--- co.parallelunivese:high-scale-lib:
++--- com.netflix.curator:curator-recipes:1.1.9
+|    +--- com.netflix.curator:curator-framework:1.1.9
+|    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    +--- com.netflix.curator:curator-client:1.1.9
+|    |    |    +--- com.google.guava:guava:11.0.1 (*)
+|    |    |    \--- org.apache.zookeeper:zookeeper:3.4.3
+|    |    |         +--- log4j:log4j:1.2.15
+|    |    |         |    \--- javax.mail:mail:1.4
+|    |    |         |         \--- javax.activation:activation:1.1
+|    |    |         +--- jline:jline:0.9.94
+|    |    |         |    \--- junit:junit:3.8.1 -> 4.10
+|    |    |         |         \--- org.hamcrest:hamcrest-core:1.1 -> 1.3.RC2
+|    |    |         \--- org.jboss.netty:netty:3.2.2.Final
+|    |    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
+|    +--- com.google.guava:guava:11.0.1 (*)
+|    \--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- com.netflix.curator:curator-client:1.1.9 (*)
++--- com.netflix.curator:curator-framework:1.1.9 (*)
++--- org.apache.zookeeper:zookeeper:3.4.3 (*)
++--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.slf4j:jcl-over-slf4j:1.6.4
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.slf4j:log4j-over-slf4j:1.6.4
+|    \--- org.slf4j:slf4j-api:1.6.4 -> 1.7.2
++--- org.apache.logging.log4j:log4j-slf4j-impl:2.0-beta6
+|    +--- org.slf4j:slf4j-api:1.7.2
+|    +--- org.slf4j:slf4j-ext:1.7.2
+|    |    +--- org.slf4j:slf4j-api:1.7.2
+|    |    \--- ch.qos.cal10n:cal10n-api:0.7.4
+|    \--- org.apache.logging.log4j:log4j-api:2.0-beta6
++--- org.apache.logging.log4j:log4j-api:2.0-beta6
++--- org.apache.logging.log4j:log4j-core:2.0-beta6
+|    \--- org.apache.logging.log4j:log4j-api:2.0-beta6
++--- com.lmax:disruptor:3.0.1
++--- junit:junit:4.10 (*)
++--- org.apache.ant:ant-junit4:1.8.4
+|    +--- org.apache.ant:ant:1.8.4
+|    |    \--- org.apache.ant:ant-launcher:1.8.4
+|    \--- junit:junit:4.8.1 -> 4.10 (*)
++--- org.hamcrest:hamcrest-core:1.3.RC2
++--- org.hamcrest:hamcrest-library:1.3.RC2
+|    \--- org.hamcrest:hamcrest-core:1.3.RC2
+\--- org.mockito:mockito-all:1.9.0
+
+(*) - dependencies omitted (listed previously)
+
+BUILD SUCCESSFUL
+
+Total time: 10.461 secs

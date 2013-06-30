@@ -20,37 +20,57 @@ if (!project.hasProperty("sonatypeUsername") || !project.hasProperty("sonatypePa
     sonatypeUsername = ""
     sonatypePassword = ""
 }
+configurations {
+    all*.exclude group: 'javax.jms', module: 'jms'
+    all*.exclude group: 'com.sun.jdmk', module: 'jmxtools'
+    all*.exclude group: 'com.sun.jmx', module: 'jmxri'
+//    published
+    javancssConf
+}
 
 repositories {
     flatDir         { dirs 'baselib' }
-    repositories    { mavenCentral() }
+    repositories    { 
+        mavenCentral()
+    }
     maven           { url "http://download.oracle.com/maven/" }    
 }
 
 dependencies {
-    compile "com.google.guava:guava:11.0.1"
+    compile "com.google.guava:guava:11.0.1" 
     compile "net.sf.trove4j:trove4j:3.0.2"
     compile "org.springframework:spring-beans:3.1.0.RELEASE"
     compile "org.springframework:spring-context:3.1.0.RELEASE"
     compile "com.yammer.metrics:metrics-core:2.0.3"
     compile "io.netty:netty:3.5.0.Final"
     compile "org.jgroups:jgroups:3.1.0.Beta"
-    compile "org.apache.zookeeper:zookeeper:3.4.3"
-    compile "com.netflix.curator:curator-client:1.1.9"
-    compile "com.netflix.curator:curator-framework:1.1.9"
-    compile "com.netflix.curator:curator-recipes:1.1.9"
     compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3"
     compile "com.sleepycat:je:5.0.34"
     compile "co.parallelunivese:high-scale-lib:" // non-Maven
     runtime "org.slf4j:slf4j-api:1.6.4"
-    runtime "org.slf4j:slf4j-jdk14:1.6.4"
     runtime "org.slf4j:jcl-over-slf4j:1.6.4"
-    runtime "org.slf4j:log4j-over-slf4j:1.6.4"                
+    runtime "org.slf4j:log4j-over-slf4j:1.6.4"   
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-beta6"
+    runtime "org.apache.logging.log4j:log4j-api:2.0-beta6"
+    runtime "org.apache.logging.log4j:log4j-core:2.0-beta6"
+    runtime "com.lmax:disruptor:3.0.1" // required for log4j
     testCompile "junit:junit:4.10"
     testCompile "org.apache.ant:ant-junit4:1.8.4"
     testCompile "org.hamcrest:hamcrest-core:1.3.RC2"
     testCompile "org.hamcrest:hamcrest-library:1.3.RC2"
     testCompile "org.mockito:mockito-all:1.9.0"        
+    compile("com.netflix.curator:curator-recipes:1.1.9") {
+        exclude group: "org.slf4j"
+    }
+    compile("com.netflix.curator:curator-client:1.1.9") {
+        exclude group: "org.slf4j"
+    }
+    compile("com.netflix.curator:curator-framework:1.1.9") {
+        exclude group: "org.slf4j"
+    }
+    compile("org.apache.zookeeper:zookeeper:3.4.3") {
+        exclude group: "org.slf4j"
+    }
 }
 
 ///////// Doduments
@@ -239,9 +259,6 @@ uploadArchives {
 }
 
 //////// Javancss
-configurations {
-    javancssConf
-}
  
 dependencies {
     javancssConf 'javancss:javancss:29.50'
@@ -266,6 +283,8 @@ task javancss(dependsOn: 'classes') << {
 }
 /////// Others
 tasks.withType(Test) { 
+    systemProperty "log4j.configurationFile", "log4j.xml"
+    systemProperty "Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector"
     useJUnit()
     doLast() {
         println "file://" + testReportDir + "/index.html"    
