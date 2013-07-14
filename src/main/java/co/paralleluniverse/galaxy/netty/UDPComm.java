@@ -79,7 +79,6 @@ import org.springframework.jmx.export.annotation.ManagedAttribute;
  */
 public class UDPComm extends AbstractComm<InetSocketAddress> {
     // Note: class must be public for Spring's auto generated javax.management.modelmbean.RequiredModelMBean to expose @ManagedAttribute
-
     private static final Logger LOG = LoggerFactory.getLogger(UDPComm.class);
     //
     private final int port;
@@ -291,32 +290,28 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         this.bootstrap.setOption("receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(4096));
 
         bootstrap.setPipelineFactory(new UdpMessagePipelineFactory(LOG, new ChannelNodeAddressResolver(addressResolver), receiveExecutor) {
-
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 final ChannelPipeline pipeline = super.getPipeline();
                 pipeline.addLast("router", new SimpleChannelHandler() {
-
                     @Override
                     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-                        if (ctx.getChannel() == multicastChannel) {
-                            if (e.getRemoteAddress().equals(myAddress))
-                                return; // this is our own multicast
-                            ((MessagePacket) e.getMessage()).setMulticast();
+                            if (ctx.getChannel() == multicastChannel) {
+                                if (e.getRemoteAddress().equals(myAddress))
+                                    return; // this is our own multicast
+                                ((MessagePacket) e.getMessage()).setMulticast();
+                            }
+                            messageReceived((MessagePacket) e.getMessage());
                         }
-                        messageReceived((MessagePacket) e.getMessage());
-                    }
 
                     @Override
                     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
                         LOG.info("Channel exception: {} {}", e.getCause().getClass().getName(), e.getCause().getMessage());
                         LOG.debug("Channel exception", e.getCause());
                     }
-
                 });
                 return pipeline;
             }
-
         });
 
         bootstrap.setOption("localAddress", new InetSocketAddress(port));
@@ -328,12 +323,10 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
     private void configureThreadPool(String name, ThreadPoolExecutor executor) {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
         executor.setThreadFactory(new CustomThreadFactory(name) {
-
             @Override
             protected Thread allocateThread(ThreadGroup group, Runnable target, String name) {
                 return new CommThread(group, target, name);
             }
-
         });
         ThreadPoolExecutorMonitor.register(name, executor);
     }
@@ -445,7 +438,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
     // visible for testing
     void messageReceived(MessagePacket packet) {
-        if(!getCluster().isMaster())
+        if (!getCluster().isMaster())
             return;
         LOG.debug("Received packet {}", packet);
 
@@ -497,11 +490,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         peers.remove(id);
         broadcastPeer.removeNode(id);
     }
-
     private static final ThreadLocal<Boolean> recursive = new ThreadLocal<Boolean>();
 
     abstract class Peer implements Callable<Void> {
-
         protected final ArrayBlockingQueue<Message> queue = new ArrayBlockingQueue<Message>(maxQueueSize);
         protected Message overflow;
         protected MessagePacket sentPacket;
@@ -574,11 +565,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 lastTimeoutsCleanup = now;
             }
         }
-
     }
 
     class NodePeer extends Peer {
-
         public final short node;
         private volatile boolean removed = false;
         private InetSocketAddress nodeAddress;
@@ -897,8 +886,8 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 if (!next.isResponse()) {
                     if (requestsOnly && next.size() + sentPacketSizeInBytes() > maxRequestOnlyPacketSize && sentPacketSizeInBytes() > 0) {
                         // check if packet consists of requestOnly message unless it is only one message.
-                        LOG.warn("NOT Sending requests only {}. can't add to packet {} bytes long.", next, sentPacketSizeInBytes());
-                        break;                        
+                        LOG.debug("NOT Sending requests only {}. can't add to packet {} bytes long.", next, sentPacketSizeInBytes());
+                        break;
                     }
                     hasRequests = true;
                 } else
@@ -929,11 +918,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         private int sentPacketSizeInBytes() {
             return sentPacket != null ? sentPacket.sizeInBytes() : 0;
         }
-
     }
 
     class BroadcastPeer extends Peer {
-
         private ConcurrentMap<Long, BroadcastEntry> broadcasts = new ConcurrentHashMap<Long, BroadcastEntry>();
 
         @Override
@@ -1079,7 +1066,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 } else {
                     if (LOG.isDebugEnabled())
                         LOG.debug("Got ACK from {} to message {}", message.getNode(), entry.message);
-                final int numNodes = entry.nodes.size();
+                    final int numNodes = entry.nodes.size();
                     if (done) {
                         if (entry.message instanceof LineMessage) {
                             LOG.debug("Got all ACKs for message {}, but no response - sending NOT_FOUND to cache!", entry.message);
@@ -1144,11 +1131,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 }
             }
         }
-
     }
 
     private static class BroadcastEntry {
-
         final Message message;
         final TShortHashSet nodes;
 
@@ -1167,7 +1152,6 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
             nodes.remove(node);
             return nodes.isEmpty();
         }
-
     }
 
     private int getNumPeerNodes() {
@@ -1193,5 +1177,4 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
     ConcurrentMap<Short, NodePeer> getPeers() {
         return peers;
     }
-
 }
