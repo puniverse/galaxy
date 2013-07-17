@@ -59,6 +59,7 @@ import org.springframework.jmx.export.assembler.MetadataMBeanInfoAssembler;
 
 /**
  * Spring helper functions.
+ *
  * @author pron
  */
 public final class SpringContainerHelper {
@@ -67,23 +68,24 @@ public final class SpringContainerHelper {
     public static ConfigurableApplicationContext createContext(String defaultDomain, Resource xmlResource, Object properties, BeanFactoryPostProcessor beanFactoryPostProcessor) {
         LOG.info("JAVA: {} {}, {}", new Object[]{System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version"), System.getProperty("java.vendor")});
         LOG.info("OS: {} {}, {}", new Object[]{System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch")});
-        LOG.info("DIR: {}", System.getProperty("user.dir"));        
-        
+        LOG.info("DIR: {}", System.getProperty("user.dir"));
+
         final DefaultListableBeanFactory beanFactory = createBeanFactory();
         final GenericApplicationContext context = new GenericApplicationContext(beanFactory);
         context.registerShutdownHook();
 
+        final PropertyPlaceholderConfigurer propertyPlaceholderConfigurer = new PropertyPlaceholderConfigurer();
+        propertyPlaceholderConfigurer.setSystemPropertiesMode(PropertyPlaceholderConfigurer.SYSTEM_PROPERTIES_MODE_OVERRIDE);
+
         if (properties != null) {
-            final PropertyPlaceholderConfigurer propertyPlaceholderConfigurer = new PropertyPlaceholderConfigurer();
-            propertyPlaceholderConfigurer.setSystemPropertiesMode(PropertyPlaceholderConfigurer.SYSTEM_PROPERTIES_MODE_OVERRIDE);
-            if(properties instanceof Resource)
-                propertyPlaceholderConfigurer.setLocation((Resource)properties);
-            else if(properties instanceof Properties)
-                propertyPlaceholderConfigurer.setProperties((Properties)properties);
+            if (properties instanceof Resource)
+                propertyPlaceholderConfigurer.setLocation((Resource) properties);
+            else if (properties instanceof Properties)
+                propertyPlaceholderConfigurer.setProperties((Properties) properties);
             else
                 throw new IllegalArgumentException("Properties argument - " + properties + " - is of an unhandled type");
-            context.addBeanFactoryPostProcessor(propertyPlaceholderConfigurer);
         }
+        context.addBeanFactoryPostProcessor(propertyPlaceholderConfigurer);
 
         // MBean exporter
         //final MBeanExporter mbeanExporter = new AnnotationMBeanExporter();
@@ -127,7 +129,7 @@ public final class SpringContainerHelper {
                 if (bean instanceof Service) {
                     final BeanDefinition beanDefinition = beanFactory.getBeanDefinition(beanName);
                     Collection<String> dependencies = getBeanDependencies(beanDefinition);
-                    
+
                     for (String dependeeName : dependencies) {
                         Object dependee = beanFactory.getBean(dependeeName);
                         if (dependee instanceof Service) {
@@ -192,14 +194,14 @@ public final class SpringContainerHelper {
 
     /**
      * adds hooks to capture autowired constructor args and add them as dependencies
-     * @return 
+     *
+     * @return
      */
     private static DefaultListableBeanFactory createBeanFactory() {
         return new DefaultListableBeanFactory() {
             {
                 final InstantiationStrategy is = getInstantiationStrategy();
                 setInstantiationStrategy(new InstantiationStrategy() {
-
                     @Override
                     public Object instantiate(RootBeanDefinition beanDefinition, String beanName, BeanFactory owner) throws BeansException {
                         return is.instantiate(beanDefinition, beanName, owner);
@@ -220,11 +222,11 @@ public final class SpringContainerHelper {
                     }
                 });
             }
-            
+
             private void addDependencies(Object bean, Object[] args) {
-                if(bean instanceof Service) {
-                    for(Object arg : args) {
-                        if(arg instanceof Service) {
+                if (bean instanceof Service) {
+                    for (Object arg : args) {
+                        if (arg instanceof Service) {
                             ((Service) arg).addDependedBy((Service) bean);
                             ((Service) bean).addDependsOn((Service) arg);
                         }
@@ -233,6 +235,7 @@ public final class SpringContainerHelper {
             }
         };
     }
+
     public static BeanDefinition defineBean(Class<?> clazz, ConstructorArgumentValues constructorArgs, MutablePropertyValues properties) {
         GenericBeanDefinition bean = new GenericBeanDefinition();
         bean.setBeanClass(clazz);

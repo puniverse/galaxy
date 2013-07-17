@@ -40,7 +40,6 @@ import org.springframework.core.io.FileSystemResource;
  * in the physical node <i>cluster</i>).
  */
 public class Grid {
-
     private static Grid instance = null;
     private final static Object lock = new Object();
 
@@ -50,7 +49,7 @@ public class Grid {
      * @return The grid instance.
      */
     public static Grid getInstance() throws InterruptedException {
-        return getInstance(null, (Object)null);
+        return getInstance(null, (Object) null);
     }
 
     /**
@@ -63,7 +62,7 @@ public class Grid {
      * @return The grid instance.
      */
     public static Grid getInstance(String configFile, String propertiesFile) throws InterruptedException {
-        return getInstance(configFile, (Object)propertiesFile);
+        return getInstance(configFile, (Object) propertiesFile);
     }
 
     /**
@@ -71,13 +70,13 @@ public class Grid {
      *
      * @param configFile The name of the configuration file containing the grid definition.
      * @param properties A {@link Properties Properties} object containing the grid's properties to be injected into placeholders
-     * in the configuration file. 
+     * in the configuration file.
      * This parameter is helpful when you want to use the same xml configuration with different properties for different
      * instances.
      * @return The grid instance.
      */
     public static Grid getInstance(String configFile, Properties properties) throws InterruptedException {
-        return getInstance(configFile, (Object)properties);
+        return getInstance(configFile, (Object) properties);
     }
 
     private static Grid getInstance(String configFile, Object properties) throws InterruptedException {
@@ -88,11 +87,13 @@ public class Grid {
                 if (_instance == null)
                     throw new RuntimeException("Error while creating a grid instance from configuration file " + configFile + "!");
                 instance = _instance;
+                if (Boolean.getBoolean("co.paralleluniverse.galaxy.autoGoOnline"))
+                    instance.goOnline();
+
             }
             return _instance;
         }
     }
-
     /////////////////////////////////////
     private final ApplicationContext context;
     private final Messenger messenger;
@@ -103,11 +104,14 @@ public class Grid {
     private final ClusterMonitor clusterMonitor;
 
     private Grid(String configFile, Object properties) throws InterruptedException {
+        if (configFile == null)
+            configFile = System.getProperty("co.paralleluniverse.galaxy.configFile");
+        if (properties == null)
+            properties = System.getProperty("co.paralleluniverse.galaxy.propertiesFile");
         this.context = SpringContainerHelper.createContext("co.paralleluniverse.galaxy",
                 configFile != null ? new FileSystemResource(configFile) : new ClassPathResource("galaxy.xml"),
                 properties instanceof String ? new FileSystemResource((String) properties) : properties,
                 new BeanFactoryPostProcessor() {
-
                     @Override
                     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory1) throws BeansException {
                         final DefaultListableBeanFactory beanFactory = ((DefaultListableBeanFactory) beanFactory1);
@@ -122,7 +126,6 @@ public class Grid {
 
                         //beanFactory.registerSingleton(name, object);
                     }
-
                 });
         this.cluster = context.getBean("cluster", Cluster.class);
         this.clusterMonitor = new ClusterMonitor(cluster);
@@ -166,8 +169,7 @@ public class Grid {
      */
     public void goOnline() throws InterruptedException {
         ((Service) backup).awaitAvailable();
-        ((AbstractCluster)cluster).goOnline();
+        ((AbstractCluster) cluster).goOnline();
         cache.awaitAvailable();
     }
-
 }
