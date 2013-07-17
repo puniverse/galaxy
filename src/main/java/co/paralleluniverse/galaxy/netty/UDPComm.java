@@ -504,7 +504,8 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
         public void sendMessage(Message message) throws InterruptedException {
             if (!queue.offer(message)) {
-                LOG.info("Adding message {} in peer {} to full queue. Waiting for available space.", message, this);
+                LOG.info("Adding message {} to full queue. Waiting for available space.", message);
+                LOG.debug("no space in Peer {}",this);
                 queue.put(message);
             }
         }

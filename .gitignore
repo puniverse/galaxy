@@ -8,3 +8,4 @@ build/
 /catalog.xml
 /.gradle/
 /ivy-build.xml
+/.nb-gradle/profiles/private/
