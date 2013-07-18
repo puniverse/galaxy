@@ -176,7 +176,8 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
     private void initRefIdCounter() throws Exception {
         this.counterService = new CounterService(channel);
         this.refIdCounter = counterService.getOrCreateCounter("refIdCounter", 1);
-
+        if (!hasServer())
+            this.setCounter(INITIAL_REF_ID);
         refAllocationExecutor.submit(new Callable<Void>() {
 
             @Override

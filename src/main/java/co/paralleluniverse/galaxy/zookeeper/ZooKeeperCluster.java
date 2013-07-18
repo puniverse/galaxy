@@ -114,6 +114,8 @@ public class ZooKeeperCluster extends AbstractCluster implements RootLocker, Ref
         av = refIdCounter.increment(); // we need this b/c refIdCounter.compareAndSet(0, INITIAL_REF_ID) doesn't work on a newly allocated znode.
         if (!av.succeeded())
             throw new RuntimeException("Error initializing refIdCounter");
+        if (!hasServer())
+            setCounter(INITIAL_REF_ID);
         refAllocationExecutor.submit(new Callable<Void>() {
 
             @Override
