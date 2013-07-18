@@ -364,6 +364,8 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         monitor.unregisterMBean();
         if (channel != null)
             channel.close();
+        if (multicastChannel != null)
+            multicastChannel.close();
         channelFactory.releaseExternalResources();
     }
 
