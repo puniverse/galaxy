@@ -19,9 +19,10 @@
  */
 package co.paralleluniverse.galaxy.core;
 
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.Timer;
+import co.paralleluniverse.common.monitoring.Metrics;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,12 +30,15 @@ import java.util.concurrent.TimeUnit;
  * @author pron
  */
 public class MetricsBackupMonitor implements BackupMonitor {
-    private final Meter backups = Metrics.newMeter(Cache.class, "backups", "backup", TimeUnit.SECONDS);
-    private final Meter replicationBackups = Metrics.newMeter(Cache.class, "replicationBackups", "replicationBackup", TimeUnit.SECONDS);
-    private final Meter backupPackets = Metrics.newMeter(Cache.class, "backupPacketsSent", "backupPacket", TimeUnit.SECONDS);
-    private final Timer slavesAckTime = Metrics.newTimer(Cache.class, "slavesAckTime", "slavesAck", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
-    private final Timer serverAckTime = Metrics.newTimer(Cache.class, "serverAckTime", "serverAck", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
+    private final Meter backups = Metrics.meter(metric("backups"));
+    private final Meter replicationBackups = Metrics.meter(metric("replicationBackups"));
+    private final Meter backupPackets = Metrics.meter(metric("backupPacketsSent"));
+    private final Timer slavesAckTime = Metrics.timer(metric("slavesAckTime"));
+    private final Timer serverAckTime = Metrics.timer(metric("serverAckTime"));
 
+    protected final String metric(String name) {
+        return MetricRegistry.name("co.paralleluniverse", "galaxy", "Cache", name);
+    }
     @Override
     public void addReplicationBackup(int num) {
         replicationBackups.mark(num);

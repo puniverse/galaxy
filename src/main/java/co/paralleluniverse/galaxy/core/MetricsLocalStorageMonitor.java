@@ -19,9 +19,10 @@
  */
 package co.paralleluniverse.galaxy.core;
 
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Gauge;
-import com.yammer.metrics.core.Histogram;
+import co.paralleluniverse.common.monitoring.Metrics;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import static com.codahale.metrics.MetricRegistry.name;
 import java.lang.ref.WeakReference;
 
 /**
@@ -35,16 +36,18 @@ class MetricsLocalStorageMonitor implements LocalStorageMonitor {
     //final Counter totalSize;
 
     public MetricsLocalStorageMonitor(String name, CacheStorage localStorage) {
-        allocated = Metrics.newHistogram(CacheStorage.class, "allocated", name, true);
-        deallocated = Metrics.newHistogram(CacheStorage.class, "deallocated", name, true);
+
+        allocated = Metrics.histogram(name("co.paralleluniverse", "galaxy", "CacheStorage", "allocated", name));
+        deallocated = Metrics.histogram(name("co.paralleluniverse", "galaxy", "CacheStorage", "deallocated", name));
         final WeakReference<CacheStorage> _localStorage = new WeakReference<CacheStorage>(localStorage);
-        totalSize = Metrics.newGauge(CacheStorage.class, "totalSize", name, new Gauge<Long>() {
-            @Override
-            public Long value() {
-                final CacheStorage localStorage = _localStorage.get();
-                return localStorage != null ? localStorage.getTotalAllocatedSize() : 0L;
-            }
-        });
+        totalSize = Metrics.register(name("co.paralleluniverse", "galaxy", "CacheStorage", "totalSize", name),
+                new Gauge<Long>() {
+                    @Override
+                    public Long getValue() {
+                        final CacheStorage localStorage = _localStorage.get();
+                        return localStorage != null ? localStorage.getTotalAllocatedSize() : 0L;
+                    }
+                });
         //totalSize = Metrics.newCounter(CacheStorage.class, "totalSize", name);
     }
 

@@ -19,21 +19,25 @@
  */
 package co.paralleluniverse.galaxy.core;
 
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Meter;
-import java.util.concurrent.TimeUnit;
+import co.paralleluniverse.common.monitoring.Metrics;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  *
  * @author pron
  */
 class MetricsMainMemoryMonitor implements MainMemoryMonitor {
-    private final Meter writes = Metrics.newMeter(MainMemory.class, "writes", "writes", TimeUnit.SECONDS);
-    private final Meter transactions = Metrics.newMeter(MainMemory.class, "transactions", "transactions", TimeUnit.SECONDS);
-    private final Meter objectsServed = Metrics.newMeter(MainMemory.class, "objectsServed", "objectsServed", TimeUnit.SECONDS);
-    private final Meter ownerWrites = Metrics.newMeter(MainMemory.class, "ownerWrites", "ownerWrites", TimeUnit.SECONDS);
-    private final Meter ownersServed = Metrics.newMeter(MainMemory.class, "ownersServed", "ownersServed", TimeUnit.SECONDS);
-    
+    private final Meter writes = Metrics.meter(metric("writes"));
+    private final Meter transactions = Metrics.meter(metric("transactions"));
+    private final Meter objectsServed = Metrics.meter(metric("objectsServed"));
+    private final Meter ownerWrites = Metrics.meter(metric("ownerWrites"));
+    private final Meter ownersServed = Metrics.meter(metric("ownersServed"));
+
+    protected final String metric(String name) {
+        return MetricRegistry.name("co.paralleluniverse", "galaxy", "MainMemory", name);
+    }
+
     @Override
     public void setMonitoredObject(Object obj) {
     }

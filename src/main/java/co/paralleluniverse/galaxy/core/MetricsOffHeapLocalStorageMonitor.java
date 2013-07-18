@@ -19,10 +19,10 @@
  */
 package co.paralleluniverse.galaxy.core;
 
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Meter;
-import java.util.concurrent.TimeUnit;
+import co.paralleluniverse.common.monitoring.Metrics;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Meter;
+import static com.codahale.metrics.MetricRegistry.name;
 
 /**
  *
@@ -56,9 +56,10 @@ class MetricsOffHeapLocalStorageMonitor extends MetricsLocalStorageMonitor imple
         private final Meter deallocated;
 
         public BinMetrics(String name, int bin) {
-            totalSize = Metrics.newCounter(CacheStorage.class, "totalSize", name + '[' + bin + ']');
-            allocated = Metrics.newMeter(CacheStorage.class, "allocated", name + '[' + bin + ']', "allocation", TimeUnit.SECONDS);
-            deallocated = Metrics.newMeter(CacheStorage.class, "deallocated", name + '[' + bin + ']', "deallocation", TimeUnit.SECONDS);
+            
+            totalSize = Metrics.counter(name("co.paralleluniverse", "galaxy", "CacheStorage", "totalSize", name + '[' + bin + ']'));
+            allocated = Metrics.meter(name("co.paralleluniverse", "galaxy", "CacheStorage", "allocated", name + '[' + bin + ']'));
+            deallocated = Metrics.meter(name("co.paralleluniverse", "galaxy", "CacheStorage", "deallocated", name + '[' + bin + ']'));
 //            allocated = Metrics.newHistogram(CacheStorage.class, "allocated", name + '[' + bin + ']', true);
 //            deallocated = Metrics.newHistogram(CacheStorage.class, "deallocated", name + '[' + bin + ']', true);
         }
