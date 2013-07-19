@@ -1048,7 +1048,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     //<editor-fold defaultstate="expanded" desc="Transactions">
     /////////////////////////// Transactions ///////////////////////////////////////////
     public Transaction beginTransaction() {
-        return new Transaction(rollbackSupported);
+        Transaction txn = new Transaction(rollbackSupported);
+        LOG.debug("Starting transaction: {}", txn);
+        return txn;
     }
 
     public void rollback(Transaction txn) {
@@ -1072,6 +1074,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     public void endTransaction(Transaction txn, boolean abort) throws InterruptedException {
+        LOG.debug("Ending transaction: {} {}", txn, abort ? "ABORT" : "COMMIT");
         Throwable ex = null;
         for (Op op : txn.getOps()) {
             try {
@@ -1092,6 +1095,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             for (TLongIterator it = txn.getLines().iterator(); it.hasNext();) {
                 final long id = it.next();
                 final CacheLine line = getLine(id);
+                LOG.debug("Ending transaction: {}, line {}", txn, line);
                 synchronized (line) {
                     if (unlockLine(line, txn)) {
                         if (!line.is(CacheLine.MODIFIED))
@@ -2277,7 +2281,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     void lockLine(CacheLine line, Transaction txn) {
         LOG.debug("Locking line {}", line);
-        LOG.trace("Locked:", new Throwable());
+        if (LOG.isTraceEnabled())
+            LOG.trace("Locked:", new Throwable());
         line.lock();
         if (txn != null)
             txn.add(line.getId());
@@ -2285,7 +2290,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     boolean unlockLine(CacheLine line, Transaction txn) {
         LOG.debug("Unlocking line {}", line);
-        LOG.trace("Unlocked:", new Throwable());
+        if (LOG.isTraceEnabled())
+            LOG.trace("Unlocked:", new Throwable());
         assert txn == null || txn.contains(line.getId());
         return line.unlock();
     }
