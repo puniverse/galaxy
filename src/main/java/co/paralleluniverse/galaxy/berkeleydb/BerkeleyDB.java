@@ -81,7 +81,14 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         this.envHome = envHome;
         final EnvironmentConfig envConfig = new EnvironmentConfig().setAllowCreate(true).setTransactional(true);
         envConfig.setDurability(new Durability(durability, Durability.SyncPolicy.SYNC, Durability.ReplicaAckPolicy.SIMPLE_MAJORITY));
-        this.env = new Environment(new File(envHome), envConfig);
+        final File dir = new File(this.envHome);
+        try {
+            if (!dir.exists())
+                dir.mkdir();
+        } catch (Exception ex) {
+            throw new RuntimeException("cannot mkdir "+envHome,ex);
+        }
+        this.env = new Environment(dir, envConfig);
 
         this.entryBinding = new MainMemoryTupleBinding();
     }
