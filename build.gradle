@@ -3,7 +3,7 @@ sourceCompatibility = '1.7'
 
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 group               = "co.paralleluniverse"
-version             = "1.2-SNAPSHOT"
+version             = "1.2"
 status              = "integration"
 description         = "A high-performance in-memory data-grid."
 ext.url             = "http://puniverse.github.com/galaxy"
