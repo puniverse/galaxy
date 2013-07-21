@@ -54,7 +54,7 @@ import org.mockito.InOrder;
  */
 public class DistributedBranchHelperTest {
     static final String ROOT = "/r";
-    MockDistributedTree mdt;
+    MyLocalTree mdt;
     DistributedBranchHelper branch;
     Listener listener;
 
@@ -64,7 +64,7 @@ public class DistributedBranchHelperTest {
     }
 
     private void reset() {
-        mdt = new MockDistributedTree();
+        mdt = new MyLocalTree();
         listener = mock(Listener.class);
         branch = null;
     }
@@ -78,6 +78,7 @@ public class DistributedBranchHelperTest {
             }
         };
         branch.addListener(listener); // listener
+        branch.init();
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -501,4 +502,28 @@ public class DistributedBranchHelperTest {
             System.out.println("nodeChildUpdated(" + node + ", " + child + ")");
         }
     };
+
+    private static class MyLocalTree {
+        private static final String SEP = "/";
+        private final LocalTree tree;
+        public MyLocalTree() {
+            this.tree = new LocalTree();
+        }
+
+        private void remove(String ROOT, String child1) {
+            tree.delete(ROOT+SEP+child1);
+        }
+
+        private void add(String ROOT, String child1) {
+            tree.create(ROOT+SEP+child1, false);
+        }
+
+        private void add(String ROOT, String child2, String a) {
+            tree.create(ROOT+SEP+child2+SEP+a, false);
+        }
+
+        private void set(String ROOT, String child0, String a, String a0) {
+            tree.set(ROOT+SEP+child0+SEP+a,a0.getBytes());
+        }
+    }
 }

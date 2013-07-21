@@ -85,11 +85,14 @@ import static co.paralleluniverse.galaxy.core.Op.Type.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 /**
  *
@@ -128,7 +131,6 @@ public class CacheTest {
         when(cluster.isMaster()).thenReturn(true);
         when(cluster.hasServer()).thenReturn(hasServer);
         when(cluster.getMyNodeId()).thenReturn(sh(5));
-
         comm = mock(AbstractComm.class);
 
         backup = mock(Backup.class);
@@ -617,15 +619,17 @@ public class CacheTest {
     /**
      * When CHNGD_OWNR is received, resend message to new owner
      */
+        setCommMsgCounter();
         PUT(1234L, sh(10), 1L, "xxx");
         INV(1234L, sh(10));
+        verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(10), 1234L, sh(-1))).setMessageId(2))));
 
         MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")).setMessageId(3))));
         assertThat(send.getFuture().isDone(), is(false));
 
         //when(cluster.getMaster(sh(20))).thenReturn(makeNodeInfo(sh(20)));
@@ -1809,8 +1813,7 @@ public class CacheTest {
         assertState(1234L, I, null);
     }
 
-    @Ignore
-    @Test
+    //@Test
     public void whenDeletedAndGETThenNOT_FOUND() {
         pending();
     }
@@ -1844,12 +1847,13 @@ public class CacheTest {
      */
     @Test
     public void testSendToOwner2() throws Exception {
+        setCommMsgCounter();
         MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(-1), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(-1), 1234L, serialize("foo")).setMessageId(1))));
         assertThat(send.getFuture().isDone(), is(false));
 
         cache.receive(Message.MSGACK(msg));
@@ -1862,6 +1866,7 @@ public class CacheTest {
      */
     @Test
     public void testSendToOwner3() throws Exception {
+        setCommMsgCounter();
         PUT(1234L, sh(10), 1L, "xxx");
 
         MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
@@ -1869,19 +1874,21 @@ public class CacheTest {
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")).setMessageId(2))));
         assertThat(send.getFuture().isDone(), is(false));
 
         INV(1234L, sh(20));
         INV(1234L, sh(20)); // twice, but only resend once
-
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(20), 1234L, sh(-1))).setMessageId(3))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, serialize("foo")).setMessageId(4))));
+        verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(20), 1234L, sh(-1))).setMessageId(5))));
         assertThat(send.getFuture().isDone(), is(false));
 
         INV(1234L, sh(30));
         INV(1234L, sh(30)); // twice, but only resend once
 
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(30), 1234L, sh(-1))).setMessageId(6))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, serialize("foo")).setMessageId(7))));
         assertThat(send.getFuture().isDone(), is(false));
 
         cache.receive(Message.MSGACK(msg));
@@ -1894,15 +1901,17 @@ public class CacheTest {
      */
     @Test
     public void testSendToOwner4() throws Exception {
+        setCommMsgCounter();
         PUT(1234L, sh(10), 1L, "xxx");
         INV(1234L, sh(10));
+        verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(10), 1234L, sh(-1))).setMessageId(2))));
 
         MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")).setMessageId(3))));
         assertThat(send.getFuture().isDone(), is(false));
 
         when(cluster.getMaster(sh(20))).thenReturn(makeNodeInfo(sh(20)));
@@ -1910,7 +1919,7 @@ public class CacheTest {
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(20), true));
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(20), true)); // twice, but only resend once
 
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, serialize("foo")).setMessageId(4))));
         assertThat(send.getFuture().isDone(), is(false));
 
         when(cluster.getMaster(sh(30))).thenReturn(makeNodeInfo(sh(30)));
@@ -1918,7 +1927,7 @@ public class CacheTest {
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(30), true));
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(30), true)); // twice, but only resend once
 
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, serialize("foo")))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, serialize("foo")).setMessageId(5))));
         assertThat(send.getFuture().isDone(), is(false));
 
         cache.receive(Message.MSGACK(msg));
@@ -1971,6 +1980,7 @@ public class CacheTest {
      */
     @Test
     public void whenTimeoutThenInterruptPendingOps() throws Exception {
+        setCommMsgCounter();
         final Op op1 = new Op(GET, 1L, null);
         final Op op2 = new Op(GETX, 1L, null);
         final Op op3 = new Op(SET, 1L, serialize("xxx"), null);
@@ -2445,5 +2455,18 @@ public class CacheTest {
 
     public Object doOp(Op.Type type, long line, Persistable data, Transaction txn) throws TimeoutException {
         return doOp(type, line, data, null, txn);
+    }
+
+    private void setCommMsgCounter() throws NodeNotFoundException {
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Message msg = (Message) invocation.getArguments()[0];
+                System.out.println("mock send msg "+msg);
+                if (msg.getMessageId()<0)
+                    msg.setMessageId(++messageId);
+                return null;
+            }
+        }).when(comm).send(any(Message.class));
     }
 }

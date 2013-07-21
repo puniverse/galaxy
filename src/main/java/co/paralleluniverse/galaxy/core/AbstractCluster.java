@@ -343,6 +343,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
         if (isSecondSlave()) {
             LOG.error("THERE ALREADY EXISTS A SLAVE FOR NODE " + getMyNodeId() + ". ABORTING.");
             goOffline();
+            throw new UnsupportedOperationException("Second slave is not supported");
         }
         try {
             awaitAvailable();
@@ -444,8 +445,8 @@ public abstract class AbstractCluster extends Service implements Cluster {
 
         if (isMe(node))
             setOnline(false);
-        else
-            leaderRemoved(nodeName);
+//        else
+//            leaderRemoved(nodeName);
         nodes.remove(nodeName);
     }
 

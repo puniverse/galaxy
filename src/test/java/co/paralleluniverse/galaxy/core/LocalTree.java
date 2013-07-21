@@ -55,6 +55,12 @@ public class LocalTree implements DistributedTree {
             pendingListeners.put(node, listener);
         else
             n.addListener(listener);
+        List<String> children = getChildren(node);
+        if (children==null) return;
+        for (String child : children) {
+            listener.nodeChildAdded(node, child);
+        }
+            
     }
 
     @Override
