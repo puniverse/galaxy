@@ -85,7 +85,7 @@ public class MessagePacket implements Iterable<Message>, Cloneable {
 
     public Message getMessage(Message m) {
         int index = messages.indexOf(m);
-        if(index < 0)
+        if (index < 0)
             return null;
         Message message = messages.get(index); // m != message. often m will be the response to message
         return message;
@@ -172,9 +172,9 @@ public class MessagePacket implements Iterable<Message>, Cloneable {
         for (Message message : messages) {
             ByteBuffer[] bs = message.toByteBuffers();
             for (ByteBuffer b : bs) {
-                b.rewind();
-                buffers[i] = b;
-                i++;
+                if (b != null)
+                    b.rewind();
+                buffers[i++] = b;
             }
         }
         return buffers;
@@ -183,10 +183,10 @@ public class MessagePacket implements Iterable<Message>, Cloneable {
     public void fromByteBuffer(ByteBuffer buffer) {
         while (buffer.hasRemaining()) {
             if (LOG.isDebugEnabled())
-                LOG.debug("decoding. remaining "+buffer.remaining());
+                LOG.debug("decoding. remaining " + buffer.remaining());
             final Message fromByteBuffer = Message.fromByteBuffer(buffer);
             if (LOG.isDebugEnabled())
-                LOG.debug("decoded "+fromByteBuffer);
+                LOG.debug("decoded " + fromByteBuffer);
             addMessage(fromByteBuffer);
         }
     }

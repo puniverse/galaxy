@@ -458,8 +458,10 @@ public class Message implements Streamable, Externalizable, Cloneable {
     @Override
     public final int size() {
         int size = size1();
-        for (int i = 0; i < getNumDataBuffers(); i++)
-            size += 2 + getDataBuffer(i).remaining();
+        for (int i = 0; i < getNumDataBuffers(); i++) {
+            final int remaining = getDataBuffer(i)==null? 0 :getDataBuffer(i).remaining();            
+            size += 2 + remaining;            
+        }
         return size;
     }
 
@@ -560,8 +562,10 @@ public class Message implements Streamable, Externalizable, Cloneable {
     }
 
     public final Message cloneDataBuffers() {
-        for (int i = 0; i < getNumDataBuffers(); i++)
-            setDataBuffer(i, Persistables.copyOf(getDataBuffer(i)));
+        for (int i = 0; i < getNumDataBuffers(); i++) {
+            final ByteBuffer db = getDataBuffer(i);
+            setDataBuffer(i, db==null? null : Persistables.copyOf(db));            
+        }
         return this;
     }
 

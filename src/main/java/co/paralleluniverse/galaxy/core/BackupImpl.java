@@ -54,7 +54,6 @@ import org.springframework.jmx.export.annotation.ManagedAttribute;
 public class BackupImpl extends ClusterService implements Backup {
     // The trick here is to allow fast updates w/o copying the line buffer with each update (and generating garbage in the process).
     // We just want to mark updated lines, and copy their contents periodically during flushes.
-
     private static final Logger LOG = LoggerFactory.getLogger(BackupImpl.class);
     private long maxDelayNanos = TimeUnit.NANOSECONDS.convert(10, TimeUnit.MILLISECONDS);
     private final Comm serverComm;
@@ -178,12 +177,10 @@ public class BackupImpl extends ClusterService implements Backup {
 
     private void startFlushThread() {
         scheduler.scheduleAtFixedRate(new Runnable() {
-
             @Override
             public void run() {
                 flushNow();
             }
-
         }, maxDelayNanos, maxDelayNanos, TimeUnit.NANOSECONDS);
     }
 
@@ -239,12 +236,10 @@ public class BackupImpl extends ClusterService implements Backup {
     @Override
     public void flush() {
         scheduler.submit(new Runnable() {
-
             @Override
             public void run() {
                 flushNow();
             }
-
         });
     }
 
@@ -399,12 +394,17 @@ public class BackupImpl extends ClusterService implements Backup {
     private Message.BACKUP makeBackup(CacheLine line, long version) {
         if (line.getVersion() != version)
             return null;
-        final ByteBuffer buffer = ByteBuffer.allocate(line.getData().limit()); // storage.allocateStorage(line.getData().limit());
-        line.rewind();
-        buffer.put(line.getData());
-        line.rewind();
-        buffer.flip();
-        final Message.BACKUP backup = Message.BACKUP(line.getId(), line.getVersion(), buffer);
+        final Message.BACKUP backup;
+        if (line.getData() == null) {
+            backup = Message.BACKUP(line.getId(), line.getVersion(), null);
+        } else {
+            final ByteBuffer buffer = ByteBuffer.allocate(line.getData().limit()); // storage.allocateStorage(line.getData().limit());
+            line.rewind();
+            buffer.put(line.getData());
+            line.rewind();
+            buffer.flip();
+            backup = Message.BACKUP(line.getId(), line.getVersion(), buffer);
+        }
         LOG.debug("Copying up version {} of line {} data: {}", new Object[]{backup.getVersion(), hex(backup.getLine()), backup.getData() != null ? "(" + backup.getData().remaining() + " bytes)" : "null"});
         return backup;
     }
@@ -470,7 +470,6 @@ public class BackupImpl extends ClusterService implements Backup {
     public Iterator<BACKUP> iterOwned() {
         final Iterator<Cache.CacheLine> it = cache.ownedIterator();
         return new Iterator<BACKUP>() {
-
             @Override
             public boolean hasNext() {
                 return it.hasNext();
@@ -489,7 +488,6 @@ public class BackupImpl extends ClusterService implements Backup {
             public void remove() {
                 throw new UnsupportedOperationException();
             }
-
         };
     }
 
@@ -558,7 +556,6 @@ public class BackupImpl extends ClusterService implements Backup {
     }
 
     private static class BackupEntry {
-
         public final long id;
         public final long version;
 
@@ -566,7 +563,5 @@ public class BackupImpl extends ClusterService implements Backup {
             this.id = id;
             this.version = version;
         }
-
     }
-
 }
