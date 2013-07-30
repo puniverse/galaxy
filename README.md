@@ -75,3 +75,5 @@ Galaxy's mailing list/forum is found on Goolge Groups [here](https://groups.goog
 ---
 
 Copyright (C) 2012-2013 Parallel Universe Software Co.
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/puniverse/galaxy/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
