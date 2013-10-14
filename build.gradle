@@ -43,7 +43,7 @@ dependencies {
     compile "org.springframework:spring-context:3.2.4.RELEASE"
     compile "com.codahale.metrics:metrics-core:3.0.1" 
     compile "io.netty:netty:3.7.0.Final"
-    compile "org.jgroups:jgroups:3.1.0.Beta"
+    compile "org.jgroups:jgroups:3.4.0.Beta1"
     compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4"
     compile "com.sleepycat:je:5.0.73"
     compile "co.parallelunivese:high-scale-lib:" // non-Maven

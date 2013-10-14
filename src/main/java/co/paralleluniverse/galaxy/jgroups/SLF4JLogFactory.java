@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
  * @author pron
  */
 public class SLF4JLogFactory implements CustomLogFactory {
-
     @Override
     public Log getLog(Class clazz) {
         return new SLF4JLog(LoggerFactory.getLogger(clazz));
@@ -41,7 +40,6 @@ public class SLF4JLogFactory implements CustomLogFactory {
     }
 
     static class SLF4JLog implements Log {
-
         private final Logger logger;
 
         public SLF4JLog(Logger logger) {
@@ -89,6 +87,11 @@ public class SLF4JLogFactory implements CustomLogFactory {
         }
 
         @Override
+        public void fatal(String msg, Object... args) {
+            logger.error(msg, args);
+        }
+
+        @Override
         public void error(String msg) {
             logger.error(msg);
         }
@@ -96,6 +99,11 @@ public class SLF4JLogFactory implements CustomLogFactory {
         @Override
         public void error(String msg, Throwable throwable) {
             logger.error(msg, throwable);
+        }
+
+        @Override
+        public void error(String format, Object... args) {
+            logger.error(format, args);
         }
 
         @Override
@@ -109,8 +117,18 @@ public class SLF4JLogFactory implements CustomLogFactory {
         }
 
         @Override
+        public void warn(String msg, Object... args) {
+            logger.warn(msg, args);
+        }
+
+        @Override
         public void info(String msg) {
             logger.info(msg);
+        }
+
+        @Override
+        public void info(String msg, Object... args) {
+            logger.info(msg, args);
         }
 
         @Override
@@ -121,6 +139,11 @@ public class SLF4JLogFactory implements CustomLogFactory {
         @Override
         public void debug(String msg, Throwable throwable) {
             logger.debug(msg, throwable);
+        }
+
+        @Override
+        public void debug(String msg, Object... args) {
+            logger.debug(msg, args);
         }
 
         @Override
@@ -136,6 +159,11 @@ public class SLF4JLogFactory implements CustomLogFactory {
         @Override
         public void trace(String msg, Throwable throwable) {
             logger.trace(msg, throwable);
+        }
+
+        @Override
+        public void trace(String msg, Object... args) {
+            logger.trace(msg, args);
         }
 
         @Override
