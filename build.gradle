@@ -3,7 +3,7 @@ sourceCompatibility = '1.7'
 
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 group               = "co.paralleluniverse"
-version             = "1.3-SNAPSHOT"
+version             = "1.2.1-SNAPSHOT"
 status              = "integration"
 description         = "A high-performance in-memory data-grid."
 ext.url             = "http://puniverse.github.com/galaxy"
@@ -37,35 +37,35 @@ repositories {
 }
 
 dependencies {
-    compile "com.google.guava:guava:11.0.1" 
-    compile "net.sf.trove4j:trove4j:3.0.2"
+    compile "com.google.guava:guava:15.0" 
+    compile "net.sf.trove4j:trove4j:3.0.3"
     compile "org.springframework:spring-beans:3.1.0.RELEASE"
     compile "org.springframework:spring-context:3.1.0.RELEASE"
-    compile "com.codahale.metrics:metrics-core:3.0.0" 
-    compile "io.netty:netty:3.5.0.Final"
+    compile "com.codahale.metrics:metrics-core:3.0.1" 
+    compile "io.netty:netty:3.7.0.Final"
     compile "org.jgroups:jgroups:3.1.0.Beta"
-    compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.3"
+    compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4"
     compile "com.sleepycat:je:5.0.73"
     compile "co.parallelunivese:high-scale-lib:" // non-Maven
-    runtime "org.slf4j:slf4j-api:1.6.4"
-    runtime "org.slf4j:jcl-over-slf4j:1.6.4"
-    runtime "org.slf4j:log4j-over-slf4j:1.6.4"   
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-beta6"
-    runtime "org.apache.logging.log4j:log4j-api:2.0-beta6"
-    runtime "org.apache.logging.log4j:log4j-core:2.0-beta6"
-    runtime "com.lmax:disruptor:3.0.1" // required for log4j
-    testCompile "junit:junit:4.10"
-    testCompile "org.apache.ant:ant-junit4:1.8.4"
-    testCompile "org.hamcrest:hamcrest-core:1.3.RC2"
-    testCompile "org.hamcrest:hamcrest-library:1.3.RC2"
-    testCompile "org.mockito:mockito-all:1.9.0"        
-    compile("com.netflix.curator:curator-recipes:1.1.9") {
+    runtime "org.slf4j:slf4j-api:1.7.5"
+    runtime "org.slf4j:jcl-over-slf4j:1.7.5"
+    runtime "org.slf4j:log4j-over-slf4j:1.7.5"   
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-beta9"
+    runtime "org.apache.logging.log4j:log4j-api:2.0-beta9"
+    runtime "org.apache.logging.log4j:log4j-core:2.0-beta9"
+    runtime "com.lmax:disruptor:3.2.0" // required for log4j
+    testCompile "junit:junit:4.11"
+    testCompile "org.apache.ant:ant-junit4:1.9.2"
+    testCompile "org.hamcrest:hamcrest-core:1.3"
+    testCompile "org.hamcrest:hamcrest-library:1.3"
+    testCompile "org.mockito:mockito-all:1.9.5"        
+    compile("com.netflix.curator:curator-recipes:1.3.3") {
         exclude group: "org.slf4j", module: '*'
     }
-    compile("com.netflix.curator:curator-client:1.1.9") {
+    compile("com.netflix.curator:curator-client:1.3.3") {
         exclude group: "org.slf4j", module: '*'
     }
-    compile("com.netflix.curator:curator-framework:1.1.9") {
+    compile("com.netflix.curator:curator-framework:1.3.3") {
         exclude group: "org.slf4j", module: '*'
     }
     compile("org.apache.zookeeper:zookeeper:3.4.3") {
@@ -177,7 +177,7 @@ apply plugin: 'github-pages'
 //githubPages { repoUri = 'https://github.com/puniverse/galaxy.git' }
 buildscript {
     repositories { mavenCentral() }
-    dependencies { classpath 'org.ajoberstar:gradle-git:0.4.0' }
+    dependencies { classpath 'org.ajoberstar:gradle-git:0.6.3' }
 }
 addGhPages {
     dependsOn javadoc,copyDocsToDist
@@ -262,7 +262,7 @@ uploadArchives {
 //////// Javancss
  
 dependencies {
-    javancssConf 'javancss:javancss:29.50'
+    javancssConf 'javancss:javancss:30.51'
 }
  
 task javancss(dependsOn: 'classes') << {

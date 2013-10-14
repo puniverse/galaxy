@@ -216,6 +216,11 @@ public final class LogMock {
         }
 
         @Override
+        public Stubber doCallRealMethod() {
+            return delegate.doCallRealMethod();
+        }
+
+        @Override
         public <T> T when(T mock) {
             return delegate.when(mock);
         }

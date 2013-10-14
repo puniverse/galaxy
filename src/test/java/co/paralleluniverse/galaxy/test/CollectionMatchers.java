@@ -28,7 +28,7 @@ import org.hamcrest.collection.*;
  * @author pron
  */
 public class CollectionMatchers {
-    public static <E> Matcher<Collection<E>> empty() {
+    public static <E> Matcher<Collection<? extends E>> empty() {
         return IsEmptyCollection.empty();
     }
 
