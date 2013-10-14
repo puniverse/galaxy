@@ -262,7 +262,7 @@ uploadArchives {
 //////// Javancss
  
 dependencies {
-    javancssConf 'javancss:javancss:30.51'
+    javancssConf 'org.codehaus.javancss:javancss:32.53'
 }
  
 task javancss(dependsOn: 'classes') << {
