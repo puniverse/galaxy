@@ -20,10 +20,10 @@
 package co.paralleluniverse.galaxy.zookeeper;
 
 import co.paralleluniverse.galaxy.cluster.DistributedTreeTKB;
-import com.netflix.curator.framework.CuratorFramework;
-import com.netflix.curator.framework.CuratorFrameworkFactory;
-import com.netflix.curator.retry.ExponentialBackoffRetry;
 import java.util.Random;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 
 /**
  *
