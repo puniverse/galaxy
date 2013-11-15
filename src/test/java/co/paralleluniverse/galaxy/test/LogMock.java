@@ -97,6 +97,10 @@ public final class LogMock {
         return Mockito.mock(classToMock, mockSettings.defaultAnswer(LOGS_CALLS));
     }
 
+    public static <T> T mock(Class<T> classToMock, Answer answer) {
+        return Mockito.mock(classToMock, answer);
+    }
+
     public static <T> OngoingStubbing<T> when(T methodCall) {
         return new OngoingStubbingExt<T>(Mockito.when(methodCall));
     }
