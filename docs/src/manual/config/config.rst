@@ -32,17 +32,19 @@ of the properties file may also be passed to ``getInstance``. If a ``null`` name
 file gets loaded. The properties file is handy when you want to use the same configuration file for all nodes, with only minor differences (like node ID). 
 In this case, you can just set the different properties in the separate properties file. This is the common case so properties files are recommended.
 
-You define properties in the properties file like so (you can make up your own property names - they have no special meaning for Galaxy):
+You define properties in the properties file like so (you can make up your own property names - they have no special meaning to Galaxy:
 
 .. code-block:: properties
 
-    cluster.nodeId=3
+    galaxy.nodeId=3
 
 and you reference them from the configuration file when setting configuration properties like this:
 
 .. code-block:: xml
 
-	<constructor-arg name="nodeId" value="${cluster.nodeId}"/> 
+	<constructor-arg name="nodeId" value="${galaxy.nodeId}"/> 
+
+Alternatively, you can define properties as JVM system properties by the same name.
 
 The configuration file defines which implementation each Galaxy component is to use, as well as implementation specific configuration parameters for each component.
 

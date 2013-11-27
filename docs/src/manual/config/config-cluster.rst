@@ -123,7 +123,7 @@ ZooKeeper Configuration Example
 .. code-block:: xml
 
     <bean id="cluster" class="co.paralleluniverse.galaxy.zookeeper.ZooKeeperCluster">
-        <constructor-arg name="nodeId" value="${grid.nodeId}"/>
+        <constructor-arg name="nodeId" value="${galaxy.nodeId}"/>
         <property name="hasServer" value="true"/>
         <constructor-arg name="zkConnectString" value="127.0.0.1:2181"/>
         <property name="sessionTimeoutMs" value="1500"/>
@@ -225,7 +225,7 @@ JGroups Configuration Example
 .. code-block:: xml
 
     <bean id="cluster" class="co.paralleluniverse.galaxy.jgroups.JGroupsCluster">
-        <constructor-arg name="nodeId" value="${grid.nodeId}"/>
+        <constructor-arg name="nodeId" value="${galaxy.nodeId}"/>
         <property name="hasServer" value="true"/>
         <constructor-arg name="jgroupsClusterName" value="cluster1"/>
         <property name="jgroupsConf">
