@@ -1,6 +1,6 @@
 /*
  * Galaxy
- * Copyright (C) 2012 Parallel Universe Software Co.
+ * Copyright (C) 2012-2013 Parallel Universe Software Co.
  * 
  * This file is part of Galaxy.
  *
@@ -21,7 +21,7 @@ package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.MonitoringType;
 import co.paralleluniverse.common.io.Checksum;
-import co.paralleluniverse.common.io.DoubleHasher;
+import co.paralleluniverse.common.io.HashFunctionChecksum;
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.common.io.Persistables;
 import co.paralleluniverse.common.io.VersionedPersistable;
@@ -32,7 +32,6 @@ import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.InvokeOnLine;
 import co.paralleluniverse.galaxy.RefNotFoundException;
-import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import co.paralleluniverse.galaxy.core.Message.INVRES;
@@ -264,7 +263,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private Checksum getChecksum() {
         assert compareBeforeWrite;
-        return new DoubleHasher(); // new MessageDigestChecksum("MD5"); // new MessageDigestChecksum("SHA-1"); // new MessageDigestChecksum("SHA-256"); 
+        return new HashFunctionChecksum(com.google.common.hash.Hashing.murmur3_128()); // new DoubleHasher(); // new MessageDigestChecksum("MD5"); // new MessageDigestChecksum("SHA-1"); // new MessageDigestChecksum("SHA-256"); 
     }
 
     public long getMaxStaleReadMillis() {
