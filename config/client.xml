@@ -29,7 +29,7 @@
     -->
 
     <bean id="cluster" class="co.paralleluniverse.galaxy.jgroups.JGroupsCluster">
-        <constructor-arg name="nodeId" value="${grid.nodeId}"/>
+        <constructor-arg name="nodeId" value="${galaxy.nodeId}"/>
         <constructor-arg name="jgroupsClusterName" value="cluster1"/>
         <property name="hasServer" value="true"/>
         <property name="jgroupsConf">
