@@ -359,13 +359,22 @@ public class StoreImpl implements Store {
         return (ListenableFuture<Void>) (Object) cache.doOpAsync(DEL, nonReserved(id), null, null, (Transaction) txn);
     }
 
-    @Override
-    public void setListener(long id, CacheListener listener) {
+    public CacheListener setListener(long id, CacheListener listener, boolean onlyIfAbsent) {
         try {
-            cache.doOp(LSTN, id, null, listener, null);
+            return (CacheListener) cache.doOp(LSTN, id, onlyIfAbsent, listener, null);
         } catch (TimeoutException e) {
             throw new AssertionError();
         }
+    }
+
+    @Override
+    public CacheListener setListenerIfAbsent(long id, CacheListener listener) {
+        return setListener(id, listener, true);
+    }
+
+    @Override
+    public void setListener(long id, CacheListener listener) {
+        setListener(id, listener, false);
     }
 
     @Override
@@ -412,9 +421,13 @@ public class StoreImpl implements Store {
 
     @Override
     public long getVersion(long id) {
-       return cache.getVersion(id);
+        return cache.getVersion(id);
     }
 
+    @Override
+    public CacheListener getListener(long id) {
+        return cache.getListener(id);
+    }
     ///////////////////////////////////////////////////////////////////
     void get1(long id, Persistable object) throws TimeoutException {
         get1(GET, id, object, null);

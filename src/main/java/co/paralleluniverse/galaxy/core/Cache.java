@@ -352,7 +352,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         private ByteBuffer data;        // 4
         private short owner = -1;       // 2
         private TShortHashSet sharers;  // 4
-        private CacheListener listener; // 4
+        private volatile CacheListener listener; // 4
         // =
         // 47 (+ 8 = 56)
 
@@ -423,8 +423,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             return listener;
         }
 
-        public void setListener(CacheListener listener) {
-            this.listener = listener;
+        private CacheListener setListener(CacheListener listener, boolean onlyIfAbsent) {
+            if (!onlyIfAbsent | this.listener==null)
+                this.listener = listener;
+            return this.listener;
         }
 
         public int size() {
@@ -485,6 +487,13 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (line == null)
             return -1;
         return line.getVersion();
+    }
+
+    public CacheListener getListener(long id) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return null;
+        return line.getListener();
     }
 
     //<editor-fold defaultstate="collapsed" desc="Execution flow">
@@ -706,7 +715,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     res = handleOpPushX(line, extra, lineChange);
                     break;
                 case LSTN:
-                    res = handleOpListen(line, extra);
+                    res = handleOpListen(line, data, extra);
                     break;
                 case INVOKE:
                     res = handleOpInvoke(line, data, nodeHint(extra), lineChange);
@@ -1431,9 +1440,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return null;
     }
 
-    private Void handleOpListen(CacheLine line, Object listener) {
-        line.setListener((CacheListener) listener);
-        return null;
+    private CacheListener handleOpListen(CacheLine line, Object data, Object listener) {
+        boolean onlyIfAbsent = (boolean) data;
+        return line.setListener((CacheListener) listener, onlyIfAbsent);
     }
 
     private Object handleOpInvoke(CacheLine line, Object data, short nodeHint, int lineChange) {

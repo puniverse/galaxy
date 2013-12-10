@@ -115,6 +115,21 @@ public interface Store {
     void setListener(long id, CacheListener listener);
 
     /**
+     * Sets a listener listening for local cache events on the given item if absent.
+     *
+     * @param id       The item's ID.
+     * @param listener The listener.
+     * @return         The given listener if it was set or the existing one otherwise.
+     */
+    CacheListener setListenerIfAbsent(long id, CacheListener listener);
+
+    /**
+     * @param  id       The item's ID.
+     * @return          The cacheListener of this line
+     */
+    CacheListener getListener(long id);
+
+    /**
      * Allocates one or more new (and empty) items in the store.<p/>
      * When allocating a single item, it's better to use {@link #put(byte[], StoreTransaction) put()}, but some data
      * structures might require allocating an array of items.<br/>
