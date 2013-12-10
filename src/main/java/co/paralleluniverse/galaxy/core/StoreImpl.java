@@ -223,7 +223,7 @@ public class StoreImpl implements Store {
     public void del(long id, StoreTransaction txn) throws TimeoutException {
         cache.doOp(DEL, nonReserved(id), null, null, (Transaction) txn);
     }
-    
+
     @Override
     public ListenableFuture<Long> allocAsync(int count, StoreTransaction txn) {
         return (ListenableFuture<Long>) (Object) cache.doOpAsync(ALLOC, -1L, null, count, (Transaction) verifyNonNull(txn));
@@ -408,6 +408,11 @@ public class StoreImpl implements Store {
             }
             throw new AssertionError();
         }
+    }
+
+    @Override
+    public long getVersion(long id) {
+       return cache.getVersion(id);
     }
 
     ///////////////////////////////////////////////////////////////////

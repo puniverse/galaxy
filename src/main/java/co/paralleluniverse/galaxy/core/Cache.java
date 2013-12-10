@@ -347,7 +347,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         long timeAccessed;
         private State state;            // 4
         private State nextState;        // 4
-        private long version;           // 8 
+        private volatile long version;  // 8 
         private long ownerClock;        // 8 must contain a counter that is monotonically increasing for each owner, e.g, the message id
         private ByteBuffer data;        // 4
         private short owner = -1;       // 2
@@ -478,6 +478,13 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             synchronized (line) {
                 return line.getState();
             }
+    }
+
+    public long getVersion(long id) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return -1;
+        return line.getVersion();
     }
 
     //<editor-fold defaultstate="collapsed" desc="Execution flow">
@@ -1742,7 +1749,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         // state is set to E. When the master dies, processLineOnNodeEvent in other peers will set S -> I,
         // so we don't need to track sharers.
-
         int change = LINE_NO_CHANGE;
         change |= setState(line, State.E) ? LINE_STATE_CHANGED : 0;
         change |= setOwner(line, msg.getNode()) ? LINE_OWNER_CHANGED : 0;
@@ -2044,7 +2050,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
 //            if (state.isLessThan(State.O) && !line.getState().isLessThan(State.O))
 //                line.timeAccessed = System.currentTimeMillis();
-
             line.state = state;
             if (line.sharers == null || !state.isLessThan(State.O))
                 line.sharers = allocateSharerSet(SHARER_SET_DEFAULT_SIZE);
