@@ -2309,6 +2309,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return line.unlock();
     }
 
+    /**
+     * Blocks
+     */
     void send(Message message) {
         LOG.debug("Sending: {}", message);
         try {

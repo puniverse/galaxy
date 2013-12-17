@@ -388,6 +388,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         }
     }
 
+    /**
+     * Can block if buffer is full
+     */
     @Override
     protected void sendToNode(Message message, short node, InetSocketAddress address) {
         try {
@@ -409,6 +412,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         }
     }
 
+    /**
+     * Can block
+     */
     @Override
     protected synchronized void broadcast(Message message) { // synchronized for message ID ordering
         try {
@@ -504,6 +510,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         private final Set<Message> timeouts = Collections.newSetFromMap(new ConcurrentHashMap<Message, Boolean>());
         private long lastTimeoutsCleanup;
 
+        /**
+         * This can block!
+         */
         public void sendMessage(Message message) throws InterruptedException {
             if (!queue.offer(message)) {
                 LOG.info("Adding message {} to full queue. Waiting for available space.", message);

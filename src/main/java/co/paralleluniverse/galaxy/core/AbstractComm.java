@@ -91,6 +91,9 @@ public abstract class AbstractComm<Address> extends ClusterService implements Co
         return scheduler;
     }
 
+    /**
+     * Blocks
+     */
     @Override
     public void send(final Message message) throws NodeNotFoundException {
         assert message.getMessageId() <= 0 ^ message.isResponse();
