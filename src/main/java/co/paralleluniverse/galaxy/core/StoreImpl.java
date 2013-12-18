@@ -428,6 +428,7 @@ public class StoreImpl implements Store {
     public CacheListener getListener(long id) {
         return cache.getListener(id);
     }
+
     ///////////////////////////////////////////////////////////////////
     void get1(long id, Persistable object) throws TimeoutException {
         get1(GET, id, object, null);
@@ -521,5 +522,12 @@ public class StoreImpl implements Store {
 
     private void get1(Op.Type type, long id, short nodeHint, Persistable object, StoreTransaction txn) throws TimeoutException {
         cache.doOp(type, id, object, nodeHint, (Transaction) txn);
+    }
+
+    @Override
+    public boolean tryPin(long id, ItemState state, StoreTransaction txn) throws IllegalStateException {
+        if (state == ItemState.INVALID)
+            throw new IllegalStateException("state Invalid is not permitted");
+        return cache.tryLock(id, state, (Transaction)txn);
     }
 }

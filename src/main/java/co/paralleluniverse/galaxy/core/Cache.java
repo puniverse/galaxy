@@ -31,7 +31,9 @@ import co.paralleluniverse.common.util.Enums;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.InvokeOnLine;
+import co.paralleluniverse.galaxy.ItemState;
 import co.paralleluniverse.galaxy.RefNotFoundException;
+import co.paralleluniverse.galaxy.StoreTransaction;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import co.paralleluniverse.galaxy.core.Message.INVRES;
@@ -326,9 +328,24 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return owned.values().iterator();
     }
 
+    boolean tryLock(long id, ItemState state, Transaction txn) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return false;
+        synchronized (line) {
+            if ((state == ItemState.OWNED & line.getState() == State.E)
+                    | (state == ItemState.SHARED & !line.getState().isLessThan(State.S))) {
+                lockLine(line, txn);
+                return true;
+            }
+        }
+        return false;
+    }
+
     //<editor-fold defaultstate="collapsed" desc="Types">
     /////////////////////////// Types ///////////////////////////////////////////
     enum State {
+        // Invalid, Shared, Owned, Exclusive
         I, S, O, E; // Order matters! (used by setNextState)
 
         public boolean isLessThan(State other) {
@@ -345,7 +362,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         private byte flags;             // 1
         //private short sem;              // 2
         long timeAccessed;
-        private State state;            // 4
+        private volatile State state;   // 4
         private State nextState;        // 4
         private volatile long version;  // 8 
         private long ownerClock;        // 8 must contain a counter that is monotonically increasing for each owner, e.g, the message id
@@ -424,7 +441,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
 
         private CacheListener setListener(CacheListener listener, boolean onlyIfAbsent) {
-            if (!onlyIfAbsent | this.listener==null)
+            if (!onlyIfAbsent | this.listener == null)
                 this.listener = listener;
             return this.listener;
         }
@@ -477,9 +494,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (line == null)
             return null;
         else
-            synchronized (line) {
-                return line.getState();
-            }
+            return line.getState();
     }
 
     public long getVersion(long id) {

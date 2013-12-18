@@ -911,6 +911,17 @@ public interface Store {
     boolean isPinned(long id);
 
     /**
+     * Pins item if it can be done locally. 
+     * 
+     * @param id  The item's ID.
+     * @param state can be X for writePin or S for readPin.
+     * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
+     * @return true if succeeded.
+     * @throws IllegalStateException if state is not X or S
+     */
+    boolean tryPin(long id, ItemState state, StoreTransaction txn) throws IllegalStateException;
+
+    /**
      * Returns an item's state in the local store.
      *
      * @param id The item's ID.
