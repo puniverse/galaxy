@@ -25,7 +25,7 @@ configurations {
     all*.exclude group: 'com.sun.jdmk', module: 'jmxtools'
     all*.exclude group: 'com.sun.jmx', module: 'jmxri'
     all*.exclude group: 'javax.mail', module: 'mail'
-//    published
+    //    published
     javancssConf
 }
 
@@ -71,6 +71,12 @@ dependencies {
     compile("org.apache.zookeeper:zookeeper:3.4.5") {
         exclude group: "org.slf4j", module: '*'
         
+    }
+    compile("de.javakaffee:kryo-serializers:0.26") {
+        exclude group: "com.esotericsoftware.kryo", module: '*'
+    }
+    compile("com.esotericsoftware.kryo:kryo:2.22") {
+        exclude group: "org.ow2.asm", module: '*'
     }
 }
 
