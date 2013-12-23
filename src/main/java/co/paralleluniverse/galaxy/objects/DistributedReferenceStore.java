@@ -35,23 +35,23 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
         this.store = store;
     }
 
-    public R getOrCreateRef(long lineId, Object arg) {
+    public R getOrCreateRef(long lineId) {
         if (lineId <= 0)
             return null;
         CacheListener ref = store.getListener(lineId);
-        return (R) (ref != null ? ref : store.setListenerIfAbsent(lineId, createRef(lineId, null, arg)));
+        return (R) (ref != null ? ref : store.setListenerIfAbsent(lineId, createRef(lineId, null)));
     }
 
-    public R newRef(long lineId, T obj, Object arg) {
+    public R newRef(long lineId, T obj) {
         if (lineId <= 0)
             return null;
         assert store.getListener(lineId) == null;
-        R ref = createRef(lineId, obj, arg);
+        R ref = createRef(lineId, obj);
         store.setListener(lineId, ref);
         return ref;
     }
 
-    protected R createRef(long id, T obj, Object arg) {
+    protected R createRef(long id, T obj) {
         return (R)new DistributedReference<T>(id, obj);
     }
 }
