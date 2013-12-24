@@ -21,6 +21,7 @@ package co.paralleluniverse.galaxy.objects;
 
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Store;
+import co.paralleluniverse.galaxy.TimeoutException;
 
 /**
  * Wraps T and implements Distributed interface
@@ -30,6 +31,7 @@ import co.paralleluniverse.galaxy.Store;
  */
 public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
     private final Store store;
+    private static byte[] ba = new byte[1];
 
     public DistributedReferenceStore(Store store) {
         this.store = store;
@@ -42,7 +44,7 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
         return (R) (ref != null ? ref : store.setListenerIfAbsent(lineId, createRef(lineId, null)));
     }
 
-    public R newRef(long lineId, T obj) {
+    private R newRef(long lineId, T obj) {
         if (lineId <= 0)
             return null;
         assert store.getListener(lineId) == null;
@@ -51,7 +53,18 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
         return ref;
     }
 
+    public R newRef(T obj) {
+        try {
+            long id = store.put(ba, null);            
+            R newRef = newRef(id, obj);
+            store.release(id);
+            return newRef;
+        } catch (TimeoutException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     protected R createRef(long id, T obj) {
-        return (R)new DistributedReference<T>(id, obj);
+        return (R) new DistributedReference<T>(id, obj);
     }
 }
