@@ -38,9 +38,9 @@ public class DistributedReference<T> implements CacheListener, Persistable {
     private final long id;
     private byte[] tmpBuffer;
 
-    protected DistributedReference(long id, T obj) {
+    public DistributedReference(long id, T obj) {
         this.obj = obj;
-        this.id = 0;
+        this.id = id;
     }
 
     public T get() {
