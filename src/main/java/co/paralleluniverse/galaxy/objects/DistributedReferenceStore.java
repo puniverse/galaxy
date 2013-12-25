@@ -44,24 +44,13 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
         return (R) (ref != null ? ref : store.setListenerIfAbsent(lineId, createRef(lineId, null)));
     }
 
-    private R newRef(long lineId, T obj) {
+    public R newRef(long lineId, T obj) {
         if (lineId <= 0)
             return null;
         assert store.getListener(lineId) == null;
         R ref = createRef(lineId, obj);
         store.setListener(lineId, ref);
         return ref;
-    }
-
-    public R newRef(T obj) {
-        try {
-            long id = store.put(ba, null);            
-            R newRef = newRef(id, obj);
-            store.release(id);
-            return newRef;
-        } catch (TimeoutException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     protected R createRef(long id, T obj) {
