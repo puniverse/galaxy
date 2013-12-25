@@ -128,6 +128,6 @@ public class DistributedReference<T> implements CacheListener, Persistable {
 
     @Override
     public String toString() {
-        return super.toString() + "[" + Long.toHexString(id) + ": " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
+        return getClass().getSimpleName() + "[" + Long.toHexString(id) + ": " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
     }
 }
