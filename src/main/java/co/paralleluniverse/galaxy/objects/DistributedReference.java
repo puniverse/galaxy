@@ -23,8 +23,11 @@ import co.paralleluniverse.common.io.ByteBufferInputStream;
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.io.serialization.Serialization;
+import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.nio.ByteBuffer;
 
 /**
@@ -33,10 +36,10 @@ import java.nio.ByteBuffer;
  * @author eitan
  * @param <T>
  */
-public class DistributedReference<T> implements CacheListener, Persistable {
-    private volatile T obj;
-    private final long id;
-    private byte[] tmpBuffer;
+public class DistributedReference<T> implements CacheListener, Persistable, Externalizable {
+    private transient volatile T obj;
+    private long id;
+    private transient byte[] tmpBuffer;
 
     public DistributedReference(long id, T obj) {
         this.obj = obj;
@@ -109,7 +112,7 @@ public class DistributedReference<T> implements CacheListener, Persistable {
         else
             this.obj = deserialize(new ByteBufferInputStream(buffer));
     }
-    
+
     protected void set(T obj) {
         this.obj = obj;
     }
@@ -124,6 +127,20 @@ public class DistributedReference<T> implements CacheListener, Persistable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // for use by Externalizable only!
+    public DistributedReference() {
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeLong(id);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        this.id = in.read();
     }
 
     @Override
