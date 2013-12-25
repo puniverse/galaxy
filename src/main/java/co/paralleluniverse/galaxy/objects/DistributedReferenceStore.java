@@ -21,7 +21,6 @@ package co.paralleluniverse.galaxy.objects;
 
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Store;
-import co.paralleluniverse.galaxy.TimeoutException;
 
 /**
  * Wraps T and implements Distributed interface
@@ -31,7 +30,6 @@ import co.paralleluniverse.galaxy.TimeoutException;
  */
 public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
     private final Store store;
-    private static byte[] ba = new byte[1];
 
     public DistributedReferenceStore(Store store) {
         this.store = store;
