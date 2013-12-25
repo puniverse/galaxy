@@ -1177,8 +1177,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private void backupLine(CacheLine line) {
         line.set(CacheLine.SLAVE, true);
         backup.startBackup();
-        backup.backup(line.getId(), line.getVersion());
-        backup.endBackup();
+        try {
+            backup.backup(line.getId(), line.getVersion());
+        } finally {
+            backup.endBackup();
+        }
         if (hasPendingMessages(line))
             backup.flush();
     }
