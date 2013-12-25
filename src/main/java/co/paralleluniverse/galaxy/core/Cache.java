@@ -33,7 +33,6 @@ import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.InvokeOnLine;
 import co.paralleluniverse.galaxy.ItemState;
 import co.paralleluniverse.galaxy.RefNotFoundException;
-import co.paralleluniverse.galaxy.StoreTransaction;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import co.paralleluniverse.galaxy.core.Message.INVRES;
@@ -152,6 +151,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         this(name, cluster, comm, storage, backup, createMonitor(monitoringType, name), maxCapacity);
     }
 
+    @SuppressWarnings("LeakingThisInConstructor")
     Cache(String name, Cluster cluster, Comm comm, CacheStorage storage, Backup backup, CacheMonitor monitor, long maxCapacity) {
         super(name, cluster);
         this.comm = comm;
