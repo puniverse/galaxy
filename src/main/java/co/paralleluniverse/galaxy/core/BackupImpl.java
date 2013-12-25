@@ -275,7 +275,7 @@ public class BackupImpl extends ClusterService implements Backup {
                         } else {
                             if (LOG.isDebugEnabled())
                                 LOG.debug("Matching version for {} ({}) not found", hex(be.id), be.version);
-                            copyImmediately = true;
+                            this.copyImmediately = true;
                         }
                     }
                     it.remove();
@@ -323,7 +323,7 @@ public class BackupImpl extends ClusterService implements Backup {
                         LOG.debug("Waiting for missing transactions");
                         currentBackupsPossiblyReady.await();
                     }
-                    copyImmediately = false;
+                    this.copyImmediately = false;
                 } finally {
                     currentBackupsLock.unlock();
                 }
