@@ -2254,6 +2254,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void readData(CacheLine line, Persistable object) {
+        if (object == null)
+            return;
         accessLine(line);
 
         final ByteBuffer buffer = line.data != null ? line.data : EMPTY_BUFFER;
