@@ -185,7 +185,7 @@ public interface Store {
      * Retrieves a given data item into a {@link Persistable}.
      *
      * @param id     The item's ID.
-     * @param object The object into which the contents of the item will be written.
+     * @param object The object into which the contents of the item will be written. May be {@code null}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     void get(long id, Persistable object) throws TimeoutException;
@@ -213,7 +213,7 @@ public interface Store {
      *
      * @param id       The item's ID.
      * @param nodeHint The ID of the node the data item is probably owned by.
-     * @param object   The object into which the contents of the item will be written.
+     * @param object   The object into which the contents of the item will be written. May be {@code null}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     void get(long id, short nodeHint, Persistable object) throws TimeoutException;
@@ -243,7 +243,7 @@ public interface Store {
      *
      * @param id      The item's ID.
      * @param ownerOf The ID of an item whose owner is probably the owner of the requested item as well.
-     * @param object  The object into which the contents of the item will be written.
+     * @param object  The object into which the contents of the item will be written. May be {@code null}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     void getFromOwner(long id, long ownerOf, Persistable object) throws TimeoutException;
@@ -267,7 +267,7 @@ public interface Store {
      * it.
      *
      * @param id     The item's ID.
-     * @param object The object into which the contents of the item will be written.
+     * @param object The object into which the contents of the item will be written. May be {@code null}.
      * @param txn    The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
@@ -302,7 +302,7 @@ public interface Store {
      * @param id       The item's ID.
      * @param nodeHint The ID of the node the data item is probably owned by.
      * @param txn      The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
-     * @param object   The object into which the contents of the item will be written.
+     * @param object   The object into which the contents of the item will be written. May be {@code null}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     void gets(long id, short nodeHint, Persistable object, StoreTransaction txn) throws TimeoutException;
@@ -337,7 +337,7 @@ public interface Store {
      *
      * @param id      The item's ID.
      * @param ownerOf The ID of an item whose owner is probably the owner of the requested item as well.
-     * @param object  The object into which the contents of the item will be written.
+     * @param object  The object into which the contents of the item will be written. May be {@code null}.
      * @param txn     The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
@@ -361,7 +361,7 @@ public interface Store {
      * or {@link #release(long) release} it.
      *
      * @param id     The item's ID.
-     * @param object The object into which the contents of the item will be written.
+     * @param object The object into which the contents of the item will be written. May be {@code null}.
      * @param txn    The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
@@ -395,7 +395,7 @@ public interface Store {
      *
      * @param id       The item's ID.
      * @param nodeHint The ID of the node the data item is probably owned by.
-     * @param object   The object into which the contents of the item will be written.
+     * @param object   The object into which the contents of the item will be written. May be {@code null}.
      * @param txn      The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
@@ -435,7 +435,7 @@ public interface Store {
      *
      * @param id      The item's ID.
      * @param ownerOf The ID of an item whose owner is probably the owner of the requested item as well.
-     * @param object  The object into which the contents of the item will be written.
+     * @param object  The object into which the contents of the item will be written. May be {@code null}.
      * @param txn     The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
@@ -607,7 +607,7 @@ public interface Store {
      *
      * @param id      The item's ID.
      * @param ownerOf The ID of an item whose owner is probably the owner of the requested item as well.
-     * @param object  The object into which the contents of the item will be written.
+     * @param object  The object into which the contents of the item will be written. May be {@code null}.
      * @return A future that will return the passed object.
      */
     ListenableFuture<Persistable> getFromOwnerAsync(long id, long ownerOf, Persistable object);
@@ -636,7 +636,7 @@ public interface Store {
      * The asynchronous version of {@link #gets(long, co.paralleluniverse.common.io.Persistable, co.paralleluniverse.galaxy.StoreTransaction) gets(long, Persistable, StoreTransaction)}
      *
      * @param id     The item's ID.
-     * @param object The object into which the contents of the item will be written.
+     * @param object The object into which the contents of the item will be written. May be {@code null}.
      * @param txn    The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return A future that will return the passed object.
      */
@@ -716,7 +716,7 @@ public interface Store {
      *
      * @param id      The item's ID.
      * @param ownerOf The ID of an item whose owner is probably the owner of the requested item as well.
-     * @param object  The object into which the contents of the item will be written.
+     * @param object  The object into which the contents of the item will be written. May be {@code null}.
      * @param txn     The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return A future that will return the passed object.
      */
@@ -745,7 +745,7 @@ public interface Store {
      * The asynchronous version of {@link #getx(long, co.paralleluniverse.common.io.Persistable, co.paralleluniverse.galaxy.StoreTransaction) getx(long, Persistable, StoreTransaction)}
      *
      * @param id     The item's ID.
-     * @param object The object into which the contents of the item will be written.
+     * @param object The object into which the contents of the item will be written. May be {@code null}.
      * @param txn    The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return A future that will return the passed object.
      */
@@ -784,7 +784,7 @@ public interface Store {
      *
      * @param id       The item's ID.
      * @param nodeHint The ID of the node the data item is probably owned by.
-     * @param object   The object into which the contents of the item will be written.
+     * @param object   The object into which the contents of the item will be written. May be {@code null}.
      * @param txn      The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return A future that will return the passed object.
      */
@@ -829,7 +829,7 @@ public interface Store {
      *
      * @param id      The item's ID.
      * @param ownerOf The ID of an item whose owner is probably the owner of the requested item as well.
-     * @param object  The object into which the contents of the item will be written.
+     * @param object  The object into which the contents of the item will be written. May be {@code null}.
      * @param txn     The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return A future that will return the passed object.
      */
