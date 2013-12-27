@@ -1459,7 +1459,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private CacheListener handleOpListen(CacheLine line, Object data, Object listener) {
-        boolean onlyIfAbsent = (boolean) (data!=null? data: false);
+        boolean onlyIfAbsent = (boolean) (data != null ? data : false);
         return line.setListener((CacheListener) listener, onlyIfAbsent);
     }
 
