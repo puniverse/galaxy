@@ -359,9 +359,9 @@ public class StoreImpl implements Store {
         return (ListenableFuture<Void>) (Object) cache.doOpAsync(DEL, nonReserved(id), null, null, (Transaction) txn);
     }
 
-    public CacheListener setListener(long id, CacheListener listener, boolean onlyIfAbsent) {
+    public CacheListener setListener(long id, CacheListener listener, boolean ifAbsent) {
         try {
-            return (CacheListener) cache.doOp(LSTN, id, onlyIfAbsent, listener, null);
+            return (CacheListener) cache.doOp(LSTN, id, ifAbsent, listener, null);
         } catch (TimeoutException e) {
             throw new AssertionError();
         }

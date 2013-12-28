@@ -30,8 +30,8 @@ import co.paralleluniverse.common.util.DegenerateInvocationHandler;
 import co.paralleluniverse.common.util.Enums;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Cluster;
-import co.paralleluniverse.galaxy.InvokeOnLine;
 import co.paralleluniverse.galaxy.ItemState;
+import co.paralleluniverse.galaxy.LineFunction;
 import co.paralleluniverse.galaxy.RefNotFoundException;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
@@ -440,8 +440,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             return listener;
         }
 
-        private CacheListener setListener(CacheListener listener, boolean onlyIfAbsent) {
-            if (!onlyIfAbsent | this.listener == null)
+        private CacheListener setListener(CacheListener listener, boolean ifAbsent) {
+            if (!ifAbsent | this.listener == null)
                 this.listener = listener;
             return this.listener;
         }
@@ -618,7 +618,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
             final long id = op.line;
             CacheLine line = getLine(id);
-
             if (line == null) {
                 Object res = handleOpNoLine(op.type, op.line, op.getExtra());
                 if (res != DIDNT_HANDLE)
@@ -702,6 +701,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         Object res = null;
 
+        LOG.debug("handleOp: {} {}", type, line);
+
         if (line != null && shouldHoldOp(line, type))
             res = PENDING;
         else {
@@ -752,6 +753,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             // addMiss and addInvalidates are handled by setNextState();
         }
 
+        if (LOG.isDebugEnabled())
+            LOG.debug("handleOp: {} {} => {}", type, hex(line.getId()), res);
         return res;
     }
 
@@ -862,6 +865,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private void runMessage(LineMessage message) {
         final long id = message.getLine();
         CacheLine line = getLine(id);
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("runMessage: {} {} {}", line, hex(id), message);
+
         if (line == null) {
             if (handleMessageNoLine(message))
                 return;
@@ -1461,8 +1468,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private CacheListener handleOpListen(CacheLine line, Object data, Object listener) {
-        boolean onlyIfAbsent = (boolean) (data != null ? data : false);
-        return line.setListener((CacheListener) listener, onlyIfAbsent);
+        final boolean ifAbsent = (boolean) (data != null ? data : false);
+        return line.setListener((CacheListener) listener, ifAbsent);
     }
 
     private Object handleOpInvoke(CacheLine line, Object data, short nodeHint, int lineChange) {
@@ -1480,24 +1487,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 return PENDING;
             return execInvoke(line, (LineFunction) data);
         }
-    }
-
-    // Called from handleOp and from handleMessageInvoke
-    private Object execInvoke(final CacheLine line, InvokeOnLine iol) {
-        return iol.invoke(new InvokeOnLine.LineAccess() {
-            @Override
-            public ByteBuffer getForRead() {
-                return line.getData().asReadOnlyBuffer();
-            }
-
-            @Override
-            public ByteBuffer getForWrite(int size) {
-                allocateLineData(line, size);
-                line.version++;
-                line.set(CacheLine.MODIFIED, true);
-                return line.getData();
-            }
-        });
     }
 
     private static short nodeHint(Object obj) {
@@ -2215,6 +2204,39 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (line.getState().isLessThan(State.O)) // => state must be set before this is called
             putLine(line.id, line, oldSize, 0); // size changed
         return true;
+    }
+
+    private Object execInvoke(final CacheLine line, LineFunction f) {
+        final LineAccess la = new LineAccess(line);
+        final Object res = f.invoke(la);
+        if (la.written)
+            line.data.flip();
+        else
+            line.data.rewind();
+        return res;
+    }
+
+    private class LineAccess implements LineFunction.LineAccess {
+        final CacheLine line;
+        boolean written;
+
+        public LineAccess(CacheLine line) {
+            this.line = line;
+        }
+
+        @Override
+        public ByteBuffer getForRead() {
+            return line.getData().asReadOnlyBuffer();
+        }
+
+        @Override
+        public ByteBuffer getForWrite(int size) {
+            allocateLineData(line, size);
+            line.version++;
+            line.set(CacheLine.MODIFIED, true);
+            written = true;
+            return line.getData();
+        }
     }
 
     private void allocateLineData(CacheLine line, int size) {
