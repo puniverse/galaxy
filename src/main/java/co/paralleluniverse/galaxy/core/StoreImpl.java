@@ -21,8 +21,8 @@ package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.CacheListener;
-import co.paralleluniverse.galaxy.LineFunction;
 import co.paralleluniverse.galaxy.ItemState;
+import co.paralleluniverse.galaxy.LineFunction;
 import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.StoreTransaction;
 import co.paralleluniverse.galaxy.TimeoutException;
@@ -43,6 +43,10 @@ public class StoreImpl implements Store {
     public StoreImpl(Cache cache) {
         this.cache = cache;
         this.rootManager = new StringRootManager(this, cache.getCluster());
+    }
+    
+    private static Persistable nonNullPersistable(Persistable object) {
+        return object == null ? Cache.NULL_PERSISTABLE : object;
     }
 
     @Override
@@ -131,17 +135,17 @@ public class StoreImpl implements Store {
 
     @Override
     public void get(long id, Persistable object) throws TimeoutException {
-        get(GET, id, object, null);
+        get(GET, id, nonNullPersistable(object), null);
     }
 
     @Override
     public void get(long id, short nodeHint, Persistable object) throws TimeoutException {
-        get(GET, id, nodeHint, object, null);
+        get(GET, id, nodeHint, nonNullPersistable(object), null);
     }
 
     @Override
     public void getFromOwner(long id, long ownerOf, Persistable object) throws TimeoutException {
-        getFromOwner(GET, id, ownerOf, object, null);
+        getFromOwner(GET, id, ownerOf, nonNullPersistable(object), null);
     }
 
     @Override
@@ -161,17 +165,17 @@ public class StoreImpl implements Store {
 
     @Override
     public void gets(long id, Persistable object, StoreTransaction txn) throws TimeoutException {
-        get(GETS, id, object, txn);
+        get(GETS, id, nonNullPersistable(object), txn);
     }
 
     @Override
     public void gets(long id, short nodeHint, Persistable object, StoreTransaction txn) throws TimeoutException {
-        get(GETS, id, nodeHint, object, txn);
+        get(GETS, id, nodeHint, nonNullPersistable(object), txn);
     }
 
     @Override
     public void getsFromOwner(long id, long ownerOf, Persistable object, StoreTransaction txn) throws TimeoutException {
-        getFromOwner(GETS, id, ownerOf, object, txn);
+        getFromOwner(GETS, id, ownerOf, nonNullPersistable(object), txn);
     }
 
     @Override
@@ -191,17 +195,17 @@ public class StoreImpl implements Store {
 
     @Override
     public void getx(long id, Persistable object, StoreTransaction txn) throws TimeoutException {
-        get(GETX, id, object, txn);
+        get(GETX, id, nonNullPersistable(object), txn);
     }
 
     @Override
     public void getx(long id, short nodeHint, Persistable object, StoreTransaction txn) throws TimeoutException {
-        get(GETX, id, nodeHint, object, txn);
+        get(GETX, id, nodeHint, nonNullPersistable(object), txn);
     }
 
     @Override
     public void getxFromOwner(long id, long ownerOf, Persistable object, StoreTransaction txn) throws TimeoutException {
-        getFromOwner(GETX, id, ownerOf, object, txn);
+        getFromOwner(GETX, id, ownerOf, nonNullPersistable(object), txn);
     }
 
     @Override
@@ -261,17 +265,17 @@ public class StoreImpl implements Store {
 
     @Override
     public ListenableFuture<Persistable> getAsync(long id, Persistable object) {
-        return getAsync(GET, id, object, null);
+        return getAsync(GET, id, nonNullPersistable(object), null);
     }
 
     @Override
     public ListenableFuture<Persistable> getAsync(long id, short nodeHint, Persistable object) {
-        return getAsync(GET, id, nodeHint, object, null);
+        return getAsync(GET, id, nodeHint, nonNullPersistable(object), null);
     }
 
     @Override
     public ListenableFuture<Persistable> getFromOwnerAsync(long id, long ownerOf, Persistable object) {
-        return getFromOwnerAsync(GET, id, ownerOf, object, null);
+        return getFromOwnerAsync(GET, id, ownerOf, nonNullPersistable(object), null);
     }
 
     @Override
@@ -291,17 +295,17 @@ public class StoreImpl implements Store {
 
     @Override
     public ListenableFuture<Persistable> getsAsync(long id, Persistable object, StoreTransaction txn) {
-        return getAsync(GETS, id, object, txn);
+        return getAsync(GETS, id, nonNullPersistable(object), txn);
     }
 
     @Override
     public ListenableFuture<Persistable> getsAsync(long id, short nodeHint, Persistable object, StoreTransaction txn) {
-        return getAsync(GETS, id, nodeHint, object, txn);
+        return getAsync(GETS, id, nodeHint, nonNullPersistable(object), txn);
     }
 
     @Override
     public ListenableFuture<Persistable> getsFromOwnerAsync(long id, long ownerOf, Persistable object, StoreTransaction txn) {
-        return getFromOwnerAsync(GETS, id, ownerOf, object, txn);
+        return getFromOwnerAsync(GETS, id, ownerOf, nonNullPersistable(object), txn);
     }
 
     @Override
@@ -321,17 +325,17 @@ public class StoreImpl implements Store {
 
     @Override
     public ListenableFuture<Persistable> getxAsync(long id, Persistable object, StoreTransaction txn) {
-        return getAsync(GETX, id, object, txn);
+        return getAsync(GETX, id, nonNullPersistable(object), txn);
     }
 
     @Override
     public ListenableFuture<Persistable> getxAsync(long id, short nodeHint, Persistable object, StoreTransaction txn) {
-        return getAsync(GETX, id, nodeHint, object, txn);
+        return getAsync(GETX, id, nodeHint, nonNullPersistable(object), txn);
     }
 
     @Override
     public ListenableFuture<Persistable> getxFromOwnerAsync(long id, long ownerOf, Persistable object, StoreTransaction txn) {
-        return getFromOwnerAsync(GETX, id, ownerOf, object, txn);
+        return getFromOwnerAsync(GETX, id, ownerOf, nonNullPersistable(object), txn);
     }
 
     @Override
@@ -431,23 +435,23 @@ public class StoreImpl implements Store {
 
     ///////////////////////////////////////////////////////////////////
     void get1(long id, Persistable object) throws TimeoutException {
-        get1(GET, id, object, null);
+        get1(GET, id, nonNullPersistable(object), null);
     }
 
     void get1(long id, short nodeHint, Persistable object) throws TimeoutException {
-        get1(GET, id, nodeHint, object, null);
+        get1(GET, id, nodeHint, nonNullPersistable(object), null);
     }
 
     void getx1(long id, Persistable object, StoreTransaction txn) throws TimeoutException {
-        get1(GETX, id, object, txn);
+        get1(GETX, id, nonNullPersistable(object), txn);
     }
 
     void getx1(long id, short nodeHint, Persistable object, StoreTransaction txn) throws TimeoutException {
-        get1(GETX, id, nodeHint, object, txn);
+        get1(GETX, id, nodeHint, nonNullPersistable(object), txn);
     }
 
     void set1(long id, Persistable object, StoreTransaction txn) throws TimeoutException {
-        cache.doOp(SET, id, object, null, (Transaction) txn);
+        cache.doOp(SET, id, nonNullPersistable(object), null, (Transaction) txn);
     }
 
     //////////////////////////////////////////////////////////////////
@@ -466,7 +470,7 @@ public class StoreImpl implements Store {
     }
 
     private void get(Op.Type type, long id, Persistable object, StoreTransaction txn) throws TimeoutException {
-        cache.doOp(type, nonReserved(id), object, null, (Transaction) txn);
+        cache.doOp(type, nonReserved(id), nonNullPersistable(object), null, (Transaction) txn);
     }
 
     private byte[] get(Op.Type type, long id, short nodeHint, StoreTransaction txn) throws TimeoutException {
@@ -474,7 +478,7 @@ public class StoreImpl implements Store {
     }
 
     private void get(Op.Type type, long id, short nodeHint, Persistable object, StoreTransaction txn) throws TimeoutException {
-        cache.doOp(type, nonReserved(id), object, nodeHint, (Transaction) txn);
+        cache.doOp(type, nonReserved(id), nonNullPersistable(object), nodeHint, (Transaction) txn);
     }
 
     private byte[] getFromOwner(Op.Type type, long id, long ownerOf, StoreTransaction txn) throws TimeoutException {
@@ -482,7 +486,7 @@ public class StoreImpl implements Store {
     }
 
     private void getFromOwner(Op.Type type, long id, long ownerOf, Persistable object, StoreTransaction txn) throws TimeoutException {
-        cache.doOp(GET_FROM_OWNER, nonReserved(ownerOf), null, new Op(type, nonReserved(id), object, (Transaction) txn), (Transaction) txn);
+        cache.doOp(GET_FROM_OWNER, nonReserved(ownerOf), null, new Op(type, nonReserved(id), nonNullPersistable(object), (Transaction) txn), (Transaction) txn);
     }
 
     private ListenableFuture<byte[]> getAsync(Op.Type type, long id, StoreTransaction txn) {
@@ -490,7 +494,7 @@ public class StoreImpl implements Store {
     }
 
     private ListenableFuture<Persistable> getAsync(Op.Type type, long id, Persistable object, StoreTransaction txn) {
-        return (ListenableFuture<Persistable>) (Object) cache.doOpAsync(type, nonReserved(id), object, null, (Transaction) txn);
+        return (ListenableFuture<Persistable>) (Object) cache.doOpAsync(type, nonReserved(id), nonNullPersistable(object), null, (Transaction) txn);
     }
 
     private ListenableFuture<byte[]> getAsync(Op.Type type, long id, short nodeHint, StoreTransaction txn) {
@@ -498,7 +502,7 @@ public class StoreImpl implements Store {
     }
 
     private ListenableFuture<Persistable> getAsync(Op.Type type, long id, short nodeHint, Persistable object, StoreTransaction txn) {
-        return (ListenableFuture<Persistable>) (Object) cache.doOpAsync(type, nonReserved(id), object, nodeHint, (Transaction) txn);
+        return (ListenableFuture<Persistable>) (Object) cache.doOpAsync(type, nonReserved(id), nonNullPersistable(object), nodeHint, (Transaction) txn);
     }
 
     private ListenableFuture<byte[]> getFromOwnerAsync(Op.Type type, long id, long ownerOf, StoreTransaction txn) {
@@ -506,7 +510,7 @@ public class StoreImpl implements Store {
     }
 
     private ListenableFuture<Persistable> getFromOwnerAsync(Op.Type type, long id, long ownerOf, Persistable object, StoreTransaction txn) {
-        return (ListenableFuture<Persistable>) (Object) cache.doOpAsync(GET_FROM_OWNER, nonReserved(ownerOf), null, new Op(type, nonReserved(id), object, (Transaction) txn), (Transaction) txn);
+        return (ListenableFuture<Persistable>) (Object) cache.doOpAsync(GET_FROM_OWNER, nonReserved(ownerOf), null, new Op(type, nonReserved(id), nonNullPersistable(object), (Transaction) txn), (Transaction) txn);
     }
 
     private long nonReserved(long id) {
@@ -517,11 +521,11 @@ public class StoreImpl implements Store {
     }
 
     private void get1(Op.Type type, long id, Persistable object, StoreTransaction txn) throws TimeoutException {
-        cache.doOp(type, id, object, null, (Transaction) txn);
+        cache.doOp(type, id, nonNullPersistable(object), null, (Transaction) txn);
     }
 
     private void get1(Op.Type type, long id, short nodeHint, Persistable object, StoreTransaction txn) throws TimeoutException {
-        cache.doOp(type, id, object, nodeHint, (Transaction) txn);
+        cache.doOp(type, id, nonNullPersistable(object), nodeHint, (Transaction) txn);
     }
 
     @Override

@@ -602,7 +602,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         synchronized (line) {
             res = handleOp(line, type, data, extra, txn, false, LINE_EVERYTHING_CHANGED);
         }
-        
+
         if (res != PENDING)
             monitor.addOp(type, 0);
         return res;
@@ -2278,7 +2278,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void readData(CacheLine line, Persistable object) {
-        if (object == null)
+        if (object == null | object == NULL_PERSISTABLE)
             return;
         accessLine(line);
 
@@ -2299,6 +2299,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private CacheLine createNewCacheLine(Op op) {
         return createNewCacheLine(op.line);
     }
+
     private CacheLine createNewCacheLine(Message message) {
         return createNewCacheLine(((LineMessage) message).getLine());
     }
@@ -2643,4 +2644,20 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         throw IRRELEVANT_STATE;
     }
     //</editor-fold>
+    static final Persistable NULL_PERSISTABLE = new Persistable() {
+        @Override
+        public int size() {
+            throw new NullPointerException();
+        }
+
+        @Override
+        public void write(ByteBuffer buffer) {
+            throw new NullPointerException();
+        }
+
+        @Override
+        public void read(ByteBuffer buffer) {
+            throw new NullPointerException();
+        }
+    };
 }
