@@ -1053,7 +1053,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
         return change;
     }
-    private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(Message.Type.GET, Message.Type.GETX, Message.Type.INV, Message.Type.PUT, Message.Type.PUTX);
+    private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(Message.Type.GET, Message.Type.GETX, Message.Type.INV, Message.Type.PUT, Message.Type.PUTX, Message.Type.INVOKE);
 
     private boolean shouldHoldMessage(CacheLine line, Message message) {
         final boolean res = message.getType().isOf(MESSAGES_BLOCKED_BY_LOCK)
