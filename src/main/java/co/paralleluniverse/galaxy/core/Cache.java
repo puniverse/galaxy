@@ -589,18 +589,20 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private Object runFastTrack(long id, Op.Type type, Object data, Object extra, Transaction txn) {
         if (!type.isOf(FAST_TRACK_OPS))
             return PENDING; // no fast track
-        final CacheLine line = getLine(id);
+        CacheLine line = getLine(id);
         if (line == null) {
             final Object res = handleOpNoLine(type, id, extra);
             if (res != DIDNT_HANDLE)
                 return res;
-            return PENDING; // no fast track
+            else
+                line = (CacheLine) createNewCacheLine(id);
         }
 
-        Object res;
+        final Object res;
         synchronized (line) {
             res = handleOp(line, type, data, extra, txn, false, LINE_EVERYTHING_CHANGED);
         }
+        
         if (res != PENDING)
             monitor.addOp(type, 0);
         return res;
@@ -2266,17 +2268,17 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         line.rewind();
     }
 
-    private CacheLine createNewCacheLine(Op op) {
-        CacheLine line = allocateCacheLine();
-        line.id = op.line;
-        return putLine(op.line, line, 0, 0);
-    }
-
-    private CacheLine createNewCacheLine(Message message) {
-        final long id = ((LineMessage) message).getLine();
+    private CacheLine createNewCacheLine(long id) {
         CacheLine line = allocateCacheLine();
         line.id = id;
         return putLine(id, line, 0, 0);
+    }
+
+    private CacheLine createNewCacheLine(Op op) {
+        return createNewCacheLine(op.line);
+    }
+    private CacheLine createNewCacheLine(Message message) {
+        return createNewCacheLine(((LineMessage) message).getLine());
     }
 
     // visible for testing
