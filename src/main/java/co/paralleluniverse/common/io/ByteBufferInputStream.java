@@ -28,7 +28,7 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 /**
- * @author Ron Pressler
+ * @author pron
  */
 public class ByteBufferInputStream extends InputStream implements DataInput, ObjectInput {
     private final ByteBuffer buffer;
@@ -198,11 +198,13 @@ public class ByteBufferInputStream extends InputStream implements DataInput, Obj
 	if (len == 0)
 	    return 0;
 
-	if (available() == 0)
+        final int rem = available();
+        assert rem >= 0;
+	if (rem == 0)
 	    return -1;
 
-	int n = Math.min(len, available());
-	buffer.get(b, off, len);
+	final int n = Math.min(len, rem);
+	buffer.get(b, off, n);
 	return n;
     }
 
