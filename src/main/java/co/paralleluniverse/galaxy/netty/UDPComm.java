@@ -296,13 +296,13 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 pipeline.addLast("router", new SimpleChannelHandler() {
                     @Override
                     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-                            if (ctx.getChannel() == multicastChannel) {
-                                if (e.getRemoteAddress().equals(myAddress))
-                                    return; // this is our own multicast
-                                ((MessagePacket) e.getMessage()).setMulticast();
-                            }
-                            UDPComm.this.messageReceived((MessagePacket) e.getMessage());
+                        if (ctx.getChannel() == multicastChannel) {
+                            if (e.getRemoteAddress().equals(myAddress))
+                                return; // this is our own multicast
+                            ((MessagePacket) e.getMessage()).setMulticast();
                         }
+                        UDPComm.this.messageReceived((MessagePacket) e.getMessage());
+                    }
 
                     @Override
                     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
@@ -516,7 +516,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         public void sendMessage(Message message) throws InterruptedException {
             if (!queue.offer(message)) {
                 LOG.info("Adding message {} to full queue. Waiting for available space.", message);
-                LOG.debug("no space in Peer {}",this);
+                LOG.debug("no space in Peer {}", this);
                 queue.put(message);
             }
         }
@@ -713,13 +713,18 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
             boolean oobMulticast = false;
             if (receivedPacket.isMulticast()) { // multicast messages may overlap with unicast ones if the original broadcast was sent as a unicast, say if the peers sentPacket wasn't empty
+                long maxIdInPacket = -1;
                 for (Iterator<Message> it = receivedPacket.iterator(); it.hasNext();) {
                     final Message message = it.next();
                     if (message.getMessageId() < lastReceivedBroadcastId) {
-                        LOG.debug("Peer {} received an out-of-band multicast message {} which has already been seen.", this, message);
-                        oobMulticast = true;
+                        LOG.trace("Peer {} received a multicast message {} which has already been seen.", this, message);
                         it.remove();
                     }
+                    maxIdInPacket = Math.max(maxIdInPacket, message.getMessageId());
+                }
+                if (maxIdInPacket < lastReceivedBroadcastId) {
+                    LOG.debug("Peer {} received an out-of-band multicast packet {} which has already been seen.", this, receivedPacket);
+                    oobMulticast = true;
                 }
             }
             if (receivedPacket.isEmpty())
@@ -864,14 +869,19 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
             if (next == null)
                 next = queue.poll();
             for (;;) {
-                if (next == null)
+                LOG.trace("handleQueue loop");
+                if (next == null) {
+                    LOG.trace("handleQueue loop: next == null");
                     break;
-                overflow = next; // we put the next message into overflow. if we _don't_ break out of the loop and use the message, we'll nul overflow
+                }
+                overflow = next; // we put the next message into overflow. if we _don't_ break out of the loop and use the message, we'll null overflow
 
                 final boolean unicastBroadcast = next.isBroadcast() && unicastBroadcasts.remove(next);
 
-                if (broadcast && (!next.isBroadcast() || unicastBroadcast))
+                if (broadcast && (!next.isBroadcast() || unicastBroadcast)) {
+                    LOG.trace("Node peer {} not taking non-broadcast message {} during broadcast", this, next);
                     break; // we're not taking any non-broadcast messages during broadcast
+                }
 
                 if (!broadcast && next.isBroadcast() && !unicastBroadcast) {
                     if (sentPacket == null || sentPacket.isEmpty()) {
@@ -892,6 +902,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 if (next.size() + sentPacketSizeInBytes() > maxPacketSize) {
                     if (next.isResponse() && requestsOnly)
                         LOG.warn("IMPORTANT: Response message {} does not fit in packet {} which contains only requests. THIS MAY CAUSE A DEADLOCK!", next, sentPacket);
+                    LOG.debug("Message {} cannot be added to packet now; packet full.");
                     break;
                 }
 
@@ -985,7 +996,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 if (next == null)
                     break;
 
-                overflow = next; // we put the next message into overflow. if we _don't_ break out of the loop and use the message, we'll nul overflow
+                overflow = next; // we put the next message into overflow. if we _don't_ break out of the loop and use the message, we'll null overflow
 
                 if (next.size() > maxPacketSize) {
                     LOG.error("Message {} is larger than the maximum packet size {}", next, maxPacketSize);
