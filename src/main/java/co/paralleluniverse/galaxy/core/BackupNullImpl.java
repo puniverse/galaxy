@@ -30,6 +30,8 @@ import java.util.Iterator;
  * @author pron
  */
 public class BackupNullImpl extends ClusterService implements Backup {
+    private Cache cache;
+    
     @ConstructorProperties({"name", "cluster", "serverComm", "slaveComm"})
     public BackupNullImpl(String name, Cluster cluster, ServerComm serverComm, SlaveComm slaveComm) {
         super(name, cluster);
@@ -50,6 +52,7 @@ public class BackupNullImpl extends ClusterService implements Backup {
 
     @Override
     public void setCache(Cache cache) {
+        this.cache = cache;
     }
 
     @Override
@@ -68,6 +71,7 @@ public class BackupNullImpl extends ClusterService implements Backup {
 
     @Override
     public void backup(long id, long version) {
+        cache.receive(Message.BACKUPACK((short) 0, id, version).setIncoming());
     }
 
     @Override
