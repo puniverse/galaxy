@@ -23,7 +23,7 @@ import co.paralleluniverse.common.io.Persistables;
 import co.paralleluniverse.common.io.Streamable;
 import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.util.Enums;
-import co.paralleluniverse.galaxy.InvokeOnLine;
+import co.paralleluniverse.galaxy.LineFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import java.io.ByteArrayInputStream;
@@ -67,7 +67,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
         public final static long REQUIRES_RESPONSE = Enums.setOf(GET, GETX, INV, BACKUP_PACKET, INVOKE);
     }
 
-    public static INVOKE INVOKE(short node, long line, InvokeOnLine data) {
+    public static INVOKE INVOKE(short node, long line, LineFunction data) {
         return new INVOKE(Type.INVOKE, node, line, data);
     }
 
@@ -735,7 +735,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
             super(type);
         }
 
-        public INVOKE(Type type, short node, long line, InvokeOnLine function) {
+        public INVOKE(Type type, short node, long line, LineFunction function) {
             super(node, type, line);
             byte[] ba = null;
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -749,10 +749,10 @@ public class Message implements Streamable, Externalizable, Cloneable {
             assert type == Type.INVOKE;
         }
 
-        public InvokeOnLine getFunction() {
+        public LineFunction getFunction() {
             try (ByteArrayInputStream bis = new ByteArrayInputStream(function);
                     ObjectInput in = new ObjectInputStream(bis)) {
-                return (InvokeOnLine) in.readObject();
+                return (LineFunction) in.readObject();
             } catch (ClassNotFoundException ex) {
                 throw new RuntimeException("Can't read object from Invoke message "+ex);
             } catch (IOException ex) {

@@ -29,7 +29,7 @@ import co.paralleluniverse.galaxy.core.NodeNotFoundException;
 import co.paralleluniverse.galaxy.core.Backup;
 import co.paralleluniverse.galaxy.core.Comm;
 import co.paralleluniverse.common.io.Persistable;
-import co.paralleluniverse.galaxy.InvokeOnLine;
+import co.paralleluniverse.galaxy.LineFunction;
 import co.paralleluniverse.galaxy.RefNotFoundException;
 import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.TimeoutException;
@@ -378,8 +378,8 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(Message.PUT(get2, 1234L, 2, toBuffer("hello")))));
     }
 
-    public static InvokeOnLine<Long> storefunc(final long set) {
-        return new InvokeOnLine<Long>() {
+    public static LineFunction<Long> storefunc(final long set) {
+        return new LineFunction<Long>() {
             @Override
             public Long invoke(LineAccess lineAccess) {
                 try {
@@ -415,7 +415,7 @@ public class CacheTest {
     public void testInvokeNotOwnerInI() throws Exception {
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
-        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        final LineFunction<Long> storefunc = storefunc(45L);
         ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
         final Message.INVOKE msg = Message.INVOKE(sh(-1), 1234L, storefunc);
         verify(comm).send(argThat(equalTo(msg)));
@@ -427,7 +427,7 @@ public class CacheTest {
     @Test
     public void testInvokeNotOwnerInS() throws Exception {
         PUT(1234L, sh(10), 2, "hello");
-        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        final LineFunction<Long> storefunc = storefunc(45L);
         assertState(1234L, S, null);
         ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
         final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
@@ -440,7 +440,7 @@ public class CacheTest {
     @Test
     public void testInvokeWhenServerIsOwner() throws Exception {
         PUT(1234L, sh(10), 2, "hello");
-        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        final LineFunction<Long> storefunc = storefunc(45L);
         assertState(1234L, S, null);
         ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
         final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
@@ -469,7 +469,7 @@ public class CacheTest {
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
         assertState(1234L, E, null);
-        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        final LineFunction<Long> storefunc = storefunc(45L);
         final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
         cache.receive(msg);
         verify(comm).send(argThat(equalTo(Message.INVRES(msg, 1234L, 45L))));
@@ -481,7 +481,7 @@ public class CacheTest {
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
         assertState(1234L, O, null);
-        final InvokeOnLine<Long> storefunc = storefunc(45L);
+        final LineFunction<Long> storefunc = storefunc(45L);
         final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
         cache.receive(msg);
         assertModified(1234L, true);
@@ -2241,7 +2241,7 @@ public class CacheTest {
         //cache.receive(Message.BACKUPACK(sh(-1), id, version));
     }
 
-    void INVOKE(long id, short owner, long version, InvokeOnLine function) {
+    void INVOKE(long id, short owner, long version, LineFunction function) {
         cache.receive(Message.INVOKE(owner, id, function));
     }
 

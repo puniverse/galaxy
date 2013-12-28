@@ -1471,12 +1471,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             handleDeleted(line);
 
         if (line.state.isLessThan(State.O)) {
-            send(Message.INVOKE(getTarget(line, nodeHint), line.id, (InvokeOnLine) data));
+            send(Message.INVOKE(getTarget(line, nodeHint), line.id, (LineFunction) data));
             return PENDING;
         } else {
             if (!transitionToE(line, nodeHint))
                 return PENDING;
-            return execInvoke(line, (InvokeOnLine) data);
+            return execInvoke(line, (LineFunction) data);
         }
     }
 

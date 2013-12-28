@@ -22,7 +22,7 @@ package co.paralleluniverse.galaxy;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
-public interface InvokeOnLine<T> extends Serializable {
+public interface LineFunction<T> extends Serializable {
     public interface LineAccess extends Serializable {
         ByteBuffer getForRead();
 

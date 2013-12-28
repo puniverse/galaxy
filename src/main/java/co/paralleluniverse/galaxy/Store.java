@@ -482,7 +482,7 @@ public interface Store {
      */
     void del(long id, StoreTransaction txn) throws TimeoutException;
 
-    <T> T invoke(long id, InvokeOnLine<T> function) throws TimeoutException;
+    <T> T invoke(long id, LineFunction<T> function) throws TimeoutException;
 
     /**
      * Allocates one or more new (and empty) items in the store.<p/>
@@ -874,7 +874,7 @@ public interface Store {
      */
     ListenableFuture<Void> setAsync(long id, Persistable object, StoreTransaction txn);
 
-    <T> ListenableFuture<T> invokeAsync(long id, InvokeOnLine<T> function);
+    <T> ListenableFuture<T> invokeAsync(long id, LineFunction<T> function);
 
     ListenableFuture<Void> delAsync(long id, StoreTransaction txn);
 

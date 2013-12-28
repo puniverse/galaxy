@@ -21,7 +21,7 @@ package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.CacheListener;
-import co.paralleluniverse.galaxy.InvokeOnLine;
+import co.paralleluniverse.galaxy.LineFunction;
 import co.paralleluniverse.galaxy.ItemState;
 import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.StoreTransaction;
@@ -115,7 +115,7 @@ public class StoreImpl implements Store {
     }
 
     @Override
-    public <T> T invoke(long lineId, InvokeOnLine<T> function) throws TimeoutException {
+    public <T> T invoke(long lineId, LineFunction<T> function) throws TimeoutException {
         return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null);
     }
 
@@ -350,7 +350,7 @@ public class StoreImpl implements Store {
     }
 
     @Override
-    public <T> ListenableFuture<T> invokeAsync(long id, InvokeOnLine<T> function) {
+    public <T> ListenableFuture<T> invokeAsync(long id, LineFunction<T> function) {
         return (ListenableFuture<T>) cache.doOpAsync(Op.Type.INVOKE, id, (Object) function, null, null);
     }
 
