@@ -2233,7 +2233,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         @Override
         public ByteBuffer getForRead() {
-            return line.getData().asReadOnlyBuffer();
+            return (ByteBuffer) line.getData().asReadOnlyBuffer().rewind();
         }
 
         @Override
