@@ -2238,12 +2238,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         @Override
         public ByteBuffer getForWrite(int size) {
-            if (line.data.capacity() < size)
+            if (size >= 0 && line.data.capacity() < size)
                 extendLineData(size);
             line.version++;
             line.set(CacheLine.MODIFIED, true);
             written = true;
-            return (ByteBuffer) ((ByteBuffer) line.getData().rewind()).compact().rewind();
+            return (ByteBuffer) line.getData().rewind();
         }
 
         private void extendLineData(int size) {

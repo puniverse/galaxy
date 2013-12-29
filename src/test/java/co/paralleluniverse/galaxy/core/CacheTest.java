@@ -387,6 +387,7 @@ public class CacheTest {
                     if (!Charset.forName("ISO-8859-1").newDecoder().decode(get).toString().equals("hello"))
                         return 0L;
                     ByteBuffer bb = lineAccess.getForWrite(8);
+                    bb.clear();
                     bb.putLong(set);
                     bb.flip();
                     return set;
