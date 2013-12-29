@@ -26,6 +26,10 @@ public interface LineFunction<T> extends Serializable {
     public interface LineAccess extends Serializable {
         ByteBuffer getForRead();
 
+        /**
+         * @param size If size is {@code -1}, buffer is retained, and not flipped after the function is invoked.
+         * @return 
+         */
         ByteBuffer getForWrite(int size);
     }
 
