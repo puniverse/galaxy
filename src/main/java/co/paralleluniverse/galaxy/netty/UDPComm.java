@@ -688,7 +688,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                     if (sentPacket != null && sentPacket.isEmpty())
                         sentPacket = null;
                     if (sentPacket != null && !broadcast) {
-                        if (isTimeToResned(now)) { // if messages have been added tos sentPacket has changed, handleQueue sets lastSent to 0
+                        if (isTimeToResned(now)) { // if messages have been added to sentPacket has changed, handleQueue sets lastSent to 0
                             LOG.debug("Peer {} sending packet {}", this, sentPacket);
                             channel.write(sentPacket, nodeAddress);
                             if (hasRequests)
@@ -716,10 +716,10 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 long maxIdInPacket = -1;
                 for (Iterator<Message> it = receivedPacket.iterator(); it.hasNext();) {
                     final Message message = it.next();
-                    if (message.getMessageId() < lastReceivedBroadcastId) {
-                        LOG.trace("Peer {} received a multicast message {} which has already been seen.", this, message);
-                        it.remove();
-                    }
+//                    if (message.getMessageId() < lastReceivedBroadcastId) {
+//                        LOG.trace("Peer {} received a multicast message {} which has already been seen.", this, message);
+//                        it.remove();
+//                    }
                     maxIdInPacket = Math.max(maxIdInPacket, message.getMessageId());
                 }
                 if (maxIdInPacket < lastReceivedBroadcastId) {
