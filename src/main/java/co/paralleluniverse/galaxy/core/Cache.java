@@ -386,7 +386,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
 
         boolean unlock() {
-            if (!isLocked())
+            if (!is(LOCKED | DELETED))
                 throw new IllegalStateException("Item has not been pinned!");
             flags &= ~LOCKED;
             return true;
@@ -402,6 +402,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         public boolean is(byte flag) {
             return (flags & flag) != 0;
+        }
+
+        public boolean is(int flag) {
+            return (flags & (byte) flag) != 0;
         }
 
         private void set(byte flag, boolean value) {
@@ -1778,7 +1782,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private int handleMessageBackupAck(Message.BACKUPACK msg, CacheLine line) throws IrrelevantStateException {
-        relevantStates(line, State.O, State.E);
+        if (line.is(CacheLine.DELETED))
+            relevantStates(line, State.I);
+        else
+            relevantStates(line, State.O, State.E);
         assert line.is(CacheLine.MODIFIED);
 
         assert line.getVersion() >= msg.getVersion();
