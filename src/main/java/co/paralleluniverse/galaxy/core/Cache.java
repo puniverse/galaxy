@@ -2216,7 +2216,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private Object execInvoke(final CacheLine line, LineFunction f) {
         final LineAccess la = new LineAccess(line);
         final Object res = f.invoke(la);
-        if (la.written)
+        if (la.flip)
             line.data.flip();
         else
             line.data.rewind();
@@ -2225,7 +2225,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private class LineAccess implements LineFunction.LineAccess {
         final CacheLine line;
-        boolean written;
+        boolean flip;
 
         public LineAccess(CacheLine line) {
             this.line = line;
@@ -2242,7 +2242,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 extendLineData(size);
             line.version++;
             line.set(CacheLine.MODIFIED, true);
-            written = true;
+            flip = size >= 0;
             return (ByteBuffer) line.getData().rewind();
         }
 
