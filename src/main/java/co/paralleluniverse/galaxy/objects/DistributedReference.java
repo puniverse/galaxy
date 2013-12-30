@@ -39,11 +39,13 @@ import java.nio.ByteBuffer;
 public class DistributedReference<T> implements CacheListener, Persistable, Externalizable {
     private transient volatile T obj;
     private long id;
+    private volatile long version;
     private transient byte[] tmpBuffer;
 
     public DistributedReference(long id, T obj) {
         this.obj = obj;
         this.id = id;
+        this.version = -1;
     }
 
     public T get() {
@@ -69,7 +71,10 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
 
     @Override
     public void received(long id, long version, ByteBuffer data) {
-        read(data);
+        if (version > this.version) {
+            read(data);
+            this.version = version;
+        }
     }
 
     /**
@@ -145,6 +150,6 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + Long.toHexString(id) + ": " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
+        return getClass().getSimpleName() + "[" + Long.toHexString(id) + " (" + version + "): " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
     }
 }
