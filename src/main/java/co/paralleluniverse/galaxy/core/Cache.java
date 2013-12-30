@@ -1062,6 +1062,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private boolean shouldHoldMessage(CacheLine line, Message message) {
         final boolean res = message.getType().isOf(MESSAGES_BLOCKED_BY_LOCK)
                 && (line.isLocked() || line.is(CacheLine.MODIFIED) || (line.getState() != State.E && line.getNextState() == State.E));
+        if (res && message.getType() == Message.Type.PUTX && line.getVersion() == ((Message.PUT)message).getVersion())
+            return false;
         if (res && message.getType() == Message.Type.INV && !line.isLocked() && !line.is(CacheLine.MODIFIED)) // INV isn't locked by -> E
             return false;
         return res;
