@@ -27,6 +27,12 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public interface Messenger {
     /**
+     * Returns a new topic. This topic will be unique among all invocations of this method in
+     * a JVM instance.
+     */
+    long createTopic();
+    
+    /**
      * Adds a message listener on a {@code lonng} topic.
      *
      * @param topic The topic.

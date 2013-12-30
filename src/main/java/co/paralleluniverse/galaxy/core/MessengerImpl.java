@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
 import org.cliffc.high_scale_lib.NonBlockingHashMapLong;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MessengerImpl extends Component implements Messenger {
     private static final Logger LOG = LoggerFactory.getLogger(MessengerImpl.class);
+    private final AtomicLong topicGenerator = new AtomicLong();
     private final Cache cache;
     private final ConcurrentMultimap<Long, MessageListener, List<MessageListener>> longTopicListeners = new ConcurrentMultimap<Long, MessageListener, List<MessageListener>>(new NonBlockingHashMapLong<List<MessageListener>>(), (List<MessageListener>) Collections.EMPTY_LIST) {
         @Override
@@ -68,6 +70,11 @@ public class MessengerImpl extends Component implements Messenger {
         });
     }
 
+    @Override
+    public long createTopic() {
+        return topicGenerator.incrementAndGet();
+    }
+    
     @Override
     public void addMessageListener(long topic, MessageListener listener) {
         longTopicListeners.put(topic, listener);
