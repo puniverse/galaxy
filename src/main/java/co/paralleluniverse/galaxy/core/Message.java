@@ -24,25 +24,20 @@ import co.paralleluniverse.common.io.Streamable;
 import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.util.Enums;
 import co.paralleluniverse.galaxy.LineFunction;
+import co.paralleluniverse.io.serialization.Serialization;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -51,6 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Message implements Streamable, Externalizable, Cloneable {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Message.class);
+
     public static enum Type {
         GET, GETX, INV, INVACK, PUT, PUTX, DEL, CHNGD_OWNR, NOT_FOUND, TIMEOUT,
         INVOKE, INVRES,
@@ -195,7 +191,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
     public static Message fromByteBuffer(ByteBuffer buffer) {
         final Type type = Type.values()[buffer.get()];
         if (LOG.isDebugEnabled())
-            LOG.debug("from bb type:" +type.name());
+            LOG.debug("from bb type:" + type.name());
         final Message message = newMessage(type);
         message.read(buffer);
         return message;
@@ -459,8 +455,8 @@ public class Message implements Streamable, Externalizable, Cloneable {
     public final int size() {
         int size = size1();
         for (int i = 0; i < getNumDataBuffers(); i++) {
-            final int remaining = getDataBuffer(i)==null? 0 :getDataBuffer(i).remaining();            
-            size += 2 + remaining;            
+            final int remaining = getDataBuffer(i) == null ? 0 : getDataBuffer(i).remaining();
+            size += 2 + remaining;
         }
         return size;
     }
@@ -512,7 +508,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
      */
     public ByteBuffer[] toByteBuffers() {
         if (LOG.isDebugEnabled())
-            LOG.debug("to bb type "+type.name());
+            LOG.debug("to bb type " + type.name());
         final ByteBuffer buffer0 = ByteBuffer.allocate(size1() + 2 * getNumDataBuffers());
         Persistables.persistable(streamableNoBuffers()).write(buffer0);
         for (int i = 0; i < getNumDataBuffers(); i++)
@@ -564,7 +560,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
     public final Message cloneDataBuffers() {
         for (int i = 0; i < getNumDataBuffers(); i++) {
             final ByteBuffer db = getDataBuffer(i);
-            setDataBuffer(i, db==null? null : Persistables.copyOf(db));            
+            setDataBuffer(i, db == null ? null : Persistables.copyOf(db));
         }
         return this;
     }
@@ -737,27 +733,12 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         public INVOKE(Type type, short node, long line, LineFunction function) {
             super(node, type, line);
-            byte[] ba = null;
-            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    ObjectOutputStream out = new ObjectOutputStream(bos)) {
-                out.writeObject(function);
-                ba = bos.toByteArray();
-            } catch (IOException e) {
-                throw new AssertionError("IOException can't happen here", e);
-            }
-            this.function = ba;
+            this.function = Serialization.getInstance().write(function);
             assert type == Type.INVOKE;
         }
 
         public LineFunction getFunction() {
-            try (ByteArrayInputStream bis = new ByteArrayInputStream(function);
-                    ObjectInput in = new ObjectInputStream(bis)) {
-                return (LineFunction) in.readObject();
-            } catch (ClassNotFoundException ex) {
-                throw new RuntimeException("Can't read object from Invoke message "+ex);
-            } catch (IOException ex) {
-                throw new AssertionError("IOException shouldn't happen here");
-            }
+            return (LineFunction) Serialization.getInstance().read(function);
         }
 
         @Override
@@ -784,6 +765,11 @@ public class Message implements Streamable, Externalizable, Cloneable {
                 in.readFully(function);
             }
         }
+
+        @Override
+        public String partialToString() {
+            return super.partialToString() + ", function: " + getFunction();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -796,25 +782,11 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         public INVRES(LineMessage responseTo, long line, Object result) {
             super(responseTo, Type.INVRES, line);
-            byte[] ba = null;
-            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    ObjectOutputStream out = new ObjectOutputStream(bos)) {
-                out.writeObject(result);
-                ba = bos.toByteArray();
-            } catch (IOException e) {
-                throw new AssertionError("IOException can't happen here", e);
-            }
-            this.result = ba;
+            this.result = Serialization.getInstance().write(result);
         }
 
         public Object getResult() {
-            try (ByteArrayInputStream bis = new ByteArrayInputStream(result);
-                    ObjectInput in = new ObjectInputStream(bis)) {
-                return (Object) in.readObject();
-            } catch (ClassNotFoundException | IOException ex) {
-                Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            return null;
+            return Serialization.getInstance().read(result);
         }
 
         @Override
@@ -840,6 +812,11 @@ public class Message implements Streamable, Externalizable, Cloneable {
                 result = new byte[dataLen];
                 in.readFully(result);
             }
+        }
+
+        @Override
+        public String partialToString() {
+            return super.partialToString() + ", result: " + getResult();
         }
     }
 
