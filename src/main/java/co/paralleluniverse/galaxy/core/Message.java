@@ -24,6 +24,7 @@ import co.paralleluniverse.common.io.Streamable;
 import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.common.util.Enums;
 import co.paralleluniverse.galaxy.LineFunction;
+import co.paralleluniverse.io.serialization.JDKSerializer;
 import co.paralleluniverse.io.serialization.Serialization;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
@@ -733,12 +734,12 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         public INVOKE(Type type, short node, long line, LineFunction function) {
             super(node, type, line);
-            this.function = Serialization.getInstance().write(function);
+            this.function = Serialization.getInstance().write(function); // new JDKSerializer().write(function);
             assert type == Type.INVOKE;
         }
 
         public LineFunction getFunction() {
-            return (LineFunction) Serialization.getInstance().read(function);
+            return (LineFunction) Serialization.getInstance().read(function); // new JDKSerializer().read(function);
         }
 
         @Override
@@ -782,11 +783,11 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         public INVRES(LineMessage responseTo, long line, Object result) {
             super(responseTo, Type.INVRES, line);
-            this.result = Serialization.getInstance().write(result);
+            this.result = Serialization.getInstance().write(result); // new JDKSerializer().write(result);
         }
 
         public Object getResult() {
-            return Serialization.getInstance().read(result);
+            return Serialization.getInstance().read(result); // new JDKSerializer().read(result);
         }
 
         @Override

@@ -86,8 +86,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -132,7 +130,6 @@ public class CacheTest {
         when(cluster.hasServer()).thenReturn(hasServer);
         when(cluster.getMyNodeId()).thenReturn(sh(5));
         comm = mock(AbstractComm.class);
-
         backup = mock(Backup.class);
         when(backup.inv(anyLong(), anyShort())).thenReturn(true);
 
@@ -392,9 +389,8 @@ public class CacheTest {
                     bb.flip();
                     return set;
                 } catch (CharacterCodingException ex) {
-                    Logger.getLogger(CacheTest.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new AssertionError(ex);
                 }
-                return 0L;
             }
         };
     }
@@ -414,12 +410,13 @@ public class CacheTest {
 
     @Test
     public void testInvokeNotOwnerInI() throws Exception {
+        setCommMsgCounter();
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
         final LineFunction<Long> storefunc = storefunc(45L);
         ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
         final Message.INVOKE msg = Message.INVOKE(sh(-1), 1234L, storefunc);
-        verify(comm).send(argThat(equalTo(msg)));
+        verify(comm).send(argThat(equalTo(msg.setMessageId(1))));
         assertState(1234L, I, null);
         cache.receive(Message.INVRES(msg, 1234L, 45L));
         assertThat((long) future.get(), equalTo(45L));
@@ -427,12 +424,13 @@ public class CacheTest {
 
     @Test
     public void testInvokeNotOwnerInS() throws Exception {
+        setCommMsgCounter();
         PUT(1234L, sh(10), 2, "hello");
         final LineFunction<Long> storefunc = storefunc(45L);
         assertState(1234L, S, null);
         ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
         final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
-        verify(comm).send(argThat(equalTo(msg)));
+        verify(comm).send(argThat(equalTo(msg.setMessageId(2))));
         assertState(1234L, S, null);
         cache.receive(Message.INVRES(msg, 1234L, 45L));
         assertThat((long) future.get(), equalTo(45L));
@@ -440,11 +438,12 @@ public class CacheTest {
 
     @Test
     public void testInvokeWhenServerIsOwner() throws Exception {
+        setCommMsgCounter();
         PUT(1234L, sh(10), 2, "hello");
         final LineFunction<Long> storefunc = storefunc(45L);
         assertState(1234L, S, null);
         ListenableFuture<Object> future = cache.doOpAsync(Op.Type.INVOKE, 1234L, storefunc, null, null);
-        final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
+        final Message msg = Message.INVOKE(sh(10), 1234L, storefunc).setMessageId(2);
         verify(comm).send(argThat(equalTo(msg)));
         assertState(1234L, S, null);
         // Server reply with putx
@@ -455,6 +454,7 @@ public class CacheTest {
 
     @Test
     public void testInvokeLocalWhenOwnerIsE() throws Exception {
+        setCommMsgCounter();
         PUTX(1234L, sh(10), 2, "hello");
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), 1234L, sh(10))));
