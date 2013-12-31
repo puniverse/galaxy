@@ -522,7 +522,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             throw new IllegalStateException("Node is a slave. Cannot run grid operations");
 
         if (LOG.isDebugEnabled())
-            LOG.debug("Run(fast): Op.{}(line:{}{}{})", new Object[]{type, hex(id), (data != null ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : "")});
+            LOG.debug("Run(fast): Op.{}(line:{}{}{})", type, hex(id), (data != null ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : ""));
         Object result = runFastTrack(id, type, data, extra, txn);
         if (result instanceof Op)
             return doOp((Op) result);
@@ -539,7 +539,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             throw new IllegalStateException("Node is a slave. Cannot run grid operations");
 
         if (LOG.isDebugEnabled())
-            LOG.debug("Run(fast): Op.{}(line:{}{}{})", new Object[]{type, hex(id), (data != null ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : "")});
+            LOG.debug("Run(fast): Op.{}(line:{}{}{})", type, hex(id), (data != null ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : ""));
         Object result = runFastTrack(id, type, data, extra, txn);
         if (result instanceof Op)
             return doOpAsync((Op) result);
@@ -684,7 +684,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     break;
             }
             if (LOG.isDebugEnabled())
-                LOG.debug("handleOp: {} -> {} line: {}", new Object[]{op, res, line});
+                LOG.debug("handleOp: {} -> {} line: {}", op, res, line);
             if (res == PENDING)
                 return res;
             else if (res instanceof Op)
@@ -704,8 +704,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         handleNodeEvents(line);
 
         Object res = null;
-
-        LOG.debug("handleOp: {} {}", type, line);
 
         if (line != null && shouldHoldOp(line, type))
             res = PENDING;
@@ -757,8 +755,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             // addMiss and addInvalidates are handled by setNextState();
         }
 
-        if (LOG.isDebugEnabled())
-            LOG.debug("handleOp: {} {} => {}", type, hex(line.getId()), res);
         return res;
     }
 
@@ -1108,7 +1104,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 final CacheLine line = getLine(id);
                 synchronized (line) {
                     if (LOG.isDebugEnabled())
-                        LOG.debug("Rolling back line {} to version {}. Modified = {}", new Object[]{hex(line.getId()), r.version, r.modified});
+                        LOG.debug("Rolling back line {} to version {}. Modified = {}", hex(line.getId()), r.version, r.modified);
                     line.version = r.version;
                     line.set(CacheLine.MODIFIED, r.modified);
                     writeData(line, r.data);
@@ -1997,7 +1993,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private void processLineOnNodeEvent(CacheLine line, short node, short newOwner) {
         if (line.getState().isLessThan(State.O) && line.getOwner() == node) { // remove shared lines owned by node
             if (LOG.isDebugEnabled())
-                LOG.debug("Node {} switched/removed - owned line {}. Setting to I and owner to {}", new Object[]{node, line, newOwner});
+                LOG.debug("Node {} switched/removed - owned line {}. Setting to I and owner to {}", node, line, newOwner);
 
             // We must S -> I, because the dead node's slaves have E (see handleMessageBackup)
             int change = 0;
@@ -2065,7 +2061,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             line.nextState = null;
         if (line.state != state) {
             if (LOG.isDebugEnabled())
-                LOG.debug("Set state {} {} -> {}", new Object[]{hex(line.getId()), line.state, state});
+                LOG.debug("Set state {} {} -> {}", hex(line.getId()), line.state, state);
 
             if (!state.isLessThan(State.O) && line.getState().isLessThan(State.O)) {
                 owned.put(line.getId(), line);
@@ -2096,7 +2092,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         short oldOwner = line.owner;
         if (owner != oldOwner) {
             if (LOG.isDebugEnabled())
-                LOG.debug("Set owner {} {} -> {}", new Object[]{hex(line.getId()), line.owner, owner});
+                LOG.debug("Set owner {} {} -> {}", hex(line.getId()), line.owner, owner);
             line.owner = owner;
             return true;
         } else
@@ -2264,7 +2260,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (line.data != null) {
             if (line.data.capacity() >= size && line.data.capacity() < size * 4) {
                 if (LOG.isDebugEnabled())
-                    LOG.debug("Reusing (clearing) storage for line {}. Storage: {} bytes. Data: {} bytes", new Object[]{hex(line.getId()), line.data.capacity(), size});
+                    LOG.debug("Reusing (clearing) storage for line {}. Storage: {} bytes. Data: {} bytes", hex(line.getId()), line.data.capacity(), size);
                 line.data.clear();
             } else {
                 deallocateStorage(line.id, line.data);
