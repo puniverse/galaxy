@@ -48,6 +48,11 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
         this.version = -1;
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[" + Long.toHexString(id) + " (" + version + "): " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
+    }
+
     public T get() {
         return obj;
     }
@@ -146,10 +151,5 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         this.id = in.read();
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "[" + Long.toHexString(id) + " (" + version + "): " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
     }
 }
