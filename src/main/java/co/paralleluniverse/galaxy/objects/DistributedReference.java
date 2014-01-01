@@ -21,6 +21,7 @@ package co.paralleluniverse.galaxy.objects;
 
 import co.paralleluniverse.common.io.ByteBufferInputStream;
 import co.paralleluniverse.common.io.Persistable;
+import co.paralleluniverse.galaxy.Cache;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.io.serialization.Serialization;
 import java.io.Externalizable;
@@ -66,16 +67,16 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
     }
 
     @Override
-    public void invalidated(long id) {
+    public void invalidated(Cache cache, long id) {
     }
 
     @Override
-    public void evicted(long id) {
+    public void evicted(Cache cache, long id) {
         clear();
     }
 
     @Override
-    public void received(long id, long version, ByteBuffer data) {
+    public void received(Cache cache, long id, long version, ByteBuffer data) {
         if (version > this.version) {
             read(data);
             this.version = version;

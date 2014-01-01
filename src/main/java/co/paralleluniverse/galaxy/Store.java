@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
  * cluster at any one time, though it may be <b>shared</b> by many. In order to write an item, a node gains ownership
  * over it.
  */
-public interface Store {
+public interface Store extends Cache {
     /**
      * Returns the maximum size, in bytes, of a data item in the grid. Attempts to store larger items will result in an
      * exception. This limit is set in the cache spring-bean configuration.

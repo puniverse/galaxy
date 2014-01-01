@@ -19,8 +19,8 @@
  */
 package co.paralleluniverse.galaxy.objects;
 
+import co.paralleluniverse.galaxy.Cache;
 import co.paralleluniverse.galaxy.CacheListener;
-import co.paralleluniverse.galaxy.Store;
 
 /**
  * Wraps T and implements Distributed interface
@@ -29,29 +29,45 @@ import co.paralleluniverse.galaxy.Store;
  * @param <T>
  */
 public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
-    private final Store store;
+    private final Cache cache;
 
-    public DistributedReferenceStore(Store store) {
-        this.store = store;
+    public DistributedReferenceStore(Cache cache) {
+        this.cache = cache;
     }
 
-    public R getOrCreateRef(long lineId) {
-        if (lineId <= 0)
+    public R newRef(long id, T obj) {
+        if (id <= 0)
             return null;
-        CacheListener ref = store.getListener(lineId);
-        return (R) (ref != null ? ref : store.setListenerIfAbsent(lineId, createRef(lineId, null)));
-    }
-
-    public R newRef(long lineId, T obj) {
-        if (lineId <= 0)
-            return null;
-        assert store.getListener(lineId) == null;
-        R ref = createRef(lineId, obj);
-        store.setListener(lineId, ref);
+        assert cache.getListener(id) == null;
+        R ref = createRef(id, obj);
+        cache.setListener(id, ref);
         return ref;
+    }
+
+    public R getOrCreateRef(long id) {
+        if (id <= 0)
+            return null;
+        CacheListener ref = cache.getListener(id);
+        return (R) (ref != null ? ref : cache.setListenerIfAbsent(id, createRef(id, null)));
     }
 
     protected R createRef(long id, T obj) {
         return (R) new DistributedReference<T>(id, obj);
+    }
+
+    public static <T> DistributedReference<T> newRef(Cache cache, long id, T obj) {
+        if (id <= 0)
+            return null;
+        assert cache.getListener(id) == null;
+        DistributedReference<T> ref = new DistributedReference<T>(id, obj);
+        cache.setListener(id, ref);
+        return ref;
+    }
+
+    public static <T> DistributedReference<T> getOrCreateRef(Cache cache, long id) {
+        if (id <= 0)
+            return null;
+        CacheListener ref = cache.getListener(id);
+        return (DistributedReference<T>) (ref != null ? ref : cache.setListenerIfAbsent(id, new DistributedReference<T>(id, null)));
     }
 }

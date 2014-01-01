@@ -29,7 +29,7 @@ public interface CacheListener {
      * The data item has been invalidated - probably requested exclusively by another node, or, possibly, deleted.
      * @param id The item's ID.
      */
-    void invalidated(long id);
+    void invalidated(Cache cache, long id);
 
     /**
      * The data item has been updated by another node. This is the opposite of the {@link #invalidated(long) invalidated} event. This method is not called when the item is 
@@ -39,11 +39,11 @@ public interface CacheListener {
      * @param version The item's version.
      * @param data The item's contents.
      */
-    void received(long id, long version, ByteBuffer data);
+    void received(Cache cache, long id, long version, ByteBuffer data);
 
     /**
      * The data item has been evicted from the local cache. Only items not owned by the local node can be evicted.
      * @param id The item's ID.
      */
-    void evicted(long id);
+    void evicted(Cache cache, long id);
 }

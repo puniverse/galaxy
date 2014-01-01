@@ -85,7 +85,7 @@ import org.springframework.jmx.export.annotation.ManagedAttribute;
  *
  * @author pron
  */
-public class Cache extends ClusterService implements MessageReceiver, NodeChangeListener {
+public class Cache extends ClusterService implements MessageReceiver, NodeChangeListener, co.paralleluniverse.galaxy.Cache {
     /*
      * To preserve memory ordering semantics, all messages from node N must be received and processed in the order in which they
      * were sent.
@@ -509,6 +509,25 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return line.getVersion();
     }
 
+    private CacheListener setListener(long id, CacheListener listener, boolean ifAbsent) {
+        try {
+            return (CacheListener) doOp(Op.Type.LSTN, id, ifAbsent, listener, null);
+        } catch (TimeoutException e) {
+            throw new AssertionError();
+        }
+    }
+
+    @Override
+    public CacheListener setListenerIfAbsent(long id, CacheListener listener) {
+        return setListener(id, listener, true);
+    }
+
+    @Override
+    public void setListener(long id, CacheListener listener) {
+        setListener(id, listener, false);
+    }
+
+    @Override
     public CacheListener getListener(long id) {
         final CacheLine line = getLine(id);
         if (line == null)
@@ -1515,7 +1534,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             }
             return PENDING;
         } else {
-            if (!transitionToE(line, (short)-1))
+            if (!transitionToE(line, (short) -1))
                 return PENDING;
             return execInvoke(line, f);
         }
@@ -2616,14 +2635,14 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private void fireLineInvalidated(CacheLine line) {
         if (line.getListener() != null) {
             try {
-                line.getListener().invalidated(line.getId());
+                line.getListener().invalidated(this, line.getId());
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }
         }
         for (CacheListener listener : listeners) {
             try {
-                listener.invalidated(line.getId());
+                listener.invalidated(this, line.getId());
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }
@@ -2637,7 +2656,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         if (line.getListener() != null) {
             try {
-                line.getListener().received(id, version, data);
+                line.getListener().received(this, id, version, data);
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }
@@ -2645,7 +2664,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
         for (CacheListener listener : listeners) {
             try {
-                listener.received(id, version, data);
+                listener.received(this, id, version, data);
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }
@@ -2656,14 +2675,14 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private void fireLineEvicted(CacheLine line) {
         if (line.getListener() != null) {
             try {
-                line.getListener().evicted(line.getId());
+                line.getListener().evicted(this, line.getId());
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }
         }
         for (CacheListener listener : listeners) {
             try {
-                listener.evicted(line.getId());
+                listener.evicted(this, line.getId());
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }

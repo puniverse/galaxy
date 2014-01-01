@@ -20,23 +20,12 @@
 package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.galaxy.CacheListener;
-import co.paralleluniverse.galaxy.core.AbstractComm;
-import co.paralleluniverse.galaxy.core.CacheMonitor;
-import co.paralleluniverse.galaxy.core.MessageReceiver;
-import co.paralleluniverse.galaxy.core.CacheStorage;
-import co.paralleluniverse.galaxy.core.HeapLocalStorage;
-import co.paralleluniverse.galaxy.core.NodeNotFoundException;
-import co.paralleluniverse.galaxy.core.Backup;
-import co.paralleluniverse.galaxy.core.Comm;
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.LineFunction;
 import co.paralleluniverse.galaxy.RefNotFoundException;
-import co.paralleluniverse.galaxy.Store;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeInfo;
 import com.google.common.base.Charsets;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -85,7 +74,7 @@ import static co.paralleluniverse.galaxy.core.Op.Type.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -1681,19 +1670,19 @@ public class CacheTest {
 
         PUT(100L, sh(10), 1L, "hello");
 
-        verify(listener).received(100L, 1L, toBuffer("hello"));
+        verify(listener).received(cache, 100L, 1L, toBuffer("hello"));
 
         PUT(100L, sh(10), 2L, "bye");
 
-        verify(listener).received(100L, 2L, toBuffer("bye"));
+        verify(listener).received(cache, 100L, 2L, toBuffer("bye"));
 
         INV(100L, sh(10));
 
-        verify(listener).invalidated(100L);
+        verify(listener).invalidated(cache, 100L);
 
         evict(100L, false);
 
-        verify(listener).evicted(100L);
+        verify(listener).evicted(cache, 100L);
     }
 
     @Test
@@ -1704,19 +1693,19 @@ public class CacheTest {
 
         PUT(100L, sh(10), 1L, "hello");
 
-        verify(listener).received(100L, 1L, toBuffer("hello"));
+        verify(listener).received(cache, 100L, 1L, toBuffer("hello"));
 
         PUT(100L, sh(10), 2L, "bye");
 
-        verify(listener).received(100L, 2L, toBuffer("bye"));
+        verify(listener).received(cache, 100L, 2L, toBuffer("bye"));
 
         INV(100L, sh(10));
 
-        verify(listener).invalidated(100L);
+        verify(listener).invalidated(cache, 100L);
 
         evict(100L, false);
 
-        verify(listener).evicted(100L);
+        verify(listener).evicted(cache, 100L);
 
         PUT(100L, sh(20), 3L, "xxx");
 
@@ -1745,8 +1734,8 @@ public class CacheTest {
         del(id);
         //evict(id, false);
 
-        verify(listener1).evicted(id);
-        verify(listener2).evicted(id);
+        verify(listener1).evicted(cache, id);
+        verify(listener2).evicted(cache, id);
 
         verifyNoMoreInteractions(listener1);
         verifyNoMoreInteractions(listener2);
@@ -1760,7 +1749,7 @@ public class CacheTest {
         final CacheListener lineListener = mock(CacheListener.class);
         cache.addCacheListener(new CacheListener() {
             @Override
-            public void received(long id, long version, ByteBuffer data) {
+            public void received(co.paralleluniverse.galaxy.Cache cache, long id, long version, ByteBuffer data) {
                 try {
                     doOp(LSTN, id, lineListener);
                 } catch (TimeoutException e) {
@@ -1769,11 +1758,11 @@ public class CacheTest {
             }
 
             @Override
-            public void invalidated(long id) {
+            public void invalidated(co.paralleluniverse.galaxy.Cache cache, long id) {
             }
 
             @Override
-            public void evicted(long id) {
+            public void evicted(co.paralleluniverse.galaxy.Cache cache, long id) {
             }
         });
 
@@ -1781,15 +1770,15 @@ public class CacheTest {
 
         PUT(100L, sh(10), 2L, "bye");
 
-        verify(lineListener).received(100L, 2L, toBuffer("bye"));
+        verify(lineListener).received(cache, 100L, 2L, toBuffer("bye"));
 
         INV(100L, sh(10));
 
-        verify(lineListener).invalidated(100L);
+        verify(lineListener).invalidated(cache, 100L);
 
         evict(100L, false);
 
-        verify(lineListener).evicted(100L);
+        verify(lineListener).evicted(cache, 100L);
 
         PUT(100L, sh(20), 3L, "xxx");
 
@@ -2061,14 +2050,14 @@ public class CacheTest {
             PUT(i, sh(10), 1L, "0123456789");
 
         InOrder inOrder = inOrder(listener);
-        inOrder.verify(listener).evicted(13);
-        inOrder.verify(listener).evicted(202);
-        inOrder.verify(listener).evicted(204);
-        inOrder.verify(listener).evicted(203);
-        inOrder.verify(listener).evicted(201);
-        inOrder.verify(listener).evicted(16);
+        inOrder.verify(listener).evicted(cache, 13);
+        inOrder.verify(listener).evicted(cache, 202);
+        inOrder.verify(listener).evicted(cache, 204);
+        inOrder.verify(listener).evicted(cache, 203);
+        inOrder.verify(listener).evicted(cache, 201);
+        inOrder.verify(listener).evicted(cache, 16);
         for (long i = 101; i <= 200; i++)
-            verify(listener, never()).evicted(i);
+            verify(listener, never()).evicted(cache, i);
     }
 
     @Test
@@ -2089,8 +2078,8 @@ public class CacheTest {
         assertState(4L, S, null);
 //        verify(listener).evicted(1L);
 //        verify(listener).evicted(2L);
-        verify(listener, never()).evicted(3L);
-        verify(listener, never()).evicted(4L);
+        verify(listener, never()).evicted(cache, 3L);
+        verify(listener, never()).evicted(cache, 4L);
 
 //        assertThat(cache.getLine(1), is(nullValue()));
 //        assertThat(cache.getLine(2), is(nullValue()));

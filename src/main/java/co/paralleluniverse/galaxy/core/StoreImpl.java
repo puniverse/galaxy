@@ -44,7 +44,7 @@ public class StoreImpl implements Store {
         this.cache = cache;
         this.rootManager = new StringRootManager(this, cache.getCluster());
     }
-    
+
     private static Persistable nonNullPersistable(Persistable object) {
         return object == null ? Cache.NULL_PERSISTABLE : object;
     }
@@ -363,22 +363,19 @@ public class StoreImpl implements Store {
         return (ListenableFuture<Void>) (Object) cache.doOpAsync(DEL, nonReserved(id), null, null, (Transaction) txn);
     }
 
-    public CacheListener setListener(long id, CacheListener listener, boolean ifAbsent) {
-        try {
-            return (CacheListener) cache.doOp(LSTN, id, ifAbsent, listener, null);
-        } catch (TimeoutException e) {
-            throw new AssertionError();
-        }
-    }
-
     @Override
     public CacheListener setListenerIfAbsent(long id, CacheListener listener) {
-        return setListener(id, listener, true);
+        return cache.setListenerIfAbsent(id, listener);
     }
 
     @Override
     public void setListener(long id, CacheListener listener) {
-        setListener(id, listener, false);
+        cache.setListener(id, listener);
+    }
+
+    @Override
+    public CacheListener getListener(long id) {
+        return cache.getListener(id);
     }
 
     @Override
@@ -426,11 +423,6 @@ public class StoreImpl implements Store {
     @Override
     public long getVersion(long id) {
         return cache.getVersion(id);
-    }
-
-    @Override
-    public CacheListener getListener(long id) {
-        return cache.getListener(id);
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -532,6 +524,6 @@ public class StoreImpl implements Store {
     public boolean tryPin(long id, ItemState state, StoreTransaction txn) throws IllegalStateException {
         if (state == ItemState.INVALID)
             throw new IllegalStateException("state Invalid is not permitted");
-        return cache.tryLock(id, state, (Transaction)txn);
+        return cache.tryLock(id, state, (Transaction) txn);
     }
 }
