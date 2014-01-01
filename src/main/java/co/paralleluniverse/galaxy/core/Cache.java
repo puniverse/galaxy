@@ -2633,6 +2633,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void fireLineInvalidated(CacheLine line) {
+        LOG.debug("fireLineInvalidated {}", line);
         if (line.getListener() != null) {
             try {
                 line.getListener().invalidated(this, line.getId());
@@ -2650,6 +2651,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void fireLineReceived(CacheLine line) {
+        LOG.debug("fireLineReceived {}", line);
         final long id = line.getId();
         final long version = line.getVersion();
         final ByteBuffer data = line.data;
@@ -2673,6 +2675,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void fireLineEvicted(CacheLine line) {
+        LOG.debug("fireLineEviceted {}", line);
         if (line.getListener() != null) {
             try {
                 line.getListener().evicted(this, line.getId());
