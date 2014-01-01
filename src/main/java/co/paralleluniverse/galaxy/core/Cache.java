@@ -1858,6 +1858,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
 
         final Object invokeRes = execInvoke(line, msg.getFunction());
+        
+        fireLineReceived(line);
+        
         send(Message.INVRES(msg, line.id, invokeRes));
         return LINE_EVERYTHING_CHANGED;
     }
