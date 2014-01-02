@@ -23,6 +23,7 @@ import co.paralleluniverse.common.io.ByteBufferInputStream;
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.Cache;
 import co.paralleluniverse.galaxy.CacheListener;
+import co.paralleluniverse.galaxy.Grid;
 import co.paralleluniverse.io.serialization.Serialization;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +46,7 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
         this.id = id;
         this.version = -1;
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[" + Long.toHexString(id) + " (" + version + "): " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
@@ -103,7 +104,7 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
 //        else {
         if (obj != null)
             buffer.put(getSerialized());
-        org.slf4j.LoggerFactory.getLogger(DistributedReference.class).debug("{} write: {} - {}", this, 
+        org.slf4j.LoggerFactory.getLogger(DistributedReference.class).debug("{} write: {} - {}", this,
                 obj, Serialization.getInstance().read(tmpBuffer));
         tmpBuffer = null;
 //        }
@@ -143,6 +144,26 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
             return (T) Serialization.getInstance().read(is);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    protected Object writeReplace() {
+        return new SerializedDistributedRef(id);
+    }
+
+    protected static class SerializedDistributedRef implements java.io.Serializable {
+        final long id;
+
+        public SerializedDistributedRef(long id) {
+            this.id = id;
+        }
+
+        Object readResolve() {
+            try {
+                return DistributedReferenceStore.getOrCreateRef(Grid.getInstance().store(), id);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
