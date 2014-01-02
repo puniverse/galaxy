@@ -104,8 +104,6 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
 //        else {
         if (obj != null)
             buffer.put(getSerialized());
-        org.slf4j.LoggerFactory.getLogger(DistributedReference.class).debug("{} write: {} - {}", this,
-                obj, Serialization.getInstance().read(tmpBuffer));
         tmpBuffer = null;
 //        }
     }
@@ -128,7 +126,6 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
          * for the line)
          */
         this.obj = deserialize(new ByteBufferInputStream(buffer));
-        org.slf4j.LoggerFactory.getLogger(DistributedReference.class).debug("{} read: {}", this, obj);
     }
 
     protected void set(T obj) {

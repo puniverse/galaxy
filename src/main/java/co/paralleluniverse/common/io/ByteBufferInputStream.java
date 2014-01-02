@@ -23,25 +23,19 @@ import java.io.DataInput;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInput;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 /**
  * @author pron
  */
-public class ByteBufferInputStream extends InputStream implements DataInput, ObjectInput {
+public class ByteBufferInputStream extends InputStream implements DataInput {
     private final ByteBuffer buffer;
     /**
      * @param buffer
      */
     public ByteBufferInputStream(ByteBuffer buffer) {
 	this.buffer = buffer;
-    }
-
-    @Override
-    public Object readObject() {
-        throw new UnsupportedOperationException("Not supported");
     }
     
     @Override
