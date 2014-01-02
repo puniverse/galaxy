@@ -22,7 +22,6 @@ package co.paralleluniverse.common.io;
 import java.io.DataOutput;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
@@ -31,7 +30,7 @@ import java.nio.ByteBuffer;
 /**
  * @author Ron Pressler
  */
-public class ByteBufferOutputStream extends OutputStream implements DataOutput, ObjectOutput {
+public class ByteBufferOutputStream extends OutputStream implements DataOutput {
     private final ByteBuffer buffer;
 
     /**
@@ -39,11 +38,6 @@ public class ByteBufferOutputStream extends OutputStream implements DataOutput, 
      */
     public ByteBufferOutputStream(ByteBuffer buffer) {
 	this.buffer = buffer;
-    }
-
-    @Override
-    public void writeObject(Object obj) {
-        throw new UnsupportedOperationException("Not supported.");
     }
     
     @Override
