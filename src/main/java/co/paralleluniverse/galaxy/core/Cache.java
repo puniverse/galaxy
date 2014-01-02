@@ -759,7 +759,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     res = handleOpListen(line, data, extra);
                     break;
                 case INVOKE:
-                    res = handleOpInvoke(line, data, op, extra, lineChange);
+                    res = handleOpInvoke(line, data, op, extra, txn, lineChange);
                     break;
             }
 
@@ -1525,7 +1525,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return line.setListener((CacheListener) listener, ifAbsent);
     }
 
-    private Object handleOpInvoke(CacheLine line, Object function, Op op, Object extra, int lineChange) {
+    private Object handleOpInvoke(CacheLine line, Object function, Op op, Object extra, Transaction txn, int lineChange) {
         if ((lineChange & (LINE_STATE_CHANGED | LINE_OWNER_CHANGED)) == 0)
             return PENDING;
 
@@ -1535,8 +1535,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         final LineFunction f = (LineFunction) function;
         if (line.state.isLessThan(State.O)) {
             if (op != null) { // when in slow track
-                assert extra == null || extra instanceof Short;
-                short nodeHint = nodeHint(extra);
+                short nodeHint = extra instanceof Short ? nodeHint(extra) : (short) -1;
                 final Message.INVOKE msg = Message.INVOKE(getTarget(line, nodeHint), line.id, f);
                 send(msg);
                 // We have to remember the message ID in order to process MSGACKs later
@@ -1550,7 +1549,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         } else {
             if (!transitionToE(line, (short) -1))
                 return PENDING;
-            return execInvoke(line, f);
+            Object res = execInvoke(line, f);
+            if (txn == null && !line.isLocked())
+                backupLine(line);
+            return res;
         }
     }
 
@@ -1872,9 +1874,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
 
         final Object invokeRes = execInvoke(line, msg.getFunction());
-        
+        backupLine(line);
+
         fireLineReceived(line);
-        
+
         send(Message.INVRES(msg, line.id, invokeRes));
         return LINE_EVERYTHING_CHANGED;
     }
