@@ -24,11 +24,8 @@ import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.galaxy.Cache;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.io.serialization.Serialization;
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.nio.ByteBuffer;
 
 /**
@@ -37,10 +34,10 @@ import java.nio.ByteBuffer;
  * @author eitan
  * @param <T>
  */
-public class DistributedReference<T> implements CacheListener, Persistable, Externalizable {
+public class DistributedReference<T> implements CacheListener, Persistable, java.io.Serializable {
+    private final long id;
     private transient volatile T obj;
-    private long id;
-    private volatile long version;
+    private transient volatile long version;
     private transient byte[] tmpBuffer;
 
     public DistributedReference(long id, T obj) {
@@ -48,7 +45,7 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
         this.id = id;
         this.version = -1;
     }
-
+    
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[" + Long.toHexString(id) + " (" + version + "): " + (obj != null ? (obj.getClass().getName() + "@" + System.identityHashCode(obj)) : "null") + "]";
@@ -90,10 +87,10 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
      */
     @Override
     public int size() {
-        if (obj instanceof Persistable)
-            return ((Persistable) obj).size();
-        else
-            return obj != null ? getSerialized().length : 0;
+//        if (obj instanceof Persistable)
+//            return ((Persistable) obj).size();
+//        else
+        return obj != null ? getSerialized().length : 0;
     }
 
     /**
@@ -101,13 +98,15 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
      */
     @Override
     public void write(ByteBuffer buffer) {
-        if (obj instanceof Persistable)
-            ((Persistable) obj).write(buffer);
-        else {
-            if (obj != null)
-                buffer.put(getSerialized());
-            tmpBuffer = null;
-        }
+//        if (obj instanceof Persistable)
+//            ((Persistable) obj).write(buffer);
+//        else {
+        if (obj != null)
+            buffer.put(getSerialized());
+        org.slf4j.LoggerFactory.getLogger(DistributedReference.class).debug("{} write: {} - {}", this, 
+                obj, Serialization.getInstance().read(tmpBuffer));
+        tmpBuffer = null;
+//        }
     }
 
     byte[] getSerialized() {
@@ -118,10 +117,17 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
 
     @Override
     public void read(ByteBuffer buffer) {
-        if (obj instanceof Persistable)
-            ((Persistable) obj).read(buffer);
-        else
-            this.obj = deserialize(new ByteBufferInputStream(buffer));
+//        if (obj instanceof Persistable)
+//            ((Persistable) obj).read(buffer);
+//        else
+        /*
+         * IMPORTANT:
+         * We need to take care of the situation where a simple set is invoked (w/o getx beforehand).
+         * The returned PUTX will call received which will overwrite the object (which we wanted to set as the value
+         * for the line)
+         */
+        this.obj = deserialize(new ByteBufferInputStream(buffer));
+        org.slf4j.LoggerFactory.getLogger(DistributedReference.class).debug("{} read: {}", this, obj);
     }
 
     protected void set(T obj) {
@@ -138,20 +144,5 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    // for use by Externalizable only!
-    public DistributedReference() {
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeLong(id);
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        this.id = in.read();
-        this.version = -1;
     }
 }
