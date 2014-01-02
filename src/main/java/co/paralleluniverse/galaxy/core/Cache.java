@@ -944,10 +944,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private int handleMessage1(LineMessage message, CacheLine line) {
         if (shouldHoldMessage(line, message)) {
-            if (message.isBroadcast())
-                fastReplyToBroadcast(line, message);
-            LOG.debug("Adding message to pending {} on line {}", message, line);
-            addPendingMessage(line, message);
+            if (message.isBroadcast() && quickReplyToBroadcast(line, message))
+                LOG.debug("quickReplyToBroadcast {}", message);
+            else {
+                LOG.debug("Adding message to pending {} on line {}", message, line);
+                addPendingMessage(line, message);
+            }
             if (line.is(CacheLine.MODIFIED))
                 backup.flush();
             return LINE_NO_CHANGE;
@@ -1089,13 +1091,14 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
     private static final long MESSAGES_WITH_FAST_REPLY = Enums.setOf(Message.Type.GET, Message.Type.GETX, Message.Type.INVOKE);
 
-    private boolean fastReplyToBroadcast(CacheLine line, LineMessage msg) {
+    private boolean quickReplyToBroadcast(CacheLine line, LineMessage msg) {
+        // we quickly reply to a broadcast if we're the line owner so that the sender's UDPComm
+        // won't be blocked in broadcast mode.
         assert msg.isBroadcast();
         if (!msg.getType().isOf(MESSAGES_WITH_FAST_REPLY))
             return false;
 
         if (line.state == State.O || line.state == State.E) {
-            LOG.debug("fastReplyToBroadcast {}", msg);
             send(Message.CHNGD_OWNR(msg, line.getId(), myNodeId(), true));
             return true;
         }
