@@ -758,6 +758,12 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                     if (request != null) {
                         if (request.isBroadcast())
                             broadcastResponses.add(message);
+                        
+//                        if(message.getType() == Message.Type.CHNGD_OWNR && ((Message.CHNGD_OWNR)message).getNewOwner() == message.getNode()) {
+//                            // this is a quickReplyToBroadcast
+//                            // TODO
+//                        }
+                        
                         sentPacket.removeMessage(message);
                     }
                 } else {
