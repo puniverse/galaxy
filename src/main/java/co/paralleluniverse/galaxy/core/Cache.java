@@ -1326,12 +1326,23 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                         send(Message.INV(sharer, line.getId(), line.getOwner())); // owner may not be us but the previous owner - see handleMessagePutX
                 }
             }
-            if (broadcastsRoutedToServer)
-                res = !line.sharers.contains(Comm.SERVER); // in this particular case, we wait for server to INVACK (this case may have consistency problems, otherwise)
-            else if (!hasServer)
-                res = !line.sharers.contains(line.getOwner()); // getOwner still has the old owner. when it invacks, it means it has inved its slaves so we're safe.
-            else
-                res = true; // we don't wait for acks, but GET messages are kept pending until the transition
+            res = false;
+            /*
+             * The following optimization has been temporarily disabled, due to the following scenario:
+             *
+             * Node A owns X and Y. B shares X and pins it. A modifies X, and doesn't wait for B's INVACK, which won't come until
+             * it unpins X. Then A also modifies Y (which can be published because it's not shared). B then requests Y and accepts it,
+             * but it is now inconsistent with X.
+             * 
+             * An alternative solution will be to enable this optimization for a single line per transaction, so that A won't be able
+             * to modify Y until X is released and INVACKed by B.
+             */
+//            if (broadcastsRoutedToServer)
+//                res = !line.sharers.contains(Comm.SERVER); // in this particular case, we wait for server to INVACK (this case may have consistency problems, otherwise)
+//            else if (!hasServer)
+//                res = !line.sharers.contains(line.getOwner()); // getOwner still has the old owner. when it invacks, it means it has inved its slaves so we're safe.
+//            else
+//                res = true; // we don't wait for acks, but GET messages are kept pending until the transition
         } else
             res = true;
         // INVACKs cannot cause deadlocks (really? proof?), so we don't need to wait and see if they timeout.
