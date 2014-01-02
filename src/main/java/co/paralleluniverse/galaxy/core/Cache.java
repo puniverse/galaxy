@@ -2677,6 +2677,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         final ByteBuffer data = line.data;
 
         if (line.getListener() != null) {
+            line.rewind();
             try {
                 line.getListener().received(this, id, version, data);
             } catch (Exception e) {
