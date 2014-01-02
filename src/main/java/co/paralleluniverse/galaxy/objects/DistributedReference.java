@@ -152,5 +152,6 @@ public class DistributedReference<T> implements CacheListener, Persistable, Exte
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         this.id = in.read();
+        this.version = -1;
     }
 }
