@@ -2240,7 +2240,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private boolean writeData(CacheLine line, Persistable object) {
         if (object.size() > maxItemSize)
-            throw new IllegalArgumentException("Object size is " + object.size() + " bytes and exceeds the limit of " + maxItemSize + " bytes.");
+            throw new IllegalArgumentException("Object size is " + object.size() + " bytes and exceeds the limit of " + maxItemSize + " bytes: " + object);
 
         if (compareBeforeWrite) {
             final Checksum chksm = getChecksum();
@@ -2453,6 +2453,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             if (response != null)
                 receive(shortCircuitMessage(message.getNode(), response));
         }
+        LOG.debug("Sent: {}", message);
         monitor.addMessageSent(message.getType());
     }
 
