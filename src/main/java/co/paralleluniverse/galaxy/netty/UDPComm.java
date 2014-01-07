@@ -656,8 +656,10 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
             recursive.set(Boolean.TRUE);
             try {
-                for (Message message : received)
+                for (Message message : received) {
+                    LOG.debug("Passing received message {} to cache", message);
                     receive(message);
+                }
             } finally {
                 recursive.remove();
             }

@@ -1812,7 +1812,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             if (!op.hasFuture())
                 op.createFuture();
             LOG.info("TIMEOUT: {}", op);
-            op.setException(new TimeoutException());
+            op.setException(new TimeoutException("Timeout while processing op " + op + ": " + msg));
             it.remove();
         }
         line.nextState = null;
