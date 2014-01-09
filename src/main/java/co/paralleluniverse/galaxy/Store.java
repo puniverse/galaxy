@@ -1,21 +1,15 @@
 /*
  * Galaxy
- * Copyright (C) 2012 Parallel Universe Software Co.
+ * Copyright (c) 2012-2014, Parallel Universe Software Co. All rights reserved.
  * 
- * This file is part of Galaxy.
- *
- * Galaxy is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 3 of 
- * the License, or (at your option) any later version.
- *
- * Galaxy is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public 
- * License along with Galaxy. If not, see <http://www.gnu.org/licenses/>.
+ * This program and the accompanying materials are dual-licensed under
+ * either the terms of the Eclipse Public License v1.0 as published by
+ * the Eclipse Foundation
+ *  
+ *   or (per the licensee's choosing)
+ *  
+ * under the terms of the GNU Lesser General Public License version 3.0
+ * as published by the Free Software Foundation.
  */
 package co.paralleluniverse.galaxy;
 
@@ -112,6 +106,7 @@ public interface Store extends Cache {
      * @param id       The item's ID.
      * @param listener The listener.
      */
+    @Override
     void setListener(long id, CacheListener listener);
 
     /**
@@ -121,12 +116,14 @@ public interface Store extends Cache {
      * @param listener The listener.
      * @return         The given listener if it was set or the existing one otherwise.
      */
+    @Override
     CacheListener setListenerIfAbsent(long id, CacheListener listener);
 
     /**
      * @param  id       The item's ID.
      * @return          The cacheListener of this line
      */
+    @Override
     CacheListener getListener(long id);
 
     /**

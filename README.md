@@ -3,11 +3,6 @@
 
 Galaxy is an in-memory data-grid. It's main function is to distribute data objects (stored as simple byte arrays) among cluster nodes for distributed processing. It also provides point-to-point messaging with guaranteed delivery and guaranteed ordering, as well as a cluster configuration management service.
 
-License
----------
-
-Galaxy is developed by [Parallel Universe](http://paralleluniverse.co), and is released as free software under the [LGPLv3](http://www.gnu.org/licenses/lgpl-3.0.txt) license.
-
 Galaxy Features and Architecture
 ---------------------------------
 
@@ -72,8 +67,25 @@ Mailing List / Forum
 
 Galaxy's mailing list/forum is found on Goolge Groups [here](https://groups.google.com/forum/#!forum/galaxy-user).
 
+License
+---------
+
+Galaxy is free software published under the following license:
+
+```
+Copyright (c) 2013-2014, Parallel Universe Software Co. All rights reserved.
+
+This program and the accompanying materials are dual-licensed under
+either the terms of the Eclipse Public License v1.0 as published by
+the Eclipse Foundation
+ 
+  or (per the licensee's choosing)
+ 
+under the terms of the GNU Lesser General Public License version 3.0
+as published by the Free Software Foundation.
+```
+
 ---
 
-Copyright (c) 2012-2013 Parallel Universe Software Co.
 
 [![githalytics.com alpha](https://cruel-carlota.gopagoda.com/fa8201ffe430046c0ae03b604c3eee83 "githalytics.com")](http://githalytics.com/puniverse/galaxy)
