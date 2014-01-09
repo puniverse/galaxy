@@ -20,7 +20,6 @@
 package co.paralleluniverse.galaxy.netty;
 
 import static co.paralleluniverse.common.collection.Util.reverse;
-import co.paralleluniverse.common.concurrent.CustomThreadFactory;
 import co.paralleluniverse.common.monitoring.ThreadPoolExecutorMonitor;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.cluster.NodeInfo;
@@ -28,12 +27,14 @@ import co.paralleluniverse.galaxy.core.ClusterService;
 import co.paralleluniverse.galaxy.core.CommThread;
 import co.paralleluniverse.galaxy.core.Message;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -62,7 +63,6 @@ import org.slf4j.LoggerFactory;
  * @author pron
  */
 abstract class AbstractTcpClient extends ClusterService {
-
     private final Logger LOG = LoggerFactory.getLogger(AbstractTcpClient.class.getName() + "." + getName());
     //
     private String nodeName;
@@ -100,13 +100,11 @@ abstract class AbstractTcpClient extends ClusterService {
         this.bootstrap = new ClientBootstrap(channelFactory);
 
         origChannelFacotry = new TcpMessagePipelineFactory(LOG, null, receiveExecutor) {
-
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 final ChannelPipeline pipeline = super.getPipeline();
                 pipeline.addBefore("messageCodec", "nodeNameWriter", new ChannelNodeNameWriter(cluster));
                 pipeline.addBefore("nodeNameWriter", "nodeInfoSetter", new SimpleChannelUpstreamHandler() {
-
                     @Override
                     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
                         if (nodeName == null)
@@ -116,25 +114,21 @@ abstract class AbstractTcpClient extends ClusterService {
                         super.channelConnected(ctx, e);
                         pipeline.remove(this);
                     }
-
                 });
                 pipeline.addLast("router", channelHandler);
                 return pipeline;
             }
-
         };
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 return AbstractTcpClient.this.getPipeline();
             }
-
         });
 
         bootstrap.setOption("tcpNoDelay", true);
         bootstrap.setOption("keepAlive", true);
-        
+
         reconnect = true;
     }
 
@@ -163,14 +157,12 @@ abstract class AbstractTcpClient extends ClusterService {
 
     private void configureThreadPool(String name, ThreadPoolExecutor executor) {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
-        executor.setThreadFactory(new CustomThreadFactory(name) {
-
+        executor.setThreadFactory(new ThreadFactoryBuilder().setNameFormat(name + "-%d").setThreadFactory(new ThreadFactory() {
             @Override
-            protected Thread allocateThread(ThreadGroup group, Runnable target, String name) {
-                return new CommThread(group, target, name);
+            public Thread newThread(Runnable r) {
+                return new CommThread(r);
             }
-
-        });
+        }).build());
         ThreadPoolExecutorMonitor.register(name, executor);
     }
 
@@ -235,12 +227,10 @@ abstract class AbstractTcpClient extends ClusterService {
 
     protected void connectLater() {
         executor.submit(new Runnable() {
-
             @Override
             public void run() {
                 connect();
             }
-
         });
     }
 
@@ -338,9 +328,7 @@ abstract class AbstractTcpClient extends ClusterService {
     }
 
     abstract protected void receive(ChannelHandlerContext ctx, Message message);
-
     private final ChannelHandler channelHandler = new SimpleChannelHandler() {
-
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
             final Message message = (Message) e.getMessage();
@@ -354,7 +342,7 @@ abstract class AbstractTcpClient extends ClusterService {
             channelLock.lock();
             try {
                 channel = e.getChannel();
-                if(!connecting) {
+                if (!connecting) {
                     LOG.info("Asked to disconnect from newly connected channel {}. Closing.", channel);
                     channel.close();
                     return;
@@ -406,6 +394,5 @@ abstract class AbstractTcpClient extends ClusterService {
                 connectLater();
             }
         }
-
     };
 }

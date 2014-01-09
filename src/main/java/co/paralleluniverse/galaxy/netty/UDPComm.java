@@ -19,7 +19,6 @@
  */
 package co.paralleluniverse.galaxy.netty;
 
-import co.paralleluniverse.common.concurrent.CustomThreadFactory;
 import co.paralleluniverse.common.monitoring.ThreadPoolExecutorMonitor;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.cluster.ReaderWriters;
@@ -32,6 +31,7 @@ import co.paralleluniverse.galaxy.core.MessageReceiver;
 import co.paralleluniverse.galaxy.core.NodeNotFoundException;
 import co.paralleluniverse.galaxy.core.ServerComm;
 import static co.paralleluniverse.galaxy.netty.IpConstants.*;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import gnu.trove.iterator.TShortIterator;
 import gnu.trove.set.hash.TLongHashSet;
 import gnu.trove.set.hash.TShortHashSet;
@@ -53,6 +53,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import static java.util.concurrent.TimeUnit.*;
@@ -322,12 +323,12 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
     private void configureThreadPool(String name, ThreadPoolExecutor executor) {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
-        executor.setThreadFactory(new CustomThreadFactory(name) {
+        executor.setThreadFactory(new ThreadFactoryBuilder().setNameFormat(name + "-%d").setThreadFactory(new ThreadFactory() {
             @Override
-            protected Thread allocateThread(ThreadGroup group, Runnable target, String name) {
-                return new CommThread(group, target, name);
+            public Thread newThread(Runnable r) {
+                return new CommThread(r);
             }
-        });
+        }).build());
         ThreadPoolExecutorMonitor.register(name, executor);
     }
 
@@ -760,12 +761,12 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                     if (request != null) {
                         if (request.isBroadcast())
                             broadcastResponses.add(message);
-                        
+
 //                        if(message.getType() == Message.Type.CHNGD_OWNR && ((Message.CHNGD_OWNR)message).getNewOwner() == message.getNode()) {
 //                            // this is a quickReplyToBroadcast
 //                            // TODO
 //                        }
-                        
+
                         sentPacket.removeMessage(message);
                     }
                 } else {

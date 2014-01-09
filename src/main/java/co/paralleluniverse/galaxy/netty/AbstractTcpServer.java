@@ -19,14 +19,15 @@
  */
 package co.paralleluniverse.galaxy.netty;
 
-import co.paralleluniverse.common.concurrent.CustomThreadFactory;
 import co.paralleluniverse.common.monitoring.ThreadPoolExecutorMonitor;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.core.ClusterService;
 import co.paralleluniverse.galaxy.core.CommThread;
 import co.paralleluniverse.galaxy.core.Message;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 import org.jboss.netty.bootstrap.ServerBootstrap;
@@ -67,14 +68,14 @@ public abstract class AbstractTcpServer extends ClusterService {
         super(name, cluster);
         this.channels = channels;
         this.port = port;
-        
-        if(bossExecutor == null)
-            bossExecutor = (ThreadPoolExecutor)Executors.newCachedThreadPool();
-        if(workerExecutor == null)
-            workerExecutor = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+
+        if (bossExecutor == null)
+            bossExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+        if (workerExecutor == null)
+            workerExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         configureThreadPool(name + "-tcpServerBoss", bossExecutor);
         configureThreadPool(name + "-tcpServerWorker", workerExecutor);
-        if(receiveExecutor != null)
+        if (receiveExecutor != null)
             configureThreadPool(name + "-tcpServerReceive", receiveExecutor);
 
         this.channelFactory = new NioServerSocketChannelFactory(bossExecutor, workerExecutor);
@@ -91,7 +92,7 @@ public abstract class AbstractTcpServer extends ClusterService {
                 return pipeline;
             }
         };
-        
+
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             @Override
             public ChannelPipeline getPipeline() throws Exception {
@@ -108,7 +109,7 @@ public abstract class AbstractTcpServer extends ClusterService {
     public AbstractTcpServer(String name, Cluster cluster, DefaultChannelGroup channels, int port) {
         this(name, cluster, channels, port, null);
     }
-    
+
     public void setBossExecutor(ThreadPoolExecutor bossExecutor) {
         assertDuringInitialization();
         this.bossExecutor = bossExecutor;
@@ -118,24 +119,22 @@ public abstract class AbstractTcpServer extends ClusterService {
         assertDuringInitialization();
         this.workerExecutor = workerExecutor;
     }
-    
+
     public void setReceiveExecutor(OrderedMemoryAwareThreadPoolExecutor receiveExecutor) {
         assertDuringInitialization();
         this.receiveExecutor = receiveExecutor;
     }
-    
+
     private void configureThreadPool(String name, ThreadPoolExecutor executor) {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
-        executor.setThreadFactory(new CustomThreadFactory(name) {
-
+        executor.setThreadFactory(new ThreadFactoryBuilder().setNameFormat(name + "-%d").setThreadFactory(new ThreadFactory() {
             @Override
-            protected Thread allocateThread(ThreadGroup group, Runnable target, String name) {
-                return new CommThread(group, target, name);
+            public Thread newThread(Runnable r) {
+                return new CommThread(r);
             }
-        });
+        }).build());
         ThreadPoolExecutorMonitor.register(name, executor);
     }
-    
     private final ChannelHandler channelHandler = new SimpleChannelHandler() {
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
@@ -156,7 +155,7 @@ public abstract class AbstractTcpServer extends ClusterService {
     }
 
     abstract protected void receive(ChannelHandlerContext ctx, Message message);
-    
+
     protected void bind() {
         Channel channel = bootstrap.bind(new InetSocketAddress(port));
         channels.add(channel);

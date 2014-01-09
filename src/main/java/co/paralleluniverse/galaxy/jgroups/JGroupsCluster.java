@@ -19,7 +19,6 @@
  */
 package co.paralleluniverse.galaxy.jgroups;
 
-import co.paralleluniverse.common.concurrent.CustomThreadFactory;
 import co.paralleluniverse.common.monitoring.ThreadPoolExecutorMonitor;
 import co.paralleluniverse.galaxy.cluster.DistributedTree;
 import co.paralleluniverse.galaxy.core.AbstractCluster;
@@ -28,10 +27,12 @@ import co.paralleluniverse.galaxy.core.RefAllocator;
 import co.paralleluniverse.galaxy.core.RefAllocatorSupport;
 import co.paralleluniverse.galaxy.core.RootLocker;
 import static co.paralleluniverse.galaxy.jgroups.JGroupsConstants.*;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.beans.ConstructorProperties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import org.jgroups.Address;
@@ -136,14 +137,13 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
             throw new RuntimeException("jgroupsThreadPool property not set!");
 
         jgroupsThreadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
-        jgroupsThreadPool.setThreadFactory(new CustomThreadFactory("jgroups") {
+        jgroupsThreadPool.setThreadFactory(new ThreadFactoryBuilder().setNameFormat("jgroups-%d").setThreadFactory(new ThreadFactory() {
 
             @Override
-            protected Thread allocateThread(ThreadGroup group, Runnable target, String name) {
-                return new CommThread(group, target, name);
+            public Thread newThread(Runnable r) {
+                return new CommThread(r);
             }
-
-        });
+        }).build());
         ThreadPoolExecutorMonitor.register("jgroups", jgroupsThreadPool);
 
         channel.getProtocolStack().getTransport().setDefaultThreadPool(jgroupsThreadPool);
