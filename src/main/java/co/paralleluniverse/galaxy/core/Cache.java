@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -2066,7 +2067,15 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             if (node != newOwner)
                 change |= setOwner(line, newOwner) ? LINE_OWNER_CHANGED : 0;
             line.setOwnerClock(0);// setOwnerClockInv(line, newOwner); - TODO ???
-            handlePendingOps(line, change);
+            boolean stop = false;
+            do {
+                try {
+                    handlePendingOps(line, change);
+                    stop = true;
+                } catch (ConcurrentModificationException e) {
+                    LOG.debug("processLineOnNodeEvent: OOPS. CME. Retrying");
+                }
+            } while (!stop);
         } else if (line.getState() == State.O && line.sharers.remove(node)) {
             if (LOG.isDebugEnabled())
                 LOG.debug("Node {} switched/removed - removing from sharers of line {}", node, line);
