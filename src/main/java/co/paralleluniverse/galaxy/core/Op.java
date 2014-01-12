@@ -15,7 +15,9 @@ package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.io.Persistable;
 import co.paralleluniverse.common.util.Enums;
-import com.google.common.util.concurrent.SettableFuture;
+import co.paralleluniverse.galaxy.Grid;
+import com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -47,19 +49,22 @@ class Op {
             return Enums.isIn(this, set);
         }
     }
+    private static final byte COMPLETED = 1;
+    private static final byte CANCELLED = 2;
     public final Type type;
     public final long line;
     public final Transaction txn;
     public final Object data;
     private Object extra;
-    private SettableFuture<Object> future;
+    private OpFuture<Object> future;
     private long startTime;
+    private byte status;
 
     Op(Type type, long line, Object data, Object extra, Transaction txn) {
         this.type = type;
         this.line = line;
         if (data != null && data instanceof byte[])
-            data = Arrays.copyOf(((byte[])data), ((byte[]) data).length);
+            data = Arrays.copyOf(((byte[]) data), ((byte[]) data).length);
         this.data = data;
         this.txn = txn;
         this.extra = extra;
@@ -105,24 +110,26 @@ class Op {
         this.extra = extra;
     }
 
-    public void createFuture() {
+    void createFuture() {
         assert future == null;
-        this.future = SettableFuture.create();
+        this.future = new OpFuture<Object>(this);
     }
 
     public boolean hasFuture() {
         return future != null;
     }
 
-    public SettableFuture<Object> getFuture() {
+    public ListenableFuture<Object> getFuture() {
         return future;
     }
 
     public void setResult(Object result) {
+        setCompleted();
         future.set(result);
     }
 
     public void setException(Throwable t) {
+        setCompleted();
         future.setException(t);
     }
 
@@ -140,6 +147,24 @@ class Op {
 
     public void setStartTime(long startTime) {
         this.startTime = startTime;
+    }
+
+    void setCancelled() {
+        assert status == 0;
+        this.status = CANCELLED;
+    }
+
+    private void setCompleted() {
+        assert status == 0;
+        this.status = COMPLETED;
+    }
+
+    public boolean isCancelled() {
+        return status == CANCELLED;
+    }
+
+    public boolean isCompleted() {
+        return status == COMPLETED;
     }
 
     @Override
@@ -173,5 +198,39 @@ class Op {
     @Override
     public String toString() {
         return "Op." + type + "(line:" + Long.toHexString(line) + (data != null ? ", data:" + data : "") + (extra != null ? ", extra:" + extra : "") + ')';
+    }
+
+    private static final class OpFuture<V> extends AbstractFuture<V> {
+        private final Op op;
+
+        OpFuture(Op op) {
+            this.op = op;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (!getCache().cancelOp(op))
+                return false;
+            assert op.isCancelled();
+            return super.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public boolean set(V value) {
+            return super.set(value);
+        }
+
+        @Override
+        public boolean setException(Throwable throwable) {
+            return super.setException(throwable);
+        }
+    }
+
+    static Cache getCache() {
+        try {
+            return ((StoreImpl) Grid.getInstance().store()).cache;
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
+        }
     }
 }

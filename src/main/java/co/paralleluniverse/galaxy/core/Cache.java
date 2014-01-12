@@ -58,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -383,7 +384,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         boolean unlock() {
             if (!is(LOCKED | DELETED))
-                throw new IllegalStateException("Item has not been pinned!");
+                throw new IllegalStateException("Item " + hex(id) + " has not been pinned!");
             flags &= ~LOCKED;
             return true;
 //            sem--;
@@ -578,6 +579,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             Object result = runOp(op);
             if (result == PENDING)
                 return op.getResult(timeout, TimeUnit.MILLISECONDS);
+            else if (result == null && op.isCancelled())
+                throw new CancellationException();
             else
                 return result;
         } catch (java.util.concurrent.TimeoutException e) {
@@ -686,6 +689,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
      */
     private Object handleOp(CacheLine line, Op op, boolean pending, int lineChange) {
         LOG.debug("handleOp: {} line: {}", op, line);
+        if (op.isCancelled()) {
+            LOG.debug("handleOp: {} line: {}: CANCELLED", op, line);
+            return null;
+        }
         try {
             Object res;
             switch (op.type) {
@@ -730,7 +737,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     res = handleOpGet(line, type, data, nodeHint(extra), txn, lineChange);
                     break;
                 case GETX:
-                    res = handleOpGetX(line, data, nodeHint(extra), txn, lineChange);
+                    res = handleOpGetX(line, data, nodeHint(extra), txn, lineChange, pending);
                     break;
                 case GET_FROM_OWNER:
                     res = handleOpGetFromOwner(line, extra);
@@ -1220,6 +1227,22 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
     }
 
+    boolean cancelOp(Op op) {
+        final CacheLine line = getLine(op.line);
+        if (line == null)
+            return false;
+        synchronized (line) {
+            final boolean completed;
+            if (!(completed = op.isCompleted())) {
+                op.setCancelled();
+                removePendingOp(line, op);
+            }
+            if (LOG.isDebugEnabled())
+                LOG.debug("Cancelling op {} on line {}: {}", op, line, completed ? "FAILED" : "SUCCESS");
+            return !completed;
+        }
+    }
+
     private void backupLine(CacheLine line) {
         line.set(CacheLine.SLAVE, true);
         backup.startBackup();
@@ -1263,12 +1286,15 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             return readData(line);
     }
 
-    private Object handleOpGetX(CacheLine line, Object data, short nodeHint, Transaction txn, int change) {
+    private Object handleOpGetX(CacheLine line, Object data, short nodeHint, Transaction txn, int change, boolean pending) {
         if ((change & (LINE_STATE_CHANGED | LINE_OWNER_CHANGED)) == 0)
             return PENDING;
 
         if (line.is(CacheLine.DELETED))
             handleDeleted(line);
+
+        if (!pending)
+            verifyNoUpgrade(line);
 
         if (!transitionToE(line, nodeHint))
             return PENDING;
@@ -1280,6 +1306,20 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             return null;
         } else
             return readData(line);
+    }
+
+    private boolean verifyNoUpgrade(CacheLine line) {
+        if (line.isLocked() && line.getState() == State.S) {
+            RuntimeException e = new IllegalStateException("Can't upgrade to X. Line " + line + " is pinned S");
+            LOG.error("Attempt to upgrade line " + line + " from S to X. Line is pinned S.", e);
+            throw e;
+        }
+        if (hasPendingOp(line, Op.Type.GETS)) {
+            RuntimeException e = new IllegalStateException("Can't upgrade to X. Line " + line + " has a pending gets operation.");
+            LOG.error("Attempt to upgrade line " + line + " from S to X. Line is pinned S.", e);
+            throw e;
+        }
+        return true;
     }
 
     private Object handleOpGetFromOwner(CacheLine line, Object extra) {
@@ -2550,6 +2590,14 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         ops.remove(op);
         if (ops.isEmpty())
             pendingOps.remove(op.line);
+    }
+
+    private boolean hasPendingOp(CacheLine line, Op.Type opType) {
+        for (Op op : getPendingOps(line)) {
+            if (op.type == opType)
+                return true;
+        }
+        return false;
     }
 
     private void addPendingMessage(CacheLine line, LineMessage message) {
