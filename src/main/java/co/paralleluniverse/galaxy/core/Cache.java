@@ -993,7 +993,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     return LINE_NO_CHANGE;
             }
         } catch (IrrelevantStateException e) {
-            LOG.warn("Got message {} when at irrelevant state {}", message, line.state);
+            if (message.getType() != Message.Type.CHNGD_OWNR) // TODO: check!!
+                LOG.warn("Got message {} when at irrelevant state {}", message, line.state);
             return LINE_NO_CHANGE;
         }
     }
