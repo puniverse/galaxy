@@ -1578,8 +1578,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 assert msg.getMessageId() > 0;
                 op.setExtra(msg);
 
-                if (f instanceof NoResultLineFunction)
-                    return null;
+//                if (f instanceof NoResultLineFunction) - TODO!!
+//                    return null;
             }
             return PENDING;
         } else {
