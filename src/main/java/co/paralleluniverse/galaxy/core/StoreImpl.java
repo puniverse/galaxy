@@ -115,10 +115,10 @@ public class StoreImpl implements Store {
 
     @Override
     public <T> T invoke(long lineId, LineFunction<T> function) throws TimeoutException {
-        if (Cache.isVoidLineFunction(function)) {
-            cache.doOpAsync(Op.Type.INVOKE, lineId, (Object) function, null, null);
-            return null;
-        } else
+//        if (Cache.isVoidLineFunction(function)) {
+//            cache.doOpAsync(Op.Type.INVOKE, lineId, (Object) function, null, null);
+//            return null;
+//        } else
             return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null);
     }
 
@@ -355,9 +355,9 @@ public class StoreImpl implements Store {
     @Override
     public <T> ListenableFuture<T> invokeAsync(long id, LineFunction<T> function) {
         final ListenableFuture<T> res = (ListenableFuture<T>) cache.doOpAsync(Op.Type.INVOKE, id, (Object) function, null, null);
-        if (Cache.isVoidLineFunction(function))
-            return Futures.immediateFuture(null);
-        else
+//        if (Cache.isVoidLineFunction(function))
+//            return Futures.immediateFuture(null);
+//        else
             return res;
     }
 
