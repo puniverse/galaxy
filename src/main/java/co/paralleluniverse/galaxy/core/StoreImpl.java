@@ -22,6 +22,7 @@ import co.paralleluniverse.galaxy.StoreTransaction;
 import co.paralleluniverse.galaxy.TimeoutException;
 import static co.paralleluniverse.galaxy.core.Op.Type.*;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -114,7 +115,11 @@ public class StoreImpl implements Store {
 
     @Override
     public <T> T invoke(long lineId, LineFunction<T> function) throws TimeoutException {
-        return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null);
+        if (Cache.isVoidLineFunction(function)) {
+            cache.doOpAsync(Op.Type.INVOKE, lineId, (Object) function, null, null);
+            return null;
+        } else
+            return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null);
     }
 
     @Override
@@ -349,7 +354,11 @@ public class StoreImpl implements Store {
 
     @Override
     public <T> ListenableFuture<T> invokeAsync(long id, LineFunction<T> function) {
-        return (ListenableFuture<T>) cache.doOpAsync(Op.Type.INVOKE, id, (Object) function, null, null);
+        final ListenableFuture<T> res = (ListenableFuture<T>) cache.doOpAsync(Op.Type.INVOKE, id, (Object) function, null, null);
+        if (Cache.isVoidLineFunction(function))
+            return Futures.immediateFuture(null);
+        else
+            return res;
     }
 
     @Override

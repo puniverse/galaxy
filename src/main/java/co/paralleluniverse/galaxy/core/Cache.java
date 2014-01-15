@@ -26,7 +26,6 @@ import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.ItemState;
 import co.paralleluniverse.galaxy.LineFunction;
-import co.paralleluniverse.galaxy.NoResultLineFunction;
 import co.paralleluniverse.galaxy.RefNotFoundException;
 import co.paralleluniverse.galaxy.TimeoutException;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
@@ -1578,7 +1577,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 assert msg.getMessageId() > 0;
                 op.setExtra(msg);
 
-//                if (f instanceof NoResultLineFunction) - TODO!!
+//                if (isVoidLineFunction(f)) // TODO!!
 //                    return null;
             }
             return PENDING;
@@ -2787,6 +2786,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         throw IRRELEVANT_STATE;
     }
     //</editor-fold>
+    
     static final Persistable NULL_PERSISTABLE = new Persistable() {
         @Override
         public int size() {
@@ -2803,4 +2803,36 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             throw new NullPointerException();
         }
     };
+
+    static boolean isVoidLineFunction(LineFunction<?> function) {
+        return isVoidLineFunction.get(function.getClass());
+    }
+    private static final ClassValue<Boolean> isVoidLineFunction = new ClassValue<Boolean>() {
+        @Override
+        protected Boolean computeValue(Class<?> type) {
+            boolean res = isVoidLineFunction(type);
+            return res;
+        }
+    };
+
+    private static boolean isVoidLineFunction(Class<?> clazz) {
+        if (clazz == null)
+            return false;
+        for (java.lang.reflect.Type iface : clazz.getGenericInterfaces()) {
+            if (iface instanceof java.lang.reflect.ParameterizedType) {
+                java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) iface;
+                if (pt.getRawType() == LineFunction.class)
+                    return (pt.getActualTypeArguments()[0] == Void.class);
+                boolean r = isVoidLineFunction((Class) pt.getRawType());
+                if (r)
+                    return true;
+            } else if (iface == LineFunction.class)
+                return false;
+
+            boolean r = isVoidLineFunction((Class) iface);
+            if (r)
+                return true;
+        }
+        return isVoidLineFunction(clazz.getSuperclass());
+    }
 }
