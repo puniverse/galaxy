@@ -1,4 +1,6 @@
 *~
+_site/
+/docs/.pygments-cache/
 /private/
 /dist/
 /artifacts

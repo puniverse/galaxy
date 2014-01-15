@@ -1,0 +1,20 @@
+markdown: enhanced_kramdown
+pygments: true
+lsi: false
+safe: false
+baseurl: /galaxy
+
+kramdown:
+  toc_levels: [1,2,3]
+  use_coderay: false
+  coderay:
+    enable_coderay: false
+    coderay_line_numbers: nil
+    coderay_css: class
+
+# Site globals used throughout docs.
+project: Galaxy
+github: puniverse/galaxy
+google_group: "https://groups.google.com/forum/#!forum/galaxy-user"
+ga_tracking_id: UA-25007319-2
+
