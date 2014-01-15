@@ -791,7 +791,8 @@ footer { padding:70px 0 55px; background:url(../images/bg.png); }
 			font-weight:bold; color:#393939; text-transform:uppercase; }
 			#docs-sidemenu li.li1>ul { margin-bottom:10px; padding-left:12px; }
 				#docs-sidemenu li.li1>ul a { color:#4d4f4f; font-size:13px; line-height:1.1em; }
-					#docs-sidemenu li.li1>ul a.cat-link { color:#3a3a3a; font-size:16px; font-weight:bold; line-height:2em; }
+				#docs-sidemenu li.li1>ul a.toc-h4 { color:#4d4f4f; font-size:12px; line-height:1.1em; padding-left: 15px; }
+				#docs-sidemenu li.li1>ul a.cat-link { color:#3a3a3a; font-size:16px; font-weight:bold; line-height:2em; }
 				#docs-sidemenu li.li1>ul ul { }
 	
 .main { width:743px; float:right; }
