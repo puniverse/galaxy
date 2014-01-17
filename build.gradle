@@ -308,4 +308,5 @@ task showResults(type:Exec) {
     //    }
 }    
 task wrapper(type: Wrapper) {
+    gradleVersion = '1.10'
 }

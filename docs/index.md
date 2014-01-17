@@ -22,7 +22,7 @@ persistence.
 {:.alert .alert-warn}
 **Note**: Galaxy is currently in ALPHA and considered experimental. Please submit bug reports and feature requests to the [issue tracker](https://github.com/puniverse/galaxy/issues).
 
-Galaxy is developed by [Parallel Universe] and released as free software under the GNU Lesser General Public License.
+Quasar is developed by [Parallel Universe] and released as free software, dual-licensed under the Eclipse Public License and the GNU Lesser General Public License.
 
 [Parallel Universe]: http://paralleluniverse.co
 
