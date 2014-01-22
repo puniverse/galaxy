@@ -3,3 +3,5 @@ co.paralleluniverse.common.io
 co.paralleluniverse.common.spring
 co.paralleluniverse.galaxy
 co.paralleluniverse.galaxy.cluster
+co.paralleluniverse.io.serialization
+co.paralleluniverse.io.serialization.kryo
