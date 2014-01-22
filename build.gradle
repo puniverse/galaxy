@@ -3,7 +3,7 @@ sourceCompatibility = '1.7'
 
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 group               = "co.paralleluniverse"
-version             = "1.3-SNAPSHOT"
+version             = "1.3"
 status              = "integration"
 description         = "A high-performance in-memory data-grid."
 ext.url             = "http://puniverse.github.com/galaxy"
@@ -82,7 +82,7 @@ dependencies {
 
 ///////// Doduments
 configure (javadoc) {    
-    destinationDir = file("$distDir/docs/javadoc")
+    destinationDir = file("docs/javadoc")
     options.links = [    
         "http://docs.oracle.com/javase/7/docs/api/",
         "http://docs.guava-libraries.googlecode.com/git-history/v12.0/javadoc/"
@@ -118,19 +118,7 @@ configure (javadoc) {
     ]
 }
 
-task generateDocs(type:Exec) {
-    workingDir 'docs'
-    environment JAVADOC_URL: "../javadoc"
-    commandLine 'make','html'
-    outputs.dir "$workingDir/build"
-    inputs.dir "$workingDir/src"
-}
-
 ////////// Distribution
-task(copyDocsToDist, dependsOn:'generateDocs', type: Copy) {
-    from 'docs/build/html'
-    into "$distDir/docs"
-}
 task copyDependenciesToDist(type:Copy) {
     from configurations.runtime
     into "$distDir/lib"
@@ -164,12 +152,10 @@ jar {
         )
     }
 }
-task distNoDocs {
+task dist {
     dependsOn copyDependenciesToDist,copyConfigToDist,jar,sourcesJar,javadocJar,srcZip,javadoc    
 }
-task dist {
-    dependsOn distNoDocs,copyDocsToDist
-}
+
 defaultTasks 'distNoDocs'
 task distZip(type:Zip, dependsOn: dist) {
     archiveName project.name+"-"+project.version+".zip"
@@ -184,17 +170,6 @@ apply plugin: 'github-pages'
 buildscript {
     repositories { mavenCentral() }
     dependencies { classpath 'org.ajoberstar:gradle-git:0.6.3' }
-}
-addGhPages {
-    dependsOn javadoc,copyDocsToDist
-}
-githubPages {
-    repoUri = 'https://github.com/puniverse/galaxy.git'  
-    pages {
-        from(javadoc.destinationDir) { into 'javadoc' }
-        from('docs/build/html')
-        //    from(distZip.outputs.files) { into '_static'}
-    }
 }
 
 ///////// Publish Artifacts 
@@ -294,7 +269,7 @@ tasks.withType(Test) {
     systemProperty "Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector"
     useJUnit()
     doLast() {
-        println "file://" + testReportDir + "/index.html"    
+        println "file://" + getReports().getHtml().getDestination() + "/index.html"
     }    
 }
 

@@ -28,6 +28,12 @@ Quasar is developed by [Parallel Universe] and released as free software, dual-l
 
 ## News
 
+### January 22, 2014
+
+Galaxy 1.3 has been released.
+
+[Galaxy's Networking](http://blog.paralleluniverse.co/post/29085615915/galaxy-internals-part-3). Part 3 of the Galaxy Internals blog post series.
+
 ### August 9, 2012
 
 [Galaxy's Networking](http://blog.paralleluniverse.co/post/29085615915/galaxy-internals-part-3). Part 3 of the Galaxy Internals blog post series.
@@ -89,7 +95,7 @@ Add the following dependency to Maven:
 <dependency>
     <groupId>co.paralleluniverse</groupId>
     <artifactId>galaxy</artifactId>
-    <version>0.1.2</version>
+    <version>{{site.version}}</version>
 </dependency>
 ~~~
 

@@ -1,6 +1,7 @@
 *~
 _site/
 /docs/.pygments-cache/
+/docs/javadoc/
 /private/
 /dist/
 /artifacts
