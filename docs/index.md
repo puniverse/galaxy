@@ -1,5 +1,7 @@
 ---
 layout: default
+title: Galaxy
+description: "Galaxy is a cache-coherent in-memory data grid for horizontal scalability."
 ---
 
 # Overview
