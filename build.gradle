@@ -37,35 +37,35 @@ repositories {
 }
 
 dependencies {
-    compile "com.google.guava:guava:15.0" 
+    compile "com.google.guava:guava:16.0.1" 
     compile "net.sf.trove4j:trove4j:3.0.3"
-    compile "org.springframework:spring-beans:3.2.5.RELEASE"
-    compile "org.springframework:spring-context:3.2.5.RELEASE"
+    compile "org.springframework:spring-beans:4.0.1.RELEASE"
+    compile "org.springframework:spring-context:4.0.1.RELEASE"
     compile "com.codahale.metrics:metrics-core:3.0.1" 
-    compile "io.netty:netty:3.8.0.Final"
-    compile "org.jgroups:jgroups:3.4.1.Final"
+    compile "io.netty:netty:3.9.0.Final"
+    compile "org.jgroups:jgroups:3.4.2.Final"
     compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4"
     compile "com.sleepycat:je:5.0.73"
     compile "co.parallelunivese:high-scale-lib:" // non-Maven
-    runtime "org.slf4j:slf4j-api:1.7.5"
-    runtime "org.slf4j:jcl-over-slf4j:1.7.5"
-    runtime "org.slf4j:log4j-over-slf4j:1.7.5"   
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-beta9"
-    runtime "org.apache.logging.log4j:log4j-api:2.0-beta9"
-    runtime "org.apache.logging.log4j:log4j-core:2.0-beta9"
+    runtime "org.slf4j:slf4j-api:1.7.6"
+    runtime "org.slf4j:jcl-over-slf4j:1.7.6"
+    runtime "org.slf4j:log4j-over-slf4j:1.7.6"   
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-rc1"
+    runtime "org.apache.logging.log4j:log4j-api:2.0-rc1"
+    runtime "org.apache.logging.log4j:log4j-core:2.0-rc1"
     runtime "com.lmax:disruptor:3.2.0" // required for log4j
     testCompile "junit:junit:4.11"
-    testCompile "org.apache.ant:ant-junit4:1.9.2"
+    testCompile "org.apache.ant:ant-junit4:1.9.3"
     testCompile "org.hamcrest:hamcrest-core:1.3"
     testCompile "org.hamcrest:hamcrest-library:1.3"
     testCompile "org.mockito:mockito-all:1.9.5"        
-    compile("org.apache.curator:curator-recipes:2.3.0") {
+    compile("org.apache.curator:curator-recipes:2.4.0") {
         exclude group: "org.slf4j", module: '*'
     }
-    compile("org.apache.curator:curator-client:2.3.0") {
+    compile("org.apache.curator:curator-client:2.4.0") {
         exclude group: "org.slf4j", module: '*'
     }
-    compile("org.apache.curator:curator-framework:2.3.0") {
+    compile("org.apache.curator:curator-framework:2.4.0") {
         exclude group: "org.slf4j", module: '*'
     }
     compile("org.apache.zookeeper:zookeeper:3.4.5") {
@@ -75,7 +75,7 @@ dependencies {
     compile("de.javakaffee:kryo-serializers:0.26") {
         exclude group: "com.esotericsoftware.kryo", module: '*'
     }
-    compile("com.esotericsoftware.kryo:kryo:2.22") {
+    compile("com.esotericsoftware.kryo:kryo:2.23.0") {
         exclude group: "org.ow2.asm", module: '*'
     }
 }
