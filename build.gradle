@@ -54,18 +54,21 @@ dependencies {
     runtime "org.apache.logging.log4j:log4j-api:2.0-rc1"
     runtime "org.apache.logging.log4j:log4j-core:2.0-rc1"
     runtime "com.lmax:disruptor:3.2.1" // required for log4j
+    compile("org.apache.zookeeper:zookeeper:3.4.6") {
+        exclude group: "org.slf4j", module: '*'
+        exclude group: "io.netty", module: 'netty'
+    }
     compile("org.apache.curator:curator-recipes:2.4.2") {
         exclude group: "org.slf4j", module: '*'
+        exclude group: "org.apache.zookeeper", module: "zookeeper"
     }
     compile("org.apache.curator:curator-client:2.4.2") {
         exclude group: "org.slf4j", module: '*'
+        exclude group: "org.apache.zookeeper", module: "zookeeper"
     }
     compile("org.apache.curator:curator-framework:2.4.2") {
         exclude group: "org.slf4j", module: '*'
-    }
-    compile("org.apache.zookeeper:zookeeper:3.4.6") {
-        exclude group: "org.slf4j", module: '*'
-        
+        exclude group: "org.apache.zookeeper", module: "zookeeper"
     }
     compile("com.esotericsoftware.kryo:kryo:2.24.0") {
         exclude group: "org.ow2.asm", module: '*'
