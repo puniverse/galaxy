@@ -24,7 +24,7 @@ public interface Backup {
 
     void setCache(Cache cache);
 
-    void startBackup();
+    boolean startBackup();
 
     /**
      * Must be called by the cache when the line is synchronized, and under a read-lock (i.e. between startBackup and endBackup)
@@ -34,7 +34,7 @@ public interface Backup {
      */
     void backup(long id, long version);
 
-    void endBackup();
+    void endBackup(boolean locked);
 
     boolean inv(long id, short owner);
 

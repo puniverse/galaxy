@@ -190,7 +190,7 @@ public class BackupImpl extends ClusterService implements Backup {
     }
 
     @Override
-    public void startBackup() {
+    public boolean startBackup() {
         LOG.debug("start backup");
         mapLock.readLock().lock();
 
@@ -198,14 +198,17 @@ public class BackupImpl extends ClusterService implements Backup {
             currentBackupsLock.lock();
             if (!copyImmediately) // test again
                 currentBackupsLock.unlock();
+            else
+                return true;
         }
+        return false;
     }
 
     @Override
-    public void endBackup() {
+    public void endBackup(boolean locked) {
         LOG.debug("end backup");
         mapLock.readLock().unlock();
-        if (copyImmediately) {
+        if (locked) {
             currentBackupsPossiblyReady.signal();
             currentBackupsLock.unlock();
         }
@@ -221,8 +224,10 @@ public class BackupImpl extends ClusterService implements Backup {
     public void backup(long id, long version) {
         if (LOG.isDebugEnabled())
             LOG.debug("Backup: {} ver: {} {}", new Object[]{hex(id), version, copyImmediately ? "(COPY)" : ""});
-        if (copyImmediately)
+        if (copyImmediately) {
             currentBackups.put(id, makeBackup(cache.getLine(id), version));
+            oldMap().remove(id);
+        }
         else
             map.put(id, new BackupEntry(id, version));
     }
@@ -260,7 +265,7 @@ public class BackupImpl extends ClusterService implements Backup {
                     final CacheLine line = cache.getLine(be.id);
                     assert line != null;
                     synchronized (line) {
-                        Message.BACKUP backup = makeBackup(line, be.version);
+                        final Message.BACKUP backup = makeBackup(line, be.version);
                         if (backup != null) {
                             oldMap.remove(be.id);
                             if (LOG.isDebugEnabled())
@@ -314,7 +319,7 @@ public class BackupImpl extends ClusterService implements Backup {
                     }
 
                     while (!oldMap.isEmpty()) {
-                        LOG.debug("Waiting for missing transactions");
+                        LOG.debug("Waiting for missing transactions: {}", oldMap);
                         currentBackupsPossiblyReady.await();
                     }
                     this.copyImmediately = false;
@@ -384,6 +389,10 @@ public class BackupImpl extends ClusterService implements Backup {
         else
             map = map1;
     }
+    
+    private NonBlockingHashMapLong<BackupEntry> oldMap() {
+        return map == map1 ? map2 : map1;
+    }
 
     private Message.BACKUP makeBackup(CacheLine line, long version) {
         if (line.getVersion() != version)
@@ -399,7 +408,7 @@ public class BackupImpl extends ClusterService implements Backup {
             buffer.flip();
             backup = Message.BACKUP(line.getId(), line.getVersion(), buffer);
         }
-        LOG.debug("Copying up version {} of line {} data: {}", new Object[]{backup.getVersion(), hex(backup.getLine()), backup.getData() != null ? "(" + backup.getData().remaining() + " bytes)" : "null"});
+        LOG.debug("Copying version {} of line {} data: {}", new Object[]{backup.getVersion(), hex(backup.getLine()), backup.getData() != null ? "(" + backup.getData().remaining() + " bytes)" : "null"});
         return backup;
     }
 
@@ -556,6 +565,11 @@ public class BackupImpl extends ClusterService implements Backup {
         public BackupEntry(long id, long version) {
             this.id = id;
             this.version = version;
+        }
+
+        @Override
+        public String toString() {
+            return "BackupEntry{" + "id: " + Long.toHexString(id) + ", version: " + version + '}';
         }
     }
 }

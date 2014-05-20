@@ -1173,7 +1173,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         boolean flush = false;
 
         final ArrayList<CacheLine> unmodified = new ArrayList<CacheLine>();
-        backup.startBackup();
+        final boolean locked = backup.startBackup();
         try {
             for (TLongIterator it = txn.getLines().iterator(); it.hasNext();) {
                 final long id = it.next();
@@ -1193,7 +1193,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 }
             }
         } finally {
-            backup.endBackup();
+            backup.endBackup(locked);
         }
         if (flush)
             backup.flush();
@@ -1217,14 +1217,24 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     public void release(long id) {
         final CacheLine line = getLine(id);
-        synchronized (line) {
-            if (unlockLine(line, null)) {
-                if (!line.is(CacheLine.MODIFIED))
-                    handlePendingMessages(line, CacheMonitor.MessageDelayReason.LOCK);
-                else
-                    backupLine(line);
+        boolean bckp = false;
+        final boolean locked = backup.startBackup();
+        try {
+            synchronized (line) {
+                if (unlockLine(line, null)) {
+                    if (!line.is(CacheLine.MODIFIED))
+                        handlePendingMessages(line, CacheMonitor.MessageDelayReason.LOCK);
+                    else {
+                        bckp = true;
+                        backupLine(line);
+                    }
+                }
             }
+        } finally {
+            backup.endBackup(locked);
         }
+        if (bckp && hasPendingMessages(line))
+            backup.flush();
     }
 
     boolean cancelOp(Op op) {
@@ -1245,14 +1255,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private void backupLine(CacheLine line) {
         line.set(CacheLine.SLAVE, true);
-        backup.startBackup();
-        try {
-            backup.backup(line.getId(), line.getVersion());
-        } finally {
-            backup.endBackup();
-        }
-        if (hasPendingMessages(line))
-            backup.flush();
+        backup.backup(line.getId(), line.getVersion());
     }
     //</editor-fold>
 
@@ -2786,7 +2789,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         throw IRRELEVANT_STATE;
     }
     //</editor-fold>
-    
+
     static final Persistable NULL_PERSISTABLE = new Persistable() {
         @Override
         public int size() {

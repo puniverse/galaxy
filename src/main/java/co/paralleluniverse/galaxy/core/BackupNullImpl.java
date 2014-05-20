@@ -60,7 +60,8 @@ public class BackupNullImpl extends ClusterService implements Backup {
     }
 
     @Override
-    public void startBackup() {
+    public boolean startBackup() {
+        return false;
     }
 
     @Override
@@ -69,7 +70,7 @@ public class BackupNullImpl extends ClusterService implements Backup {
     }
 
     @Override
-    public void endBackup() {
+    public void endBackup(boolean locked) {
     }
 
     @Override
