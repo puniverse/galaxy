@@ -39,8 +39,8 @@ repositories {
 dependencies {
     compile "com.google.guava:guava:17.0" 
     compile "net.sf.trove4j:trove4j:3.0.3"
-    compile "org.springframework:spring-beans:4.0.4.RELEASE"
-    compile "org.springframework:spring-context:4.0.4.RELEASE"
+    compile "org.springframework:spring-beans:4.0.5.RELEASE"
+    compile "org.springframework:spring-context:4.0.5.RELEASE"
     compile "com.codahale.metrics:metrics-core:3.0.2" 
     compile "io.netty:netty:3.9.1.Final"
     compile "org.jgroups:jgroups:3.4.4.Final"
@@ -79,7 +79,10 @@ dependencies {
     testCompile "junit:junit:4.11"
     testCompile "org.hamcrest:hamcrest-core:1.3"
     testCompile "org.hamcrest:hamcrest-library:1.3"
-    testCompile "org.mockito:mockito-all:1.9.5"        
+    testCompile "org.mockito:mockito-all:1.9.5"
+    testCompile('org.gridkit.lab:nanocloud:0.8.2.2') {
+        exclude group: "org.ow2.asm", module: '*'
+    }
 }
 
 ///////// Doduments
