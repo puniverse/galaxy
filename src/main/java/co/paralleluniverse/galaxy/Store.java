@@ -91,6 +91,20 @@ public interface Store extends Cache {
     long getRoot(String rootName, StoreTransaction txn) throws TimeoutException;
 
     /**
+     * Gets or possibly creates a root data item. The same item ID will be returned when this method is called on any
+     * cluster node with the same root name.
+     * <p/>
+     * You can test if the root has been newly created by this transaction by calling .
+     *
+     * @param rootName The root's name.
+     * @param id       If the root does not yet exist, it will be created and given this ID.
+     * @return The root item's ID.
+     * @param txn      The current transaction. May not be null.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    long getRoot(String rootName, long id, StoreTransaction txn) throws TimeoutException;
+
+    /**
      * Tests whether a root item has been newly created.
      *
      * @param rootId The root item's ID.
@@ -114,14 +128,14 @@ public interface Store extends Cache {
      *
      * @param id       The item's ID.
      * @param listener The listener.
-     * @return         The given listener if it was set or the existing one otherwise.
+     * @return The given listener if it was set or the existing one otherwise.
      */
     @Override
     CacheListener setListenerIfAbsent(long id, CacheListener listener);
 
     /**
-     * @param  id       The item's ID.
-     * @return          The cacheListener of this line
+     * @param id The item's ID.
+     * @return The cacheListener of this line
      */
     @Override
     CacheListener getListener(long id);
@@ -908,11 +922,11 @@ public interface Store extends Cache {
     boolean isPinned(long id);
 
     /**
-     * Pins item if it can be done locally. 
-     * 
-     * @param id  The item's ID.
+     * Pins item if it can be done locally.
+     *
+     * @param id    The item's ID.
      * @param state can be X for writePin or S for readPin.
-     * @param txn The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
+     * @param txn   The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return true if succeeded.
      * @throws IllegalStateException if state is not X or S
      */

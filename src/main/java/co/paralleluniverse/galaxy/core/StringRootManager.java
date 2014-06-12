@@ -43,7 +43,11 @@ class StringRootManager {
     }
 
     public long get(String root, Transaction txn) throws TimeoutException {
-        return new StringRootPageHandler(root).find(txn);
+        return new StringRootPageHandler(root).find(txn, -1);
+    }
+
+    public long get(String root, long ref, Transaction txn) throws TimeoutException {
+        return new StringRootPageHandler(root).find(txn, ref);
     }
 
     private class StringRootPageHandler implements Persistable {
@@ -56,7 +60,7 @@ class StringRootManager {
             this.str = str;
         }
 
-        public long find(Transaction txn) throws TimeoutException {
+        public long find(Transaction txn, long rootRef) throws TimeoutException {
             ref = str.hashCode();
             result = -1;
 
@@ -94,7 +98,7 @@ class StringRootManager {
                     store.release(curRef);
                     return result;
                 } else if (this.size + mySize <= store.getMaxItemSize()) {
-                    final long myRef = store.put(new byte[0], null);
+                    final long myRef = rootRef > 0 ? rootRef : store.put(new byte[0], null);
                     if (LOG.isDebugEnabled())
                         LOG.debug("New root for {} is {}. Writing into base {}.", new Object[]{str, hex(myRef), hex(curRef)});
                     final StringRootPage page = new StringRootPage();
@@ -109,7 +113,7 @@ class StringRootManager {
             }
 
             // no space!
-            final long myRef = store.put(new byte[0], null);
+            final long myRef = rootRef > 0 ? rootRef : store.put(new byte[0], null);
             final StringRootPage page = new StringRootPage();
             page.put(str, myRef);
             this.ref = store.put(page, null);

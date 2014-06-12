@@ -84,6 +84,11 @@ public class StoreImpl implements Store {
     }
 
     @Override
+    public long getRoot(String root, long id, StoreTransaction txn) throws TimeoutException {
+        return rootManager.get(root, id, (Transaction) verifyNonNull(txn));
+    }
+
+    @Override
     public boolean isRootCreated(long rootId, StoreTransaction txn) {
         return ((Transaction) txn).contains(rootId);
     }
@@ -119,7 +124,7 @@ public class StoreImpl implements Store {
 //            cache.doOpAsync(Op.Type.INVOKE, lineId, (Object) function, null, null);
 //            return null;
 //        } else
-            return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null);
+        return (T) cache.doOp(Op.Type.INVOKE, lineId, (Object) function, null, null);
     }
 
     @Override
@@ -358,7 +363,7 @@ public class StoreImpl implements Store {
 //        if (Cache.isVoidLineFunction(function))
 //            return Futures.immediateFuture(null);
 //        else
-            return res;
+        return res;
     }
 
     @Override
