@@ -13,7 +13,6 @@
  */
 package co.paralleluniverse.galaxy.cluster;
 
-import co.paralleluniverse.common.collection.LinkedHashMap2;
 import co.paralleluniverse.galaxy.cluster.DistributedTree.Listener;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ public abstract class DistributedBranchHelper {
     private final DistributedTree tree;
     private final String branchRoot;
     private final boolean ordered;
-    private final LinkedHashMap2<String, Node> nodes = new LinkedHashMap2<String, Node>();
+    private final ConcurrentSkipListMap<String, Node> nodes = new ConcurrentSkipListMap<String, Node>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
     private boolean doneInit = false;
 
@@ -197,8 +197,8 @@ public abstract class DistributedBranchHelper {
                     nodes.wait();
 
                 if (ordered) {
-                    previous = nodes.previousValue(name);
-                    next = nodes.nextValue(name);
+                    previous = nodes.lowerEntry(name).getValue();
+                    next = nodes.higherEntry(name).getValue();
                 }
                 node = nodes.remove(name);
                 _doneInit = this.doneInit;
@@ -219,7 +219,7 @@ public abstract class DistributedBranchHelper {
     private Node getNextNode(String node) {
         assert ordered;
         synchronized (nodes) {
-            final Map.Entry<String, Node> entry = nodes.nextEntry(node);
+            final Map.Entry<String, Node> entry = nodes.higherEntry(node);
             return (entry != null ? entry.getValue() : null);
         }
     }
@@ -227,7 +227,7 @@ public abstract class DistributedBranchHelper {
     private Node getPreviousNode(String node) {
         assert ordered;
         synchronized (nodes) {
-            final Map.Entry<String, Node> entry = nodes.previousEntry(node);
+            final Map.Entry<String, Node> entry = nodes.lowerEntry(node);
             return (entry != null ? entry.getValue() : null);
         }
     }
