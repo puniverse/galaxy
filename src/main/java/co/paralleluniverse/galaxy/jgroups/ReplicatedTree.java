@@ -138,9 +138,8 @@ public class ReplicatedTree {
             LOG.trace("Creating {} {}", fqn, ephemeral ? "(ephemeral)" : "");
             channel.send(new Message(null, new Request(Request.CREATE, fqn, ephemeral)));
             synchronized (updateCondition) {
-                while (!exists(fqn)) {
+                while (!exists(fqn))
                     updateCondition.wait();
-                }
             }
         } catch (Exception ex) {
             LOG.error("failure bcasting PUT request", ex);

@@ -185,7 +185,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
     public static Message fromByteBuffer(ByteBuffer buffer) {
         final Type type = Type.values()[buffer.get()];
         if (LOG.isDebugEnabled())
-            LOG.debug("from bb type:" + type.name());
+            LOG.debug("from ByteBuffer type:" + type.name());
         final Message message = newMessage(type);
         message.read(buffer);
         return message;
