@@ -317,7 +317,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
     private void configureThreadPool(String name, ThreadPoolExecutor executor) {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
-        executor.setThreadFactory(new ThreadFactoryBuilder().setNameFormat(name + "-%d").setThreadFactory(new ThreadFactory() {
+        executor.setThreadFactory(new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).setThreadFactory(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 return new CommThread(r);

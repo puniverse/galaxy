@@ -16,7 +16,9 @@ package co.paralleluniverse.galaxy.core;
 import co.paralleluniverse.common.concurrent.OrderedThreadPoolExecutor;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.beans.ConstructorProperties;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +31,7 @@ public class NodeOrderedThreadPoolExecutor extends OrderedThreadPoolExecutor {
 
     @ConstructorProperties({"cluster", "corePoolSize", "maximumPoolSize", "keepAliveTime", "unit", "maxQueueSize"})
     public NodeOrderedThreadPoolExecutor(Cluster cluster, int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, int maxQueueSize) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, maxQueueSize);
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, maxQueueSize, new ThreadFactoryBuilder().setDaemon(true).build());
         cluster.addNodeChangeListener(listener);
     }
 
@@ -41,7 +43,7 @@ public class NodeOrderedThreadPoolExecutor extends OrderedThreadPoolExecutor {
 
     @ConstructorProperties({"cluster", "corePoolSize", "maximumPoolSize", "keepAliveTime", "unit", "maxQueueSize", "handler"})
     public NodeOrderedThreadPoolExecutor(Cluster cluster, int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, int maxQueueSize, RejectedExecutionHandler handler) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, maxQueueSize, handler);
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, maxQueueSize, new ThreadFactoryBuilder().setDaemon(true).build(),handler);
         cluster.addNodeChangeListener(listener);
     }
 
