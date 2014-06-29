@@ -373,7 +373,6 @@ public abstract class AbstractCluster extends Service implements Cluster {
             controlTree.delete(LEADERS + "/" + myNodeInfo.getName());
             fireOffline();
             shutdown();
-            System.exit(0);
         }
     }
 

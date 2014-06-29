@@ -194,6 +194,7 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
         super.shutdown();
         refAllocationExecutor.shutdownNow();
         channel.disconnect();
+        channel.close();
     }
 
     @Override
