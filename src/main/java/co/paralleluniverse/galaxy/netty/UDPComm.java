@@ -99,7 +99,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
     private BroadcastPeer broadcastPeer = new BroadcastPeer();
     private SocketAddress myAddress;
     private final ConcurrentMap<Short, NodePeer> peers = new ConcurrentHashMap<Short, NodePeer>();
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1,new ThreadFactoryBuilder().setDaemon(true).build());
     private final UDPCommMonitor monitor;
 
     @ConstructorProperties({"name", "cluster", "serverComm", "port"})
