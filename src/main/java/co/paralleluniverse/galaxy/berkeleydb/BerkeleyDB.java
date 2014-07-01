@@ -28,6 +28,9 @@ import com.sleepycat.je.CursorConfig;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.DatabaseException;
+import com.sleepycat.je.DatabaseExistsException;
+import com.sleepycat.je.DatabaseNotFoundException;
 import com.sleepycat.je.DiskOrderedCursor;
 import com.sleepycat.je.DiskOrderedCursorConfig;
 import com.sleepycat.je.Durability;
@@ -80,7 +83,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
             if (!dir.exists())
                 dir.mkdirs();
         } catch (Exception ex) {
-            throw new RuntimeException("cannot mkdir "+envHome,ex);
+            throw new RuntimeException("cannot mkdir " + envHome, ex);
         }
         this.env = new Environment(dir, envConfig);
 
@@ -105,10 +108,26 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
     @Override
     public void init() throws Exception {
         super.init();
-        if (truncate)
-            truncate();
 
         LOG.info("Opening database, home: {}", env.getHome());
+        if (truncate) {
+            // make sure the db are exist before truncate is called
+            openOrCreate();
+            ownerIndex.close();
+            ownerDirectory.close();
+            mainStore.close();
+            truncate();
+        }
+        openOrCreate();
+
+        PreloadConfig ownerDirectoryPreloadConfig = new PreloadConfig();
+        this.ownerDirectory.preload(ownerDirectoryPreloadConfig);
+
+        if (!truncate)
+            resetOwners();
+    }
+
+    private void openOrCreate() throws DatabaseException, IllegalStateException, DatabaseExistsException, DatabaseNotFoundException, IllegalArgumentException {
         // Open the database. Create it if it does not already exist.
         this.ownerDirectory = env.openDatabase(null, "ownerDirecotry",
                 new DatabaseConfig().setAllowCreate(true).setTransactional(true));
@@ -116,14 +135,8 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         this.ownerIndex = env.openSecondaryDatabase(null, "ownerIndex", ownerDirectory,
                 ((SecondaryConfig) (new SecondaryConfig().setAllowCreate(true).setSortedDuplicates(true).setTransactional(true))).setAllowPopulate(true).setKeyCreator(new OwnerKeyCreator()));
 
-        PreloadConfig ownerDirectoryPreloadConfig = new PreloadConfig();
-        this.ownerDirectory.preload(ownerDirectoryPreloadConfig);
-
         this.mainStore = env.openDatabase(null, "mainStore",
                 new DatabaseConfig().setAllowCreate(true).setTransactional(true));
-
-        if (!truncate)
-            resetOwners();
     }
 
     public void truncate() {
@@ -307,10 +320,10 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
     public long getMaxId() {
         final long ownerDirecotryMaxId = getMaxId(ownerDirectory);
         final long mainStoreMaxId = getMaxId(mainStore);
-        
+
         LOG.info("OwnerDirectory max id: {}", ownerDirecotryMaxId);
         LOG.info("MainStore max id: {}", mainStoreMaxId);
-        
+
         return Math.max(ownerDirecotryMaxId, mainStoreMaxId);
     }
 
