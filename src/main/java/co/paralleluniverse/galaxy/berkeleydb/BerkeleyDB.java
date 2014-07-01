@@ -78,7 +78,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         final File dir = new File(this.envHome);
         try {
             if (!dir.exists())
-                dir.mkdir();
+                dir.mkdirs();
         } catch (Exception ex) {
             throw new RuntimeException("cannot mkdir "+envHome,ex);
         }
