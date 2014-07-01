@@ -21,6 +21,7 @@ package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.common.io.Persistable;
+import co.paralleluniverse.galaxy.AbstractCacheListener;
 import co.paralleluniverse.galaxy.LineFunction;
 import co.paralleluniverse.galaxy.RefNotFoundException;
 import co.paralleluniverse.galaxy.TimeoutException;
@@ -88,7 +89,7 @@ import org.mockito.stubbing.Answer;
  *
  * @author pron
  */
-//@RunWith(Parameterized.class)
+@RunWith(Parameterized.class)
 public class CacheTest {
     Cache cache;
     FullCluster cluster;
@@ -99,18 +100,19 @@ public class CacheTest {
     boolean hasServer;
     long messageId = 0;
 
-    public CacheTest() {
-        hasServer = true;
-    }
-
-//    public CacheTest(boolean hasServer) {
-//        this.hasServer = true;
+//    public CacheTest() {
+//        this(true);
 //    }
+
+    public CacheTest(boolean hasServer) {
+        this.hasServer = hasServer;
+    }
+    
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                    {true},
-                    {false},});
+            {true},
+            {false},});
     }
 
     @Before
@@ -466,10 +468,10 @@ public class CacheTest {
         final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
         cache.receive(msg);
         verify(comm).send(argThat(equalTo(Message.INVRES(msg, 1234L, 45L))));
-        assertModified(1234L, true); 
+        assertModified(1234L, true);
     }
 
-    @Ignore // not true since the optimization in transitionToE has been removed
+    @Ignore // not true since c62a579 when the optimization in transitionToE has been removed
     @Test
     public void testHandleInvokeWhenO() throws Exception {
         PUTX(1234L, sh(10), 2, "hello", 20);
@@ -479,7 +481,7 @@ public class CacheTest {
         final LineFunction<Long> storefunc = storefunc(45L);
         final Message.INVOKE msg = Message.INVOKE(sh(10), 1234L, storefunc);
         cache.receive(msg);
-        assertModified(1234L, true); 
+        assertModified(1234L, true);
         assertState(1234L, O, E);
         verify(comm).send(argThat(equalTo(Message.INV(sh(20), 1234L, sh(10)))));
         verify(comm).send(argThat(equalTo(Message.INVRES(msg, 1234L, 45L))));
@@ -511,7 +513,7 @@ public class CacheTest {
         assertOwner(1234L, sh(50));
 
         assertState(1234L, I, null);
-        verify(comm).send(argThat(equalTo(Message.PUTX(getx, 1234L, sh(20, 30, 40, 50, 60), 2, toBuffer("hello")))));
+        verify(comm).send(argThat(equalTo(Message.PUTX(getx, 1234L, sh(20, 30, 40, 50, 60), 0, 2, toBuffer("hello")))));
     }
 
     /**
@@ -595,16 +597,15 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(Message.GETX(sh(20), 1234L))));
     }
 
-    /**
-     * When CHNGD_OWNR is received as a response to a GETX, then re-send GETX to the new owner.
-     */
     @Test
     public void whenGetxAndCHNGD_OWNRToYou() throws Exception {
         ListenableFuture<Object> future = cache.doOpAsync(GETX, 1234L, null, null, null);
         LineMessage msg = (LineMessage) captureMessage();
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(10), true));
         assertThat(future.isDone(), is(false));
-        cache.receive(Message.PUTX(msg, 1234L, null, 1L, toBuffer("foo")));
+        cache.receive(Message.PUTX(msg, 1234L, null, 0, 1L, toBuffer("foo")));
+        if (hasServer())
+            INVACK(1234L, sh(0));
         assertThat(future.isDone(), is(true));
         assertThat(deserialize(future.get()), equalTo("foo"));
     }
@@ -619,20 +620,19 @@ public class CacheTest {
         INV(1234L, sh(10));
         verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(10), 1234L, sh(-1))).setMessageId(2))));
 
-        MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
+        MSG msg = Message.MSG(sh(-1), 1234L, true, serialize("foo"));
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")).setMessageId(3))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, true, serialize("foo")).setMessageId(3))));
         assertThat(send.getFuture().isDone(), is(false));
 
         //when(cluster.getMaster(sh(20))).thenReturn(makeNodeInfo(sh(20)));
-
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(10), true));
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(10), true)); // twice, but only resend once
         cache.receive(Message.TIMEOUT(msg));
-        cache.receive(Message.PUTX(msg, 1234L, null, 1L, toBuffer("xxx")));
+        cache.receive(Message.PUTX(msg, 1234L, null, 0, 1L, toBuffer("xxx")));
 
         assertThat(send.getFuture().isDone(), is(true));
 
@@ -725,7 +725,7 @@ public class CacheTest {
      */
     @Test
     public void whenMSGAndNoLineThenCHNGD_OWNER() throws Exception {
-        final LineMessage msg = Message.MSG(sh(10), 1234L, serialize("foo"));
+        final LineMessage msg = Message.MSG(sh(10), 1234L, true, serialize("foo"));
         cache.receive(msg);
 
         verify(comm).send(argThat(equalTo(Message.CHNGD_OWNR(msg, 1234L, sh(-1), false))));
@@ -736,7 +736,7 @@ public class CacheTest {
      */
     @Test
     public void whenMSGBcastAndNoLineThenACK() throws Exception {
-        final LineMessage msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
+        final LineMessage msg = Message.MSG(sh(-1), 1234L, true, serialize("foo"));
         cache.receive(msg);
 
         verify(comm).send(argThat(equalTo(Message.ACK(msg))));
@@ -824,12 +824,12 @@ public class CacheTest {
         cache.receive(getx);
 
         verify(backup).inv(1234L, sh(10));
-        verify(comm, never()).send(argThat(equalTo(Message.PUTX(getx, 1234L, sh(10, 20), 2L, toBuffer("bye")))));
+        verify(comm, never()).send(argThat(equalTo(Message.PUTX(getx, 1234L, sh(10, 20), 0, 2L, toBuffer("bye")))));
 
         cache.receive(Message.INVACK(sh(5), 1234L).setIncoming());
 
         assertThat(cache.getLine(1234L).is(CacheLine.SLAVE), is(false));
-        verify(comm).send(argThat(equalTo(Message.PUTX(getx, 1234L, new short[0], 2L, toBuffer("bye")))));
+        verify(comm).send(argThat(equalTo(Message.PUTX(getx, 1234L, new short[0], 0, 2L, toBuffer("bye")))));
     }
 
     /**
@@ -951,7 +951,7 @@ public class CacheTest {
         if (hasServer)
             verify(comm).send(argThat(equalTo(Message.INV(Comm.SERVER, 1L, sh(10)))));
 
-        // assertThat(deserialize((byte[]) res), is("hello")); // not true since the optimization in transitionToE has been removed
+        // assertThat(deserialize((byte[]) res), is("hello")); // not true since c62a579 when the optimization in transitionToE has been removed
     }
 
     /**
@@ -959,6 +959,7 @@ public class CacheTest {
      * hasServer.
      */
     @Test
+    @Ignore // not true since c62a579 when the optimization in transitionToE has been removed
     public void whenGetxAndPUTXThenDontWaitForINVACKIffServer() throws Exception {
         Op getx = new Op(GETX, 1L, null);
         Object res = cache.runOp(getx);
@@ -1009,6 +1010,12 @@ public class CacheTest {
 
         assertThat(getx.getFuture().isDone(), is(false));
 
+        // - since c62a579
+        cache.receive(Message.INVACK(Message.INV(sh(20), 1L, sh(10))));
+        cache.receive(Message.INVACK(Message.INV(sh(30), 1L, sh(10))));
+        assertThat(getx.getFuture().isDone(), is(false));
+        // - 
+        
         cache.receive(Message.INVACK(Message.INV(Comm.SERVER, 1L, sh(10))));
 
         assertThat(getx.getFuture().isDone(), is(true));
@@ -1019,6 +1026,7 @@ public class CacheTest {
      * When an owned line is getx and no server then wait for an INVACK from the previous owner (means that it inved its slaves).
      */
     @Test
+    @Ignore // not true since c62a579
     public void whenGetxAndPUTXAndNoServerThenDoWaitForINVACKFromPreviousOwner() throws Exception {
         assumeTrue(!hasServer);
 
@@ -1064,10 +1072,10 @@ public class CacheTest {
 
         Object res = cache.runOp(new Op(GETX, 1L, null));
 
-        if (hasServer) {
-            assertThat(res, is(not(PENDING)));
-            cache.unlockLine(cache.getLine(1L), null);
-        }
+//        if (hasServer()) {
+//            assertThat(res, is(not(PENDING)));
+//            cache.unlockLine(cache.getLine(1L), null);
+//        }
         cache.receive(Message.GET(sh(100), 1));
 
         assertState(1, O, E);
@@ -1083,13 +1091,14 @@ public class CacheTest {
      * Once all INVACKs have been received, respond to GET and set state from E to O.
      */
     @Test
+    @Ignore // - not true since c62a579
     public void whenPUTXAndGetXAndAcksAndRequestsThenRespond() throws Exception {
         PUTX(1, sh(10), 1, "hello", 20, 30);
 
         Op getx = new Op(GETX, 1L, null);
         Object res = cache.runOp(getx);
 
-        assertThat(res, is(not(PENDING)));
+        assertThat(res, is(not(PENDING))); // - not true since c62a579
         cache.unlockLine(cache.getLine(1L), null);
 
         cache.receive(Message.GET(sh(100), 1));
@@ -1099,7 +1108,7 @@ public class CacheTest {
             cache.receive(Message.INVACK(Message.INV(sh(0), 1L, sh(10))));
         cache.receive(Message.BACKUPACK(sh(0), 1L, 1L));
 
-        assertState(1, O, null);
+        assertState(1, O, null); // after c62a579 this would be O -> E b/c op GETX is still pending
         assertVersion(1, 1);
         verify(comm).send(argThat(equalTo(Message.INV(sh(20), 1L, sh(10)))));
         verify(comm).send(argThat(equalTo(Message.INV(sh(30), 1L, sh(10)))));
@@ -1177,7 +1186,7 @@ public class CacheTest {
 
             verify(comm).send(argThat(equalTo(Message.PUT(Message.GET(sh(10), 1234L), 1234L, 1L, toBuffer("hello")))));
             verify(comm).send(argThat(equalTo(Message.PUT(Message.GET(sh(20), 1234L), 1234L, 1L, toBuffer("hello")))));
-            verify(comm).send(argThat(equalTo(Message.PUTX(Message.GETX(sh(30), 1234L), 1234L, sh(10, 20), 1L, toBuffer("hello")))));
+            verify(comm).send(argThat(equalTo(Message.PUTX(Message.GETX(sh(30), 1234L), 1234L, sh(10, 20), 0, 1L, toBuffer("hello")))));
 
             reset();
         }
@@ -1203,7 +1212,7 @@ public class CacheTest {
         cache.receive(Message.BACKUPACK(sh(0), 1234L, 1L));
 
         verify(comm).send(argThat(equalTo(Message.PUT(Message.GET(sh(10), 1234L), 1234L, 1L, toBuffer("hello")))));
-        verify(comm).send(argThat(equalTo(Message.PUTX(Message.GETX(sh(20), 1234L), 1234L, new short[]{sh(10)}, 1L, toBuffer("hello")))));
+        verify(comm).send(argThat(equalTo(Message.PUTX(Message.GETX(sh(20), 1234L), 1234L, new short[]{sh(10)}, 0, 1L, toBuffer("hello")))));
         verify(comm).send(argThat(equalTo(Message.CHNGD_OWNR(Message.GET(sh(30), 1234L), 1234L, sh(20), false)))); // b/c hasServer: I, no-server: S
     }
 
@@ -1247,14 +1256,14 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(Message.PUT(Message.GET(sh(10), 1234L), 1234L, 3L, toBuffer("1234"))))); // handling the GET
         verify(comm).send(argThat(equalTo(Message.INV(sh(10), 1234L, sh(5))))); // for the sets
 
+        INVACK(1234L, sh(10)); // added b/c of c62a579
+
         assertThat(get(1234L), is("because!!!!!"));
         assertModified(1234, true);
         assertVersion(1234, 5);
 
-        assertState(1234L, O, E);
-
-        INVACK(1234L, sh(10));
-
+//        assertState(1234L, O, E); -- since c62a579
+//        INVACK(1234L, sh(10));
         assertState(1234L, E, null);
     }
 
@@ -1330,8 +1339,8 @@ public class CacheTest {
         cache.runOp(new Op(PUSHX, 1234L, sh(20), null));
         cache.runOp(new Op(PUSHX, 1234L, sh(30), null));
 
-        verify(comm).send(argThat(equalTo(Message.PUTX(sh(20), 1234L, sh(), 1L, toBuffer("hello")))));
-        verify(comm, never()).send(argThat(equalTo(Message.PUTX(sh(30), 1234L, sh(), 1L, toBuffer("hello")))));
+        verify(comm).send(argThat(equalTo(Message.PUTX(sh(20), 1234L, sh(), 0, 1L, toBuffer("hello")))));
+        verify(comm, never()).send(argThat(equalTo(Message.PUTX(sh(30), 1234L, sh(), 0, 1L, toBuffer("hello")))));
     }
 
     @Test
@@ -1472,7 +1481,7 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(Message.PUT(sh(10), 1234L, 2L, toBuffer("bye")))));
         verify(comm).send(argThat(equalTo(Message.PUT(sh(20), 1234L, 2L, toBuffer("bye")))));
         // By the time we get to pushx, we're not exclusive, so nothing will be sent
-        verify(comm, never()).send(argThat(equalTo(Message.PUTX(sh(30), 1234L, hasServer() ? new short[]{sh(0)} : sh(), 2L, toBuffer("bye")))));
+        verify(comm, never()).send(argThat(equalTo(Message.PUTX(sh(30), 1234L, hasServer() ? new short[]{sh(0)} : sh(), 0, 2L, toBuffer("bye")))));
     }
 
     /**
@@ -1752,7 +1761,7 @@ public class CacheTest {
     @Test
     public void testSetLineListenerInCacheListener() throws Exception {
         final CacheListener lineListener = mock(CacheListener.class);
-        cache.addCacheListener(new CacheListener() {
+        cache.addCacheListener(new AbstractCacheListener() {
             @Override
             public void received(co.paralleluniverse.galaxy.Cache cache, long id, long version, ByteBuffer data) {
                 try {
@@ -1760,14 +1769,6 @@ public class CacheTest {
                 } catch (TimeoutException e) {
                     throw new AssertionError(e);
                 }
-            }
-
-            @Override
-            public void invalidated(co.paralleluniverse.galaxy.Cache cache, long id) {
-            }
-
-            @Override
-            public void evicted(co.paralleluniverse.galaxy.Cache cache, long id) {
             }
         });
 
@@ -1815,7 +1816,7 @@ public class CacheTest {
 
     @Test
     public void testSend() throws Exception {
-        MSG msg = Message.MSG(sh(15), -1L, serialize("hello"));
+        MSG msg = Message.MSG(sh(15), -1L, true, serialize("hello"));
         cache.send(msg);
 
         verify(comm).send(argThat(equalTo(msg)));
@@ -1832,9 +1833,9 @@ public class CacheTest {
 
         PUTX(1234L, sh(1), 1, "hello");
 
-        cache.runOp(new Op(SEND, 1234, Message.MSG(sh(-1), 1234L, serialize("foo")), null));
+        cache.runOp(new Op(SEND, 1234, Message.MSG(sh(-1), 1234L, true, serialize("foo")), null));
 
-        verify(receiver).receive(argThat(equalTo(Message.MSG(sh(5), 1234L, serialize("foo")))));
+        verify(receiver).receive(argThat(equalTo(Message.MSG(sh(5), 1234L, true, serialize("foo")))));
     }
 
     /**
@@ -1843,12 +1844,12 @@ public class CacheTest {
     @Test
     public void testSendToOwner2() throws Exception {
         setCommMsgCounter();
-        MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
+        MSG msg = Message.MSG(sh(-1), 1234L, true, serialize("foo"));
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(-1), 1234L, serialize("foo")).setMessageId(1))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(-1), 1234L, true, serialize("foo")).setMessageId(1))));
         assertThat(send.getFuture().isDone(), is(false));
 
         cache.receive(Message.MSGACK(msg));
@@ -1864,18 +1865,18 @@ public class CacheTest {
         setCommMsgCounter();
         PUT(1234L, sh(10), 1L, "xxx");
 
-        MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
+        MSG msg = Message.MSG(sh(-1), 1234L, true, serialize("foo"));
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")).setMessageId(2))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, true, serialize("foo")).setMessageId(2))));
         assertThat(send.getFuture().isDone(), is(false));
 
         INV(1234L, sh(20));
         INV(1234L, sh(20)); // twice, but only resend once
         verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(20), 1234L, sh(-1))).setMessageId(3))));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, serialize("foo")).setMessageId(4))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, true, serialize("foo")).setMessageId(4))));
         verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(20), 1234L, sh(-1))).setMessageId(5))));
         assertThat(send.getFuture().isDone(), is(false));
 
@@ -1883,7 +1884,7 @@ public class CacheTest {
         INV(1234L, sh(30)); // twice, but only resend once
 
         verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(30), 1234L, sh(-1))).setMessageId(6))));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, serialize("foo")).setMessageId(7))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, true, serialize("foo")).setMessageId(7))));
         assertThat(send.getFuture().isDone(), is(false));
 
         cache.receive(Message.MSGACK(msg));
@@ -1901,12 +1902,12 @@ public class CacheTest {
         INV(1234L, sh(10));
         verify(comm).send(argThat(equalTo(Message.INVACK(Message.INV(sh(10), 1234L, sh(-1))).setMessageId(2))));
 
-        MSG msg = Message.MSG(sh(-1), 1234L, serialize("foo"));
+        MSG msg = Message.MSG(sh(-1), 1234L, true, serialize("foo"));
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
         assertThat(res, is(PENDING));
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, serialize("foo")).setMessageId(3))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, true, serialize("foo")).setMessageId(3))));
         assertThat(send.getFuture().isDone(), is(false));
 
         when(cluster.getMaster(sh(20))).thenReturn(makeNodeInfo(sh(20)));
@@ -1914,7 +1915,7 @@ public class CacheTest {
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(20), true));
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(20), true)); // twice, but only resend once
 
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, serialize("foo")).setMessageId(4))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(20), 1234L, true, serialize("foo")).setMessageId(4))));
         assertThat(send.getFuture().isDone(), is(false));
 
         when(cluster.getMaster(sh(30))).thenReturn(makeNodeInfo(sh(30)));
@@ -1922,7 +1923,7 @@ public class CacheTest {
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(30), true));
         cache.receive(Message.CHNGD_OWNR(msg, 1234L, sh(30), true)); // twice, but only resend once
 
-        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, serialize("foo")).setMessageId(5))));
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, true, serialize("foo")).setMessageId(5))));
         assertThat(send.getFuture().isDone(), is(false));
 
         cache.receive(Message.MSGACK(msg));
@@ -1979,7 +1980,7 @@ public class CacheTest {
         final Op op1 = new Op(GET, 1L, null);
         final Op op2 = new Op(GETX, 1L, null);
         final Op op3 = new Op(SET, 1L, serialize("xxx"), null);
-        final Op op4 = new Op(SEND, 1L, Message.MSG(sh(-1), 1234L, serialize("foo")), null);
+        final Op op4 = new Op(SEND, 1L, Message.MSG(sh(-1), 1234L, true, serialize("foo")), null);
 
         Object res1 = cache.runOp(op1);
         Object res2 = cache.runOp(op2);
@@ -2090,7 +2091,6 @@ public class CacheTest {
 //        assertThat(cache.getLine(2), is(nullValue()));
 //        assertThat(cache.getLine(3), is(not(nullValue())));
 //        assertThat(cache.getLine(4), is(not(nullValue())));
-
         // check line 3's sharers by getx and verifying INV's
         cache.runOp(new Op(GETX, 3L, null));
         verify(comm).send(argThat(equalTo(Message.INV(sh(20), 3L, sh(20)))));
@@ -2232,7 +2232,7 @@ public class CacheTest {
         short[] ssharers = new short[sharers.length];
         for (int i = 0; i < sharers.length; i++)
             ssharers[i] = (short) sharers[i];
-        cache.receive(Message.PUTX(Message.GETX(owner, id), id, ssharers, version, toBuffer(obj)).setMessageId(++messageId));
+        cache.receive(Message.PUTX(Message.GETX(owner, id), id, ssharers, 0, version, toBuffer(obj)).setMessageId(++messageId));
         //cache.receive(Message.BACKUPACK(sh(-1), id, version));
     }
 
@@ -2241,7 +2241,7 @@ public class CacheTest {
     }
 
     void PUTX(long id, short owner, long version, String obj) {
-        cache.receive(Message.PUTX(Message.GETX(owner, id), id, new short[0], version, toBuffer(obj)).setMessageId(++messageId));
+        cache.receive(Message.PUTX(Message.GETX(owner, id), id, new short[0], 0, version, toBuffer(obj)).setMessageId(++messageId));
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), id, owner)));
         //cache.receive(Message.BACKUPACK(sh(-1), id, version));
