@@ -380,6 +380,11 @@ public class Message implements Streamable, Externalizable, Cloneable {
         return this;
     }
 
+    public Message setOutgoing() {
+        this.incoming = false;
+        return this;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }
@@ -401,18 +406,20 @@ public class Message implements Streamable, Externalizable, Cloneable {
         return (flags & FLAG_RESPONSE) != 0;
     }
 
-    private void setBroadcast(boolean value) {
+    private Message setBroadcast(boolean value) {
         assert !incoming;
         flags = (byte) (value ? (flags | FLAG_BROADCAST) : (flags & ~FLAG_BROADCAST));
+        return this;
     }
 
     public boolean isBroadcast() {
         return (flags & FLAG_BROADCAST) != 0;
     }
 
-    public final void setReplyRequired(boolean value) {
+    public final Message setReplyRequired(boolean value) {
         assert !incoming;
         flags = (byte) (value ? (flags | FLAG_REPLY_REQUIRED) : (flags & ~FLAG_REPLY_REQUIRED));
+        return this;
     }
 
     public boolean isReplyRequired() {
@@ -930,20 +937,22 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
     ///////////////////////////////////////////////////////////////////////
     public static class PUTX extends PUT {
-        private int messages; // no. of pending messages
+        private int parts; // no. of pending messages
         private short[] sharers;
 
         PUTX() {
             super(Type.PUTX);
         }
 
-        public PUTX(LineMessage responseTo, long line, short[] sharers, int messages, long version, ByteBuffer data) {
+        public PUTX(LineMessage responseTo, long line, short[] sharers, int parts, long version, ByteBuffer data) {
             super(Type.PUTX, responseTo, line, version, data);
+            this.parts = parts;
             this.sharers = sharers;
         }
 
-        public PUTX(short node, long line, short[] sharers, int messages, long version, ByteBuffer data) {
+        public PUTX(short node, long line, short[] sharers, int parts, long version, ByteBuffer data) {
             super(Type.PUTX, node, line, version, data);
+            this.parts = parts;
             this.sharers = sharers;
         }
 
@@ -952,7 +961,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
         }
 
         public int getMessages() {
-            return messages;
+            return parts;
         }
 
         @Override
@@ -963,7 +972,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
         @Override
         public void writeNoHeader(DataOutput out) throws IOException {
             super.writeNoHeader(out);
-            out.writeShort(messages);
+            out.writeShort(parts);
             out.writeShort(sharers.length);
             for (short s : sharers)
                 out.writeShort(s);
@@ -972,7 +981,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
         @Override
         public void readNoHeader(DataInput in) throws IOException {
             super.readNoHeader(in);
-            messages = in.readUnsignedShort();
+            parts = in.readUnsignedShort();
             int numSharers = in.readUnsignedShort();
             sharers = new short[numSharers];
             for (int i = 0; i < numSharers; i++)
@@ -981,7 +990,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         @Override
         public String partialToString() {
-            return super.partialToString() + ", sharers: " + Arrays.toString(sharers) + ", messages: " + messages;
+            return super.partialToString() + ", sharers: " + Arrays.toString(sharers) + ", messages: " + parts;
         }
     }
 

@@ -101,7 +101,7 @@ public class CacheTest {
     long messageId = 0;
 
 //    public CacheTest() {
-//        this(true);
+//        this.hasServer = false;
 //    }
 
     public CacheTest(boolean hasServer) {
@@ -824,7 +824,7 @@ public class CacheTest {
         cache.receive(getx);
 
         verify(backup).inv(1234L, sh(10));
-        verify(comm, never()).send(argThat(equalTo(Message.PUTX(getx, 1234L, sh(10, 20), 0, 2L, toBuffer("bye")))));
+        verify(comm, never()).send(argThat(equalTo(Message.PUTX(getx, 1234L, new short[0], 0, 2L, toBuffer("bye")))));
 
         cache.receive(Message.INVACK(sh(5), 1234L).setIncoming());
 
@@ -1015,7 +1015,7 @@ public class CacheTest {
         cache.receive(Message.INVACK(Message.INV(sh(30), 1L, sh(10))));
         assertThat(getx.getFuture().isDone(), is(false));
         // - 
-        
+
         cache.receive(Message.INVACK(Message.INV(Comm.SERVER, 1L, sh(10))));
 
         assertThat(getx.getFuture().isDone(), is(true));
@@ -1931,6 +1931,97 @@ public class CacheTest {
         assertThat(send.getResult(), is(nullValue()));
     }
 
+    @Test
+    public void testSend1() throws Exception {
+        CacheListener listener = mock(CacheListener.class);
+
+        doOp(LSTN, 1234L, listener);
+
+        PUTX(1234L, sh(10), 1L, "xxx");
+
+        MSG msg = Message.MSG(sh(-1), 1234L, false, serialize("foo"));
+        Op send = new Op(SEND, 1234, msg, null);
+        Object res = cache.runOp(send);
+
+        assertThat(res, is(not(PENDING)));
+
+        verify(listener).messageReceived(serialize("foo"));
+    }
+
+    @Test
+    public void testSend2() throws Exception {
+        CacheListener listener = mock(CacheListener.class);
+
+        PUTX(1234L, sh(10), 1L, "xxx");
+
+        MSG msg = Message.MSG(sh(-1), 1234L, false, serialize("foo"));
+        Op send = new Op(SEND, 1234, msg, null);
+        Object res = cache.runOp(send);
+
+        assertThat(res, is(not(PENDING)));
+
+        verify(listener, never()).messageReceived(any(byte[].class));
+
+        doOp(LSTN, 1234L, listener);
+
+        verify(listener).messageReceived(serialize("foo"));
+    }
+
+    @Test
+    public void testSend3() throws Exception {
+        setCommMsgCounter();
+        CacheListener listener = mock(CacheListener.class);
+
+        doOp(LSTN, 1234L, listener);
+
+        PUT(1234L, sh(10), 1L, "xxx");
+
+        MSG msg = Message.MSG(sh(-1), 1234L, false, serialize("foo"));
+        Op send = new Op(SEND, 1234, msg, null);
+        Object res = cache.runOp(send);
+
+        assertThat(res, is(not(PENDING)));
+
+        verify(listener, never()).messageReceived(any(byte[].class));
+
+        verify(comm).send(argThat(equalTo(Message.MSG(sh(10), 1234L, false, serialize("foo")).setMessageId(2))));
+    }
+
+    @Test
+    public void whenPendingMSGsAndGETXThenSend() throws Exception {
+        PUTX(1234L, sh(10), 1L, "xxx");
+
+        cache.receive(Message.MSG(sh(20), 1234L, false, serialize("foo")));
+        cache.receive(Message.MSG(sh(20), 1234L, false, serialize("bar")));
+
+        GETX(1234, sh(30));
+
+        InOrder inOrder = inOrder(comm);
+        inOrder.verify(comm).send(argThat(equalTo(Message.PUTX(Message.GET(sh(30), 1234L), 1234L, new short[0], 2, 1, toBuffer("xxx")))));
+        inOrder.verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, false, true, serialize("foo")).setReplyRequired(false))));
+        inOrder.verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, false, true, serialize("bar")).setReplyRequired(false))));
+    }
+
+    @Test
+    public void whenPUTXandPendingAndGETXThenSend() throws Exception {
+        PUTX(1234L, sh(10), 2, 1L, "xxx");
+
+        GETX(1234, sh(30));
+
+        verify(comm, never()).send(argThat(equalTo(Message.PUTX(Message.GET(sh(30), 1234L), 1234L, new short[0], 2, 1, toBuffer("xxx")))));
+        
+        cache.receive(Message.MSG(sh(20), 1234L, false, true, serialize("foo")));
+
+        verify(comm, never()).send(argThat(equalTo(Message.PUTX(Message.GET(sh(30), 1234L), 1234L, new short[0], 2, 1, toBuffer("xxx")))));
+        
+        cache.receive(Message.MSG(sh(20), 1234L, false, true, serialize("bar")));
+
+        InOrder inOrder = inOrder(comm);
+        inOrder.verify(comm).send(argThat(equalTo(Message.PUTX(Message.GET(sh(30), 1234L), 1234L, new short[0], 2, 1, toBuffer("xxx")))));
+        inOrder.verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, false, true, serialize("foo")).setReplyRequired(false))));
+        inOrder.verify(comm).send(argThat(equalTo(Message.MSG(sh(30), 1234L, false, true, serialize("bar")).setReplyRequired(false))));
+    }
+
     /**
      * When NodeNotFoundException is thrown during send INV, short-circuit an INVACK
      */
@@ -2241,7 +2332,11 @@ public class CacheTest {
     }
 
     void PUTX(long id, short owner, long version, String obj) {
-        cache.receive(Message.PUTX(Message.GETX(owner, id), id, new short[0], 0, version, toBuffer(obj)).setMessageId(++messageId));
+        PUTX(id, owner, 0, version, obj);
+    }
+
+    void PUTX(long id, short owner, int parts, long version, String obj) {
+        cache.receive(Message.PUTX(Message.GETX(owner, id), id, new short[0], parts, version, toBuffer(obj)).setMessageId(++messageId));
         if (hasServer())
             cache.receive(Message.INVACK(Message.INV(sh(0), id, owner)));
         //cache.receive(Message.BACKUPACK(sh(-1), id, version));

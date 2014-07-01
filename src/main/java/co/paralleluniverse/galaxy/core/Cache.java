@@ -874,6 +874,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             case MSG:
                 if (handleMessageMessengerMsg((Message.MSG) message))
                     return;
+                break;
             case MSGACK:
                 if (((LineMessage) message).getLine() == -1) {
                     if (receiver != null)
@@ -1076,7 +1077,16 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         int messageCount = 0;
         long totalDelay = 0;
 
-        for (LineMessage msg : getAndClearPendingMessages(line)) {
+        final Collection<LineMessage> pending = getPendingMessages(line);
+        final int n = pending.size();
+        for (int i = 0; i < n; i++) {
+            final Iterator<LineMessage> it = pending.iterator();
+            if (!it.hasNext())
+                break;
+            
+            final LineMessage msg = it.next();
+            it.remove();
+
             LOG.debug("Handling pending message {}", msg);
             change |= handleMessage1(msg, line);
 
@@ -1537,7 +1547,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         assert msg1.getMessageId() > 0;
         msg.setMessageId(msg1.getMessageId());
 
-        return PENDING; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
+        return msg.isMessenger() ? PENDING : null; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
     }
 
     private Object handleOpPush(CacheLine line, Object extra, int change) {
@@ -1712,10 +1722,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         final List<Message.MSG> pendingMSGs = getAndClearPendingMSGs(line);
         send(Message.PUTX(msg, line.id, sharers, pendingMSGs.size(), line.version, readOnly(line.data)));
         line.rewind();
-        for (Message.MSG m : getAndClearPendingMSGs(line)) {
+        for (Message.MSG m : pendingMSGs) {
             m.setPending(true);
             m.setNode(msg.getNode());
             m.setReplyRequired(false);
+            m.setOutgoing();
             send(m);
         }
 
@@ -1889,8 +1900,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private int handleMessageMsg(Message.MSG msg, CacheLine line) {
         setOwnerClock(line, msg);
 
+        int change = LINE_NO_CHANGE;
         if (msg.isPending()) {
             line.parts--;
+            if (line.parts == 0)
+                change |= LINE_STATE_CHANGED;
+
             msg.setPending(false);
         }
         if (line.getListener() != null) {
@@ -1903,7 +1918,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 send(Message.MSGACK(msg));
         } else
             addPendingMessage(line, msg);
-        return LINE_NO_CHANGE;
+        return change;
     }
 
     private int handleMessageMsgAck(LineMessage ack, CacheLine line) throws IrrelevantStateException {
