@@ -85,12 +85,12 @@ public class Message implements Streamable, Externalizable, Cloneable {
         return new PUT(nodes, line, version, data);
     }
 
-    public static PUTX PUTX(LineMessage responseTo, long line, short[] sharers, long version, ByteBuffer data) {
-        return new PUTX(responseTo, line, sharers, version, data);
+    public static PUTX PUTX(LineMessage responseTo, long line, short[] sharers, int messages, long version, ByteBuffer data) {
+        return new PUTX(responseTo, line, sharers, messages, version, data);
     }
 
-    public static PUTX PUTX(short node, long line, short[] sharers, long version, ByteBuffer data) {
-        return new PUTX(node, line, sharers, version, data);
+    public static PUTX PUTX(short node, long line, short[] sharers, int messages, long version, ByteBuffer data) {
+        return new PUTX(node, line, sharers, messages, version, data);
     }
 
     public static LineMessage DEL(short node, long line) {
@@ -148,12 +148,20 @@ public class Message implements Streamable, Externalizable, Cloneable {
         return new MSG(responseTo, data);
     }
 
-    public static MSG MSG(short node, long line, byte[] data) {
-        return new MSG(node, line, data);
+    public static MSG MSG(short node, long line, boolean messenger, byte[] data) {
+        return new MSG(node, line, messenger, data);
     }
 
-    public static MSG MSG(short[] nodes, long line, byte[] data) {
-        return new MSG(nodes, line, data);
+    public static MSG MSG(short[] nodes, long line, boolean messenger, byte[] data) {
+        return new MSG(nodes, line, messenger, data);
+    }
+
+    public static MSG MSG(short node, long line, boolean messenger, boolean pending, byte[] data) {
+        return new MSG(node, line, messenger, pending, data);
+    }
+
+    public static MSG MSG(short[] nodes, long line, boolean messenger, boolean pending, byte[] data) {
+        return new MSG(nodes, line, messenger, pending, data);
     }
 
     public static LineMessage MSGACK(MSG responseTo) {
@@ -922,18 +930,19 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
     ///////////////////////////////////////////////////////////////////////
     public static class PUTX extends PUT {
+        private int messages; // no. of pending messages
         private short[] sharers;
 
         PUTX() {
             super(Type.PUTX);
         }
 
-        public PUTX(LineMessage responseTo, long line, short[] sharers, long version, ByteBuffer data) {
+        public PUTX(LineMessage responseTo, long line, short[] sharers, int messages, long version, ByteBuffer data) {
             super(Type.PUTX, responseTo, line, version, data);
             this.sharers = sharers;
         }
 
-        public PUTX(short node, long line, short[] sharers, long version, ByteBuffer data) {
+        public PUTX(short node, long line, short[] sharers, int messages, long version, ByteBuffer data) {
             super(Type.PUTX, node, line, version, data);
             this.sharers = sharers;
         }
@@ -942,14 +951,19 @@ public class Message implements Streamable, Externalizable, Cloneable {
             return sharers;
         }
 
+        public int getMessages() {
+            return messages;
+        }
+
         @Override
         public int sizeNoHeader() {
-            return super.sizeNoHeader() + 2 + 2 * sharers.length;
+            return super.sizeNoHeader() + 2 + 2 + 2 * sharers.length;
         }
 
         @Override
         public void writeNoHeader(DataOutput out) throws IOException {
             super.writeNoHeader(out);
+            out.writeShort(messages);
             out.writeShort(sharers.length);
             for (short s : sharers)
                 out.writeShort(s);
@@ -958,6 +972,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
         @Override
         public void readNoHeader(DataInput in) throws IOException {
             super.readNoHeader(in);
+            messages = in.readUnsignedShort();
             int numSharers = in.readUnsignedShort();
             sharers = new short[numSharers];
             for (int i = 0; i < numSharers; i++)
@@ -966,7 +981,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         @Override
         public String partialToString() {
-            return super.partialToString() + ", sharers: " + Arrays.toString(sharers);
+            return super.partialToString() + ", sharers: " + Arrays.toString(sharers) + ", messages: " + messages;
         }
     }
 
@@ -1195,7 +1210,10 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
     ///////////////////////////////////////////////////////////////////////
     public static class MSG extends LineMessage {
+        private static final byte MESSENGER = 1;
+        private static final byte PENDING = 1 << 1;
         private byte[] data;
+        private byte flags;
 
         MSG() {
             super(Type.MSG);
@@ -1203,16 +1221,30 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         public MSG(MSG responseTo, byte[] data) {
             super(responseTo, Type.MSG);
+            this.flags = 0;
             this.data = data;
         }
 
-        private MSG(short node, long line, byte[] data) {
+        private MSG(short node, long line, boolean messenger, byte[] data) {
+            this(node, line, messenger, false, data);
+        }
+
+        private MSG(short[] nodes, long line, boolean messenger, byte[] data) {
+            this(nodes, line, messenger, false, data);
+        }
+
+        private MSG(short node, long line, boolean messenger, boolean pending, byte[] data) {
             super(node, Type.MSG, line);
+            this.flags = 0;
+            flags |= messenger ? MESSENGER : 0;
+            flags |= pending ? PENDING : 0;
             this.data = data;
         }
 
-        private MSG(short[] nodes, long line, byte[] data) {
+        private MSG(short[] nodes, long line, boolean messenger, boolean pending, byte[] data) {
             super(nodes, Type.MSG, line);
+            flags |= messenger ? MESSENGER : 0;
+            flags |= pending ? PENDING : 0;
             this.data = data;
         }
 
@@ -1224,14 +1256,27 @@ public class Message implements Streamable, Externalizable, Cloneable {
             this.data = data;
         }
 
+        public boolean isMessenger() {
+            return (flags & MESSENGER) != 0;
+        }
+
+        public boolean isPending() {
+            return (flags & PENDING) != 0;
+        }
+
+        public void setPending(boolean value) {
+            this.flags |= value ? PENDING : 0;
+        }
+
         @Override
         public int sizeNoHeader() {
-            return super.sizeNoHeader() + 2 + (data != null ? data.length : 0);
+            return super.sizeNoHeader() + 2 + 1 + (data != null ? data.length : 0);
         }
 
         @Override
         public void writeNoHeader(DataOutput out) throws IOException {
             super.writeNoHeader(out);
+            out.writeByte(flags);
             out.writeShort(data != null ? (short) data.length : 0);
             if (data != null)
                 out.write(data);
@@ -1240,6 +1285,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
         @Override
         public void readNoHeader(DataInput in) throws IOException {
             super.readNoHeader(in);
+            flags = in.readByte();
             final int dataLen = in.readUnsignedShort();
             if (dataLen == 0)
                 data = null;
@@ -1251,7 +1297,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         @Override
         public String partialToString() {
-            return super.partialToString() + ", data: " + (data == null ? "null" : "(" + data.length + " bytes)");
+            return super.partialToString() + ", messenger: " + flags + ", data: " + (data == null ? "null" : "(" + data.length + " bytes)" + (isPending() ? " (pending)" : ""));
         }
     }
 }

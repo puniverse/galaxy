@@ -40,4 +40,12 @@ public interface CacheListener {
      * @param id The item's ID.
      */
     void evicted(Cache cache, long id);
+    
+    /**
+     * Called when a message has been received.
+     *
+     * @param message  The message's contents.
+     * @return {@code true} if the message has been processed; {@code false} otherwise, 
+     */
+    void messageReceived(byte[] message);
 }

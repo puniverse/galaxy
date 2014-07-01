@@ -122,6 +122,10 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
         this.obj = deserialize(new ByteBufferInputStream(buffer));
     }
 
+    @Override
+    public void messageReceived(byte[] message) {
+    }
+
     protected void set(T obj) {
         this.obj = obj;
     }

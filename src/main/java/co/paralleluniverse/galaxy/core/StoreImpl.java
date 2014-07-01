@@ -14,6 +14,8 @@
 package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.io.Persistable;
+import co.paralleluniverse.common.io.Streamable;
+import co.paralleluniverse.common.io.Streamables;
 import co.paralleluniverse.galaxy.CacheListener;
 import co.paralleluniverse.galaxy.ItemState;
 import co.paralleluniverse.galaxy.LineFunction;
@@ -26,6 +28,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import co.paralleluniverse.galaxy.core.Message.LineMessage;
+import co.paralleluniverse.galaxy.core.Message.MSG;
+import co.paralleluniverse.galaxy.core.Op.Type;
 
 /**
  *
@@ -431,6 +436,28 @@ public class StoreImpl implements Store {
     @Override
     public long getVersion(long id) {
         return cache.getVersion(id);
+    }
+
+    @Override
+    public void send(long ref, Streamable msg) throws TimeoutException {
+        send(ref, Streamables.toByteArray(msg));
+    }
+
+    @Override
+    public void send(long line, byte[] msg) throws TimeoutException {
+        final LineMessage message = Message.MSG((short) -1, line, false, msg);
+        cache.doOp(Type.SEND, line, null, message, null);
+    }
+
+    @Override
+    public ListenableFuture<Void> sendAsync(long ref, Streamable msg) {
+        return sendAsync(ref, Streamables.toByteArray(msg));
+    }
+
+    @Override
+    public ListenableFuture<Void> sendAsync(long line, byte[] msg) {
+        final LineMessage message = Message.MSG((short) -1, line, false, msg);
+        return (ListenableFuture<Void>) (Object) cache.doOpAsync(Type.SEND, line, null, message, null);
     }
 
     ///////////////////////////////////////////////////////////////////

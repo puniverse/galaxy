@@ -18,7 +18,5 @@ package co.paralleluniverse.galaxy.core;
  * @author pron
  */
 public interface MessageReceiver {
-
     void receive(Message message);
-    
 }
