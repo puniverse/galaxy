@@ -952,37 +952,37 @@ public interface Store extends Cache {
      * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
      * on the item's owning node.
      *
-     * @param ref The item to whom the message is to be sent.
+     * @param id  The item's ID.
      * @param msg The message.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
-    void send(long ref, Streamable data) throws TimeoutException;
+    void send(long id, Streamable data) throws TimeoutException;
 
     /**
      * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
      * on the item's owning node.
      *
-     * @param ref The item to whom the message is to be sent.
+     * @param id  The item's ID.
      * @param msg The message.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
-    void send(long line, byte[] msg) throws TimeoutException;
+    void send(long id, byte[] msg) throws TimeoutException;
 
     /**
      * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
      * on the item's owning node.
      *
-     * @param ref The item to whom the message is to be sent.
+     * @param id  The item's ID.
      * @param msg The message.
      */
-    ListenableFuture<Void> sendAsync(long ref, Streamable msg);
+    ListenableFuture<Void> sendAsync(long id, Streamable msg);
 
     /**
      * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
      * on the item's owning node.
      *
-     * @param ref The item to whom the message is to be sent.
+     * @param id  The item's ID.
      * @param msg The message.
      */
-    ListenableFuture<Void> sendAsync(long line, byte[] msg);
+    ListenableFuture<Void> sendAsync(long id, byte[] msg);
 }

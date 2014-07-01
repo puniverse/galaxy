@@ -439,25 +439,25 @@ public class StoreImpl implements Store {
     }
 
     @Override
-    public void send(long ref, Streamable msg) throws TimeoutException {
-        send(ref, Streamables.toByteArray(msg));
+    public void send(long id, Streamable msg) throws TimeoutException {
+        send(id, Streamables.toByteArray(msg));
     }
 
     @Override
-    public void send(long line, byte[] msg) throws TimeoutException {
-        final LineMessage message = Message.MSG((short) -1, line, false, msg);
-        cache.doOp(Type.SEND, line, null, message, null);
+    public void send(long id, byte[] msg) throws TimeoutException {
+        final LineMessage message = Message.MSG((short) -1, id, false, msg);
+        cache.doOp(Type.SEND, id, null, message, null);
     }
 
     @Override
-    public ListenableFuture<Void> sendAsync(long ref, Streamable msg) {
-        return sendAsync(ref, Streamables.toByteArray(msg));
+    public ListenableFuture<Void> sendAsync(long id, Streamable msg) {
+        return sendAsync(id, Streamables.toByteArray(msg));
     }
 
     @Override
-    public ListenableFuture<Void> sendAsync(long line, byte[] msg) {
-        final LineMessage message = Message.MSG((short) -1, line, false, msg);
-        return (ListenableFuture<Void>) (Object) cache.doOpAsync(Type.SEND, line, null, message, null);
+    public ListenableFuture<Void> sendAsync(long id, byte[] msg) {
+        final LineMessage message = Message.MSG((short) -1, id, false, msg);
+        return (ListenableFuture<Void>) (Object) cache.doOpAsync(Type.SEND, id, null, message, null);
     }
 
     ///////////////////////////////////////////////////////////////////
