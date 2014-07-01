@@ -24,6 +24,7 @@ import java.util.Random;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.junit.Test;
 
 /**
  *
@@ -31,18 +32,17 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
  */
 public class ZooKeeperDistributedTreeTKB {
     public static void main(String[] args) throws Exception {
-        final CuratorFramework client = CuratorFrameworkFactory.newClient("127.0.0.1:2181", 1500, 1000, new ExponentialBackoffRetry(20, 20));
-        client.start();
-        try {
-            Random rand = new Random();
-
-            final String me = "node-" + Long.toHexString(rand.nextLong());
-            final ZooKeeperDistributedTree tree = new ZooKeeperDistributedTree(client);
-            DistributedTreeTKB tkb = new DistributedTreeTKB(tree, me);
-            
-            tkb.run();
-        } finally {
-            client.close();
+        try (CuratorFramework client = CuratorFrameworkFactory.builder().connectString("127.0.0.1:2181").
+                sessionTimeoutMs(1500).connectionTimeoutMs(1000).retryPolicy(new ExponentialBackoffRetry(20, 20)).
+                defaultData(new byte[0]).build()) {
+            client.start();
+            final String me = "node-" + Long.toHexString(new Random().nextLong());
+            new DistributedTreeTKB(new ZooKeeperDistributedTree(client), me).run();
         }
+    }
+
+//    @Test
+    public void hello() throws Exception {
+        main(new String[]{});
     }
 }
