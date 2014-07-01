@@ -26,6 +26,7 @@ import java.util.concurrent.Executors;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import static org.apache.curator.framework.CuratorFrameworkFactory.builder;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicLong;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
@@ -80,8 +81,8 @@ public class ZooKeeperCluster extends AbstractCluster implements RootLocker, Ref
     @Override
     protected void init() throws Exception {
         super.init();
-
-        client = CuratorFrameworkFactory.newClient(zkConnectString, sessionTimeoutMs, connectionTimeoutMs, retryPolicy);
+        client = CuratorFrameworkFactory.builder().connectString(zkConnectString).sessionTimeoutMs(sessionTimeoutMs).
+                connectionTimeoutMs(connectionTimeoutMs).retryPolicy(retryPolicy).defaultData(new byte[0]).build();
         client.start();
 
         try {
@@ -140,10 +141,10 @@ public class ZooKeeperCluster extends AbstractCluster implements RootLocker, Ref
 
     @Override
     public void shutdown() {
+        super.shutdown();
         refAllocationExecutor.shutdownNow();
         client.close();
 
-        super.shutdown();
     }
 
     @Override
