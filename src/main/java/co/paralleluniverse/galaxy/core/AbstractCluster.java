@@ -236,8 +236,6 @@ public abstract class AbstractCluster extends Service implements Cluster {
             }
         });
 
-
-
         myNodeInfo.writeToTree();
 
         setReady(true);
@@ -325,10 +323,11 @@ public abstract class AbstractCluster extends Service implements Cluster {
 
     @Override
     public void shutdown() {
-        if (myNodeInfo.getName() != null) {
-            controlTree.delete(LEADERS + "/" + myNodeInfo.getName());
-        }
-        controlTree.delete(myNodeInfo.treeNodePath);
+// moved to setOnline(false)
+//        if (myNodeInfo.getName() != null) {
+//            controlTree.delete(LEADERS + "/" + myNodeInfo.getName());
+//        }
+//        controlTree.delete(myNodeInfo.treeNodePath);
     }
 
     public void goOnline() {
@@ -370,7 +369,14 @@ public abstract class AbstractCluster extends Service implements Cluster {
                 fireSlaveAdded(slave);
         } else {
             LOG.info("NODE IS GOING OFFLINE!");
+            // TODO: check if web have to test (myNodeInfo.getName() != null) before
             controlTree.delete(LEADERS + "/" + myNodeInfo.getName());
+//      this was inside the shutdown.
+//        if (myNodeInfo.getName() != null) {
+//            controlTree.delete(LEADERS + "/" + myNodeInfo.getName());
+//        }
+          // TODO: test if it helps and can be done here  
+//        controlTree.delete(myNodeInfo.treeNodePath);
             fireOffline();
             shutdown();
         }
@@ -952,7 +958,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
                     LOG.warn("No reader set for property {} (found in node {})", childName, name);
                     return;
                 }
-                
+
                 final Object currentProperty = properties.get(childName);
                 final Object newValProperty = readProperty(childName, value);
                 // required properties shouldn't be changed
