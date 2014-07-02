@@ -51,7 +51,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1083,7 +1082,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             final Iterator<LineMessage> it = pending.iterator();
             if (!it.hasNext())
                 break;
-            
+
             final LineMessage msg = it.next();
             it.remove();
 
@@ -1912,7 +1911,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             try {
                 line.getListener().messageReceived(msg.getData());
             } catch (Exception e) {
-                LOG.error("Listener threw an exception.", e);
+                LOG.error("Listener threw an exception on messageReceived.", e);
             }
             if (msg.isReplyRequired())
                 send(Message.MSGACK(msg));
@@ -2204,8 +2203,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             int change = 0;
             change |= setState(line, State.I) ? LINE_STATE_CHANGED : 0;
             setNextState(line, null);
-            if (node != newOwner)
+            if (node != newOwner) {
                 change |= setOwner(line, newOwner) ? LINE_OWNER_CHANGED : 0;
+                fireLineKilled(line);
+            }
             line.setOwnerClock(0);// setOwnerClockInv(line, newOwner); - TODO ???
             boolean stop = false;
             do {
@@ -2859,6 +2860,24 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         for (CacheListener listener : listeners) {
             try {
                 listener.evicted(this, line.getId());
+            } catch (Exception e) {
+                LOG.error("Listener threw an exception.", e);
+            }
+        }
+    }
+
+    private void fireLineKilled(CacheLine line) {
+        LOG.debug("fireLineEviceted {}", line);
+        if (line.getListener() != null) {
+            try {
+                line.getListener().killed(this, line.getId());
+            } catch (Exception e) {
+                LOG.error("Listener threw an exception.", e);
+            }
+        }
+        for (CacheListener listener : listeners) {
+            try {
+                listener.killed(this, line.getId());
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }

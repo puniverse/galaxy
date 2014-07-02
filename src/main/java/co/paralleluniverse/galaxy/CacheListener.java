@@ -42,6 +42,12 @@ public interface CacheListener {
     void evicted(Cache cache, long id);
     
     /**
+     * The data item belonged to a node that has died (without slave replacement)
+     * @param id  The item's ID.
+     */
+    void killed(Cache cache, long id);
+    
+    /**
      * Called when a message has been received.
      *
      * @param message  The message's contents.

@@ -33,6 +33,11 @@ public abstract class AbstractCacheListener implements CacheListener {
     }
 
     @Override
+    public void killed(Cache cache, long id) {
+    }
+
+    @Override
     public void messageReceived(byte[] message) {
+        throw new RuntimeException("Received unexpected message (" + message.length + " bytes)");
     }
 }

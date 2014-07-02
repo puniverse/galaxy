@@ -68,6 +68,10 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
     }
 
     @Override
+    public void killed(Cache cache, long id) {
+    }
+    
+    @Override
     public void received(Cache cache, long id, long version, ByteBuffer data) {
         if (version > this.version) {
             read(data);
