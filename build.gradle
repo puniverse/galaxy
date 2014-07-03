@@ -289,15 +289,6 @@ tasks.withType(Test) {
     }    
 }
 
-task showResults(type:Exec) {
-    workingDir test.getReports().getJunitXml().getDestination()
-    commandLine 'cat','TEST-co.paralleluniverse.common.LinkedHashMap2Test.xml'
-    //    standardOutput = new ByteArrayOutputStream()
-    //    ext.output = { return standardOutput.toString() }
-    //    doLast {
-    //        logger.error(output)
-    //    }
-}    
 task wrapper(type: Wrapper) {
     gradleVersion = '1.10'
 }
