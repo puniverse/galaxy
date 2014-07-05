@@ -90,7 +90,7 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-core:1.3"
     testCompile "org.hamcrest:hamcrest-library:1.3"
     testCompile "org.mockito:mockito-all:1.9.5"
-    testCompile('org.gridkit.lab:nanocloud:0.8.2.2') {
+    testCompile('org.gridkit.lab:nanocloud:0.8.2.4') {
         exclude group: "org.slf4j", module: '*'
         exclude group: "org.ow2.asm", module: '*'
     }
