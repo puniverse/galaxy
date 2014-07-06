@@ -70,14 +70,14 @@ public class ZooKeeperDistributedTree implements DistributedTree {
             watcher.checkEphemeral();
             watcher.setChildren();
             client.checkExists().usingWatcher(watcher).forPath(watcher.path);
-            
+
             client.getChildren().inBackground(new BackgroundCallback() {
 
                 @Override
                 public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
                     final List<String> children = event.getChildren();
-                    if(children != null) {
-                        for(String child : children)
+                    if (children != null) {
+                        for (String child : children)
                             listener.nodeChildAdded(nodeName(node), nodeName(child));
                     }
                 }
@@ -169,10 +169,10 @@ public class ZooKeeperDistributedTree implements DistributedTree {
             final EphemeralChildren ec = getEphemeralChildren(parent(node));
             if (ec != null) {
                 try {
-                    LOG.info("in set ec is {}",ec);
+                    LOG.info("in set ec is {}", ec);
                     ec.setChildData(child(node), data);
                     client.setData().forPath(possiblyWithSequence(parent(node)), ec.toByteArray());
-                    LOG.info("in set ec is {}",ec);
+                    LOG.info("in set ec is {}", ec);
                     return;
                 } catch (Exception e) {
                     ex = e;
@@ -499,7 +499,7 @@ public class ZooKeeperDistributedTree implements DistributedTree {
     private static final Pattern ORDERED_NODE = Pattern.compile(".*:[0-9]{10}+\\z");
 
     private static boolean isOrdered(String node) {
-        if(node == null)
+        if (node == null)
             return false;
         return ORDERED_NODE.matcher(node).matches();
     }
