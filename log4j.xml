@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration status="DEBUG">
+<configuration status="WARN">
     <appenders>
         <Console name="Console" target="SYSTEM_ERR">
             <!-- ThreadContext: %x = stack, %X = map-->
@@ -7,7 +7,7 @@
         </Console>
     </appenders>
     <loggers>
-        <root level="INFO">
+        <root level="WARN">
             <appender-ref ref="Console"/>
         </root>
         <!--<logger name="org.apache.zookeeper" level="WARN"/>--> 
