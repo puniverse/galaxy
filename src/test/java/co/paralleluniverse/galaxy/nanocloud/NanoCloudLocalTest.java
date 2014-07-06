@@ -12,8 +12,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.apache.commons.io.FileUtils;
+import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ServerConfig;
-import org.apache.zookeeper.server.ZooKeeperServerMain;
+import org.apache.zookeeper.server.ZooKeeperServer;
+import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.vicluster.ViManager;
@@ -25,50 +27,31 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class NanoCloudLocalTest extends BaseCloudTest {
-    private Thread zk;
+    private ZooKeeperServer zkServer;
 
     @Before
-    public void setUp() throws InterruptedException {
-        Thread.sleep(2000);
-        this.zk = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ServerConfig sc = new ServerConfig();
-                    sc.parse(pathToResource("config/zoo.cfg"));
-                    final File dataDir = new File("/tmp/zookeeper/");
-                    FileUtils.deleteDirectory(dataDir);
-                    dataDir.mkdirs();
-                    new ZooKeeperServerMain().runFromConfig(sc);
-                } catch (QuorumPeerConfig.ConfigException | IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
-        zk.start();
+    public void setUp() throws InterruptedException, QuorumPeerConfig.ConfigException, IOException {
+        zkServer = startZookeeper("config/zoo.cfg", "/tmp/zookeeper/");
         cloud = createLocalCloud();
     }
 
     @After
     public void tearDown() throws InterruptedException {
-        zk.interrupt();
+        if (zkServer.isRunning()) {
+            zkServer.shutdown();
+        }
     }
 
-//    @Test
+    @Test
     public void clusterAddTest() throws InterruptedException, ExecutionException {
-            cloud.nodes(SERVER, PEER1, PEER2);
-            setJvmArgs(cloud);
-            warmUp(cloud);
-            Thread.sleep(300);
-            Future<Void> server = cloud.node(SERVER).submit(createServer());
-            Future<Short> peer1 = cloud.node(PEER1).submit(createWaitForLargerPeer(1));
-            Future<Short> peer2 = cloud.node(PEER2).submit(createWaitForLargerPeer(2));
-            int largerPeer = peer1.get();
-            System.out.println("peer 1 returned " + largerPeer);
-            assertEquals("id of node larger than peer1", 2, largerPeer);
-//        server.cancel(true);
-//        peer2.cancel(true);
-        }
+        cloud.nodes(SERVER, PEER1, PEER2);
+        setJvmArgs(cloud);
+        cloud.node(SERVER).submit(createServer());        
+        cloud.node(PEER2).submit(createWaitForLargerPeer(2));
+        int largerPeer = cloud.node(PEER1).submit(createWaitForLargerPeer(1)).get();
+        System.out.println("PEER1 returned " + largerPeer);
+        assertEquals("id of node larger than peer1", 2, largerPeer);
+    }
 
     private static Runnable createServer() {
         return new Runnable() {
@@ -147,6 +130,40 @@ public class NanoCloudLocalTest extends BaseCloudTest {
 
     public static String pathToResource(final String name) {
         return ClassLoader.getSystemClassLoader().getResource(name).getPath();
+    }
+
+    private static ZooKeeperServer startZookeeper(final String configResource, final String dataDirName) throws IOException, QuorumPeerConfig.ConfigException {
+        ServerConfig sc = new ServerConfig();
+        sc.parse(pathToResource(configResource));
+        final File dataDir = new File(dataDirName);
+        FileUtils.deleteDirectory(dataDir);
+        dataDir.mkdirs();
+        FileTxnSnapLog txnLog = null;
+        try {
+            // Note that this thread isn't going to be doing anything else,
+            // so rather than spawning another thread, we will just call
+            // run() in this thread.
+            // create a file logger url from the command line args
+            ZooKeeperServer zkServer = new ZooKeeperServer();
+
+            txnLog = new FileTxnSnapLog(new File(sc.getDataDir()), new File(
+                    sc.getDataDir()));
+            zkServer.setTxnLogFactory(txnLog);
+            zkServer.setTickTime(sc.getTickTime());
+            zkServer.setMinSessionTimeout(sc.getMinSessionTimeout());
+            zkServer.setMaxSessionTimeout(sc.getMaxSessionTimeout());
+            ServerCnxnFactory cnxnFactory = ServerCnxnFactory.createFactory();
+            cnxnFactory.configure(sc.getClientPortAddress(),
+                    sc.getMaxClientCnxns());
+            cnxnFactory.startup(zkServer);
+            return zkServer;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (txnLog != null) {
+                txnLog.close();
+            }
+        }
     }
 
     private static final String PEER2 = "peer2";
