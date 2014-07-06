@@ -357,6 +357,7 @@ public class ZooKeeperDistributedTree implements DistributedTree {
                                 client.getChildren().usingWatcher(this).forPath(event.getPath());
                             break;
                         case NodeDataChanged:
+                            client.checkExists().usingWatcher(this).forPath(event.getPath());
                             LOG.info("Node data changed: {} ({})", node, event.getPath());
                             if (ephemeral) {
                                 final EphemeralChildren ec = getEphemeralChildren(event.getPath());
@@ -382,7 +383,6 @@ public class ZooKeeperDistributedTree implements DistributedTree {
                                 ephemeralChildren = ec;
                             } else
                                 listener.nodeUpdated(node);
-                            client.checkExists().usingWatcher(this).forPath(event.getPath());
                             break;
                         case NodeDeleted:
                             LOG.info("Node deleted: {} ({})", node, event.getPath());
