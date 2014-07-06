@@ -27,26 +27,24 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class NanoCloudLocalTest extends BaseCloudTest {
-    private ZooKeeperServer zkServer;
+    private ServerCnxnFactory zkCnxnFactory;
 
     @Before
     public void setUp() throws InterruptedException, QuorumPeerConfig.ConfigException, IOException {
-        zkServer = startZookeeper("config/zoo.cfg", "/tmp/zookeeper/");
+        zkCnxnFactory = startZookeeper("config/zoo.cfg", "/tmp/zookeeper/");
         cloud = createLocalCloud();
     }
 
     @After
     public void tearDown() throws InterruptedException {
-        if (zkServer.isRunning()) {
-            zkServer.shutdown();
-        }
+        zkCnxnFactory.shutdown();
     }
 
     @Test
     public void clusterAddTest() throws InterruptedException, ExecutionException {
         cloud.nodes(SERVER, PEER1, PEER2);
         setJvmArgs(cloud);
-        cloud.node(SERVER).submit(createServer());        
+        cloud.node(SERVER).submit(createServer());
         cloud.node(PEER2).submit(createWaitForLargerPeer(2));
         int largerPeer = cloud.node(PEER1).submit(createWaitForLargerPeer(1)).get();
         System.out.println("PEER1 returned " + largerPeer);
@@ -132,7 +130,7 @@ public class NanoCloudLocalTest extends BaseCloudTest {
         return ClassLoader.getSystemClassLoader().getResource(name).getPath();
     }
 
-    private static ZooKeeperServer startZookeeper(final String configResource, final String dataDirName) throws IOException, QuorumPeerConfig.ConfigException {
+    private static ServerCnxnFactory startZookeeper(final String configResource, final String dataDirName) throws IOException, QuorumPeerConfig.ConfigException {
         ServerConfig sc = new ServerConfig();
         sc.parse(pathToResource(configResource));
         final File dataDir = new File(dataDirName);
@@ -140,10 +138,6 @@ public class NanoCloudLocalTest extends BaseCloudTest {
         dataDir.mkdirs();
         FileTxnSnapLog txnLog = null;
         try {
-            // Note that this thread isn't going to be doing anything else,
-            // so rather than spawning another thread, we will just call
-            // run() in this thread.
-            // create a file logger url from the command line args
             ZooKeeperServer zkServer = new ZooKeeperServer();
 
             txnLog = new FileTxnSnapLog(new File(sc.getDataDir()), new File(
@@ -156,7 +150,7 @@ public class NanoCloudLocalTest extends BaseCloudTest {
             cnxnFactory.configure(sc.getClientPortAddress(),
                     sc.getMaxClientCnxns());
             cnxnFactory.startup(zkServer);
-            return zkServer;
+            return cnxnFactory;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
