@@ -197,8 +197,8 @@ public abstract class DistributedBranchHelper {
                     nodes.wait();
 
                 if (ordered) {
-                    previous = nodes.lowerEntry(name).getValue();
-                    next = nodes.higherEntry(name).getValue();
+                    previous = value(nodes.lowerEntry(name));
+                    next = value(nodes.higherEntry(name));
                 }
                 node = nodes.remove(name);
                 _doneInit = this.doneInit;
@@ -305,5 +305,13 @@ public abstract class DistributedBranchHelper {
             assert node.equals(treePath);
             testProperty(childName);
         }
+    }
+
+    private static <K, V> V value(Map.Entry<K, V> entry) {
+        return entry != null ? entry.getValue() : null;
+    }
+
+    private static <K, V> K key(Map.Entry<K, V> entry) {
+        return entry != null ? entry.getKey() : null;
     }
 }

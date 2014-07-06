@@ -54,21 +54,21 @@ public class NanoCloudLocalTest extends BaseCloudTest {
         zk.interrupt();
     }
 
-    @Test
+//    @Test
     public void clusterAddTest() throws InterruptedException, ExecutionException {
-        cloud.nodes(SERVER, PEER1, PEER2);
-        setJvmArgs(cloud);
-        warmUp(cloud);
-        Thread.sleep(300);
-        Future<Void> server = cloud.node(SERVER).submit(createServer());
-        Future<Short> peer1 = cloud.node(PEER1).submit(createWaitForLargerPeer(1));
-        Future<Short> peer2 = cloud.node(PEER2).submit(createWaitForLargerPeer(2));
-        int largerPeer = peer1.get();
-        System.out.println("peer 1 returned " + largerPeer);
-        assertEquals("id of node larger than peer1", 2, largerPeer);
+            cloud.nodes(SERVER, PEER1, PEER2);
+            setJvmArgs(cloud);
+            warmUp(cloud);
+            Thread.sleep(300);
+            Future<Void> server = cloud.node(SERVER).submit(createServer());
+            Future<Short> peer1 = cloud.node(PEER1).submit(createWaitForLargerPeer(1));
+            Future<Short> peer2 = cloud.node(PEER2).submit(createWaitForLargerPeer(2));
+            int largerPeer = peer1.get();
+            System.out.println("peer 1 returned " + largerPeer);
+            assertEquals("id of node larger than peer1", 2, largerPeer);
 //        server.cancel(true);
 //        peer2.cancel(true);
-    }
+        }
 
     private static Runnable createServer() {
         return new Runnable() {
@@ -116,7 +116,7 @@ public class NanoCloudLocalTest extends BaseCloudTest {
                     }
                 });
                 for (Short node : grid.cluster().getNodes()) {
-                    if (node>grid.cluster().getMyNodeId())
+                    if (node > grid.cluster().getMyNodeId())
                         return node;
                 }
                 return future.get();
@@ -138,7 +138,7 @@ public class NanoCloudLocalTest extends BaseCloudTest {
         //            "co.paralleluniverse.galaxy.configFile",
         //            "co.paralleluniverse.galaxy.autoGoOnline"
         };
-        JvmProps props = JvmProps.at(cloud.node("**"));
+        JvmProps props = JvmProps.at(cloud.node("**")).addJvmArg("-ea");
 //        JvmProps props = JvmProps.at(cloud.node("**")).addJvmArg("-javaagent:" + System.getProperty("co.paralleluniverse.quasarJar"));
         //"log4j.configurationFile", "log4j.xml"
         for (String string : copyEnv)

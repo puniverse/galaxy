@@ -15,11 +15,13 @@ package co.paralleluniverse.galaxy;
 
 /**
  * A listener for messages sent in the grid.
+ *
  * @see Messenger
  */
 public interface MessageListener {
     /**
      * Called when a message has been received.
+     *
      * @param fromNode The cluster node ID of the node that originated the message.
      * @param message  The message's contents.
      */

@@ -144,7 +144,7 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
                 monitor.addOwnerWrite();
                 monitor.addObjectServed();
                 store.write(id, msg.getNode(), 1, new byte[0], null);
-                send(Message.PUTX(msg, id, new short[0], 1, null));
+                send(Message.PUTX(msg, id, new short[0], 0, 1, null));
                 return true;
             } else if ((owner = store.casOwner(id, SERVER, msg.getNode())) == msg.getNode()) { // if owner is server, then transfer ownership
                 MainMemoryEntry entry = store.read(id);
@@ -152,7 +152,7 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
                     LOG.debug("Owner of line {} is now node {} (previously owned by server)", hex(id), msg.getNode());
                 monitor.addOwnerWrite();
                 monitor.addObjectServed();
-                send(Message.PUTX(msg, id, new short[0], entry.version, ByteBuffer.wrap(entry.data)));
+                send(Message.PUTX(msg, id, new short[0], 0, entry.version, ByteBuffer.wrap(entry.data)));
                 return true;
             }
             if (owner == -1 && !isReserved(id)) {
@@ -217,7 +217,7 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
         final long id = msg.getLine();
 
         if (handleMessageGet(msg))
-            send(Message.MSG(msg.getNode(), id, msg.getData())); // return to sender, immediately following a PUTX
+            send(Message.MSG(msg.getNode(), id, msg.isMessenger(), msg.getData())); // return to sender, immediately following a PUTX
     }
 
     private void handleMessageBackup(BACKUP_PACKET msg) {

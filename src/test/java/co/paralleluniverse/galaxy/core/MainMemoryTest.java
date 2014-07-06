@@ -19,12 +19,8 @@
  */
 package co.paralleluniverse.galaxy.core;
 
-import co.paralleluniverse.galaxy.core.MainMemory;
-import co.paralleluniverse.galaxy.core.MainMemoryMonitor;
-import co.paralleluniverse.galaxy.core.Comm;
 import co.paralleluniverse.galaxy.server.MainMemoryEntry;
 import co.paralleluniverse.galaxy.server.MainMemoryDB;
-import com.google.common.primitives.Ints;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
@@ -155,7 +151,7 @@ public class MainMemoryTest {
 
         verify(store).casOwner(id(154), sh(0), sh(10));
         verify(store).read(id(154));
-        verify(comm).send(argThat(equalTo(Message.PUTX(get, id(154), new short[0], 1234, ByteBuffer.wrap(new byte[]{3, 4, 5})))));
+        verify(comm).send(argThat(equalTo(Message.PUTX(get, id(154), new short[0], 0, 1234, ByteBuffer.wrap(new byte[]{3, 4, 5})))));
         verify(monitor).addObjectServed();
         verify(monitor).addOwnerWrite();
         verifyNoMoreInteractions(monitor);
@@ -173,7 +169,7 @@ public class MainMemoryTest {
 
         verify(store).casOwner(15, sh(-1), sh(10));
         verify(store).write(15, sh(10), 1, new byte[0], null);
-        verify(comm).send(argThat(equalTo(Message.PUTX(get, 15, new short[0], 1, null))));
+        verify(comm).send(argThat(equalTo(Message.PUTX(get, 15, new short[0], 0, 1, null))));
         verify(monitor).addObjectServed();
         verify(monitor).addOwnerWrite();
         verifyNoMoreInteractions(monitor);

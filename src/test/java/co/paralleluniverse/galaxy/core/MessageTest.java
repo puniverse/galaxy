@@ -115,7 +115,7 @@ public class MessageTest {
     public void testPUTXSer() {
         final long line = rand.nextLong();
         final LineMessage m = new LineMessage((short) rand.nextInt(), Message.Type.GET, line);
-        testSerialize(Message.PUTX(m, line, randomShortArray(5), rand.nextLong(), randomBuffer(100)));
+        testSerialize(Message.PUTX(m, line, randomShortArray(5), rand.nextInt(1000), rand.nextLong(), randomBuffer(100)));
     }
 
     @Test
@@ -189,17 +189,17 @@ public class MessageTest {
 
     @Test
     public void testMSGSer() {
-        final MSG msg1 = Message.MSG((short) rand.nextInt(), rand.nextLong(), randomArray(50));
+        final MSG msg1 = Message.MSG((short) rand.nextInt(), rand.nextLong(), rand.nextBoolean(), randomArray(50));
         testSerialize(Message.MSG(msg1, randomArray(80)));
 
-        testSerialize(Message.MSG((short) rand.nextInt(), rand.nextLong(), randomArray(80)));
+        testSerialize(Message.MSG((short) rand.nextInt(), rand.nextLong(), rand.nextBoolean(), randomArray(80)));
 
-        testSerialize(Message.MSG(randomShortArray(2), rand.nextLong(), randomArray(80)));
+        testSerialize(Message.MSG(randomShortArray(2), rand.nextLong(), rand.nextBoolean(), randomArray(80)));
     }
 
     @Test
     public void testMSGACKSer() {
-        final MSG msg1 = Message.MSG((short) rand.nextInt(), rand.nextLong(), randomArray(50));
+        final MSG msg1 = Message.MSG((short) rand.nextInt(), rand.nextLong(), rand.nextBoolean(), randomArray(50));
         testSerialize(Message.MSGACK(msg1));
     }
 

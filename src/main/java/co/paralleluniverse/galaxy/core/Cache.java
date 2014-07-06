@@ -51,7 +51,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -103,7 +102,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private final NonBlockingHashMapLong<CacheLine> owned;
     private final ConcurrentMap<Long, CacheLine> shared;
     private final NonBlockingHashMapLong<ArrayList<Op>> pendingOps;
-    private final NonBlockingHashMapLong<HashSet<LineMessage>> pendingMessages;
+    private final NonBlockingHashMapLong<LinkedHashSet<LineMessage>> pendingMessages;
     private ConcurrentLinkedDeque<CacheLine> freeLineList;
     private ConcurrentLinkedDeque<TShortHashSet> freeSharerSetList;
     private final ThreadLocal<Queue<Message>> shortCircuitMessage = new ThreadLocal<Queue<Message>>();
@@ -174,7 +173,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         this.owned = new NonBlockingHashMapLong<CacheLine>();
         this.shared = buildSharedCache(maxCapacity);
         this.pendingOps = new NonBlockingHashMapLong<ArrayList<Op>>();
-        this.pendingMessages = new NonBlockingHashMapLong<HashSet<LineMessage>>();
+        this.pendingMessages = new NonBlockingHashMapLong<LinkedHashSet<LineMessage>>();
     }
 
     private ConcurrentMap<Long, CacheLine> buildSharedCache(long maxCapacity) {
@@ -354,6 +353,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         public static final byte MODIFIED = 1 << 1;
         public static final byte SLAVE = 1 << 2; // true when slave(s) think line is owned by us
         public static final byte DELETED = 1 << 3;
+        public static final byte INCOMPLETE = 1 << 4;
         private long id;                // 8
         private byte flags;             // 1
         //private short sem;              // 2
@@ -363,11 +363,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         private volatile long version;  // 8 
         private long ownerClock;        // 8 must contain a counter that is monotonically increasing for each owner, e.g, the message id
         private ByteBuffer data;        // 4
+        private short parts;            // 2
         private short owner = -1;       // 2
         private TShortHashSet sharers;  // 4
         private volatile CacheListener listener; // 4
         // =
-        // 47 (+ 8 = 56)
+        // 49 (+ 8 = 57)
 
         public long getId() {
             return id;
@@ -394,6 +395,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         public boolean isLocked() {
             return (flags & LOCKED) != 0; // sem > 0;
+        }
+
+        public boolean isIncomplete() {
+            return parts > 0;
         }
 
         public boolean is(byte flag) {
@@ -822,7 +827,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private boolean shouldHoldOp(CacheLine line, Op.Type op) {
-        return (hasPendingMessages(line) // give mesages a chance if we're not part of a transaction (line isn't locked) and messages are simply waiting for backups or another independent sets (that isn't part of a transaction)
+        return (hasPendingMessages(line) // give messages a chance if we're not part of a transaction (line isn't locked) and messages are simply waiting for backups or another independent set (that isn't part of a transaction)
                 && op.isOf(LOCKING_OPS)
                 && !line.isLocked()
                 && !(line.getState() != State.E && line.getNextState() == State.E))
@@ -866,8 +871,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private void receive1(Message message) {
         switch (message.getType()) {
             case MSG:
-                handleMessageMsg((Message.MSG) message);
-                return;
+                if (handleMessageMessengerMsg((Message.MSG) message))
+                    return;
+                break;
             case MSGACK:
                 if (((LineMessage) message).getLine() == -1) {
                     if (receiver != null)
@@ -906,9 +912,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     /**
      * Special handling for msg.
      */
-    private void handleMessageMsg(Message.MSG message) {
+    private boolean handleMessageMessengerMsg(Message.MSG message) {
+        if (!message.isMessenger())
+            return false;
         if (receiver == null)
-            return;
+            return true;
 
         setOwnerClockPut(message);
 
@@ -916,23 +924,26 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             receiver.receive(message);
             if (message.isReplyRequired())
                 send(Message.MSGACK(message));
-            return;
+            return true;
         }
 
         CacheLine line = getLine(message.getLine());
         if (line == null) {
             boolean res = handleMessageNoLine(message);
             assert res;
-            return;
-        }
-        synchronized (line) {
-            if (handleNotOwner(message, line))
-                return;
+            return true;
         }
 
-        receiver.receive(message);
+        synchronized (line) {
+            if (handleNotOwner(message, line))
+                return true;
+
+            receiver.receive(message);
+        }
+
         if (message.isReplyRequired())
             send(Message.MSGACK(message));
+        return true;
     }
 
     private void handleMessage(LineMessage message, CacheLine line) {
@@ -975,6 +986,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     return handleMessageNotFound(message, line);
                 case CHNGD_OWNR:
                     return handleMessageChngdOwnr((Message.CHNGD_OWNR) message, line);
+                case MSG:
+                    return handleMessageMsg((Message.MSG) message, line);
                 case MSGACK:
                     return handleMessageMsgAck(message, line);
                 case BACKUP: // in slave mode only
@@ -1063,7 +1076,16 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         int messageCount = 0;
         long totalDelay = 0;
 
-        for (LineMessage msg : getAndClearPendingMessages(line)) {
+        final Collection<LineMessage> pending = getPendingMessages(line);
+        final int n = pending.size();
+        for (int i = 0; i < n; i++) {
+            final Iterator<LineMessage> it = pending.iterator();
+            if (!it.hasNext())
+                break;
+
+            final LineMessage msg = it.next();
+            it.remove();
+
             LOG.debug("Handling pending message {}", msg);
             change |= handleMessage1(msg, line);
 
@@ -1080,18 +1102,31 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
         return change;
     }
-    private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(Message.Type.GET, Message.Type.GETX, Message.Type.INV, Message.Type.PUT, Message.Type.PUTX, Message.Type.INVOKE);
+    private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(
+            Message.Type.GET,
+            Message.Type.GETX,
+            Message.Type.INV,
+            Message.Type.PUT,
+            Message.Type.PUTX,
+            Message.Type.INVOKE);
 
     private boolean shouldHoldMessage(CacheLine line, Message message) {
         final boolean res = message.getType().isOf(MESSAGES_BLOCKED_BY_LOCK)
-                && (line.isLocked() || line.is(CacheLine.MODIFIED) || (line.getState() != State.E && line.getNextState() == State.E));
+                && (line.isLocked()
+                || line.is(CacheLine.MODIFIED)
+                || line.isIncomplete()
+                || (line.getState() != State.E && line.getNextState() == State.E));
 //        if (res && message.getType() == Message.Type.PUTX && line.getVersion() == ((Message.PUT)message).getVersion())
 //            return false;
         if (res && message.getType() == Message.Type.INV && !line.isLocked() && !line.is(CacheLine.MODIFIED)) // INV isn't locked by -> E
             return false;
         return res;
     }
-    private static final long MESSAGES_WITH_FAST_REPLY = Enums.setOf(Message.Type.GET, Message.Type.GETX, Message.Type.INVOKE);
+
+    private static final long MESSAGES_WITH_FAST_REPLY = Enums.setOf(
+            Message.Type.GET,
+            Message.Type.GETX,
+            Message.Type.INVOKE);
 
     private boolean quickReplyToBroadcast(CacheLine line, LineMessage msg) {
         // we quickly reply to a broadcast if we're the line owner so that the sender's UDPComm
@@ -1505,13 +1540,13 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         // we make a copy of the message because it may have been sent and sits in some comm queues,
         // so changing the target node might cause trouble.
-        final Message.MSG msg1 = Message.MSG(line.getOwner(), msg.getLine(), msg.getData());
+        final Message.MSG msg1 = Message.MSG(line.getOwner(), msg.getLine(), msg.isMessenger(), msg.getData());
         send((Message) msg1);
         // We have to remember the message ID in order to process MSGACKs later
         assert msg1.getMessageId() > 0;
         msg.setMessageId(msg1.getMessageId());
 
-        return PENDING; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
+        return msg.isMessenger() ? PENDING : null; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
     }
 
     private Object handleOpPush(CacheLine line, Object extra, int change) {
@@ -1553,14 +1588,42 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         // TODO: maybe S, or, rather, transitional O. We could add this node to sharers and  if new owner dies, we become owner here and in the server
         setState(line, State.I);
 
-        send(Message.PUTX(toNode, line.id, sharers, line.version, readOnly(line.data)));
+        final List<Message.MSG> pendingMSGs = getAndClearPendingMSGs(line);
+        send(Message.PUTX(toNode, line.id, sharers, pendingMSGs.size(), line.version, readOnly(line.data)));
         line.rewind();
+        for (Message.MSG m : getAndClearPendingMSGs(line)) {
+            m.setPending(true);
+            m.setNode(toNode);
+            m.setReplyRequired(false);
+            send(m);
+        }
+
         return null;
     }
 
     private CacheListener handleOpListen(CacheLine line, Object data, Object listener) {
         final boolean ifAbsent = (boolean) (data != null ? data : false);
-        return line.setListener((CacheListener) listener, ifAbsent);
+        final CacheListener lst = line.setListener((CacheListener) listener, ifAbsent);
+
+        // send pending MSG messages to listener
+        if (lst != null && lst == listener) {
+            for (Message.MSG msg : getAndClearPendingMSGs(line))
+                handleMessageMsg(msg, line);
+        }
+        return lst;
+    }
+
+    private List<Message.MSG> getAndClearPendingMSGs(CacheLine line) {
+        final List<Message.MSG> ms = new ArrayList<>();
+        final Collection<LineMessage> msgs = getPendingMessages(line);
+        for (Iterator<LineMessage> it = msgs.iterator(); it.hasNext();) {
+            final LineMessage msg = it.next();
+            if (msg.getType() == Message.Type.MSG) {
+                ms.add((Message.MSG) msg);
+                it.remove();
+            }
+        }
+        return ms;
     }
 
     private Object handleOpInvoke(CacheLine line, Object function, Op op, Object extra, Transaction txn, int lineChange) {
@@ -1655,8 +1718,16 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         change |= setState(line, (hasServer | !line.is(CacheLine.SLAVE)) ? State.I : State.S) ? LINE_STATE_CHANGED : 0;
         change |= setOwner(line, msg.getNode()) ? LINE_OWNER_CHANGED : 0;
 
-        send(Message.PUTX(msg, line.id, sharers, line.version, readOnly(line.data)));
+        final List<Message.MSG> pendingMSGs = getAndClearPendingMSGs(line);
+        send(Message.PUTX(msg, line.id, sharers, pendingMSGs.size(), line.version, readOnly(line.data)));
         line.rewind();
+        for (Message.MSG m : pendingMSGs) {
+            m.setPending(true);
+            m.setNode(msg.getNode());
+            m.setReplyRequired(false);
+            m.setOutgoing();
+            send(m);
+        }
 
         return change;
     }
@@ -1703,6 +1774,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         line.sharers.addAll(sharers);
         line.version = msg.getVersion();
         writeData(line, (Object) msg.getData());
+        line.parts = (short) msg.getMessages();
 
         setOwnerClock(line, msg);
 
@@ -1824,13 +1896,37 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return LINE_NO_CHANGE;
     }
 
+    private int handleMessageMsg(Message.MSG msg, CacheLine line) {
+        setOwnerClock(line, msg);
+
+        int change = LINE_NO_CHANGE;
+        if (msg.isPending()) {
+            line.parts--;
+            if (line.parts == 0)
+                change |= LINE_STATE_CHANGED;
+
+            msg.setPending(false);
+        }
+        if (line.getListener() != null) {
+            try {
+                line.getListener().messageReceived(msg.getData());
+            } catch (Exception e) {
+                LOG.error("Listener threw an exception on messageReceived.", e);
+            }
+            if (msg.isReplyRequired())
+                send(Message.MSGACK(msg));
+        } else
+            addPendingMessage(line, msg);
+        return change;
+    }
+
     private int handleMessageMsgAck(LineMessage ack, CacheLine line) throws IrrelevantStateException {
         Op sendOp = null;
         final Collection<Op> pending = getPendingOps(line);
         for (Iterator<Op> it = pending.iterator(); it.hasNext();) {
             final Op op = it.next();
             if (op.type == Op.Type.SEND) {
-                Message.MSG msg = (Message.MSG) op.getExtra();
+                final Message.MSG msg = (Message.MSG) op.getExtra();
                 if (msg.getMessageId() == ack.getMessageId()) {
                     sendOp = op;
                     break;
@@ -1944,6 +2040,26 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     //<editor-fold defaultstate="collapsed" desc="Stale Reads">
     /////////////////////////// Stale Reads ///////////////////////////////////////////
+    /*
+     * The stale reads mechanism enables reading invalidated data (I lines) as long as this doesn't result in inconsistent views.
+     *
+     * The way this is done is by keeping track of INV and PUT messages from each host. Once an invalidated line has been PUT, we
+     * cannot allow any stale (I) lines from the same owner to be read (until they've all been PUT or evicted).
+     */
+    private boolean isPossibleInconsistencies(CacheLine line) {
+        assert line.getState() == State.I;
+        final short owner = line.getOwner();
+        if (System.currentTimeMillis() - line.timeAccessed > maxStaleReadMillis)
+            return true;
+        if (owner == -1)
+            return false;
+        final OwnerClock oc = ownerClocks.get(owner);
+        if (oc == null)
+            return false;
+        long lastPut = Math.max(oc.lastPut.get(), globalOwnerClock.lastPut.get());
+        return line.getOwnerClock() <= lastPut;
+    }
+
     private void setOwnerClock(CacheLine line, Message msg) {
         if (!STALE_READS)
             return;
@@ -2009,26 +2125,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 oc = tmp;
         }
         return oc;
-    }
-
-    /*
-     * The stale reads mechanism enables reading invalidated data (I lines) as long as this doesn't result in inconsistent views.
-     *
-     * The way this is done is by keeping track of INV and PUT messages from each host. Once an invalidated line has been PUT, we
-     * cannot allow any stale (I) lines from the same owner to be read (until they've all been PUT or evicted).
-     */
-    private boolean isPossibleInconsistencies(CacheLine line) {
-        assert line.getState() == State.I;
-        final short owner = line.getOwner();
-        if (System.currentTimeMillis() - line.timeAccessed > maxStaleReadMillis)
-            return true;
-        if (owner == -1)
-            return false;
-        final OwnerClock oc = ownerClocks.get(owner);
-        if (oc == null)
-            return false;
-        long lastPut = Math.max(oc.lastPut.get(), globalOwnerClock.lastPut.get());
-        return line.getOwnerClock() <= lastPut;
     }
 
     private static class OwnerClock {
@@ -2107,8 +2203,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             int change = 0;
             change |= setState(line, State.I) ? LINE_STATE_CHANGED : 0;
             setNextState(line, null);
-            if (node != newOwner)
+            if (node != newOwner) {
                 change |= setOwner(line, newOwner) ? LINE_OWNER_CHANGED : 0;
+                fireLineKilled(line);
+            }
             line.setOwnerClock(0);// setOwnerClockInv(line, newOwner); - TODO ???
             boolean stop = false;
             do {
@@ -2604,7 +2702,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private void addPendingMessage(CacheLine line, LineMessage message) {
-        HashSet<LineMessage> msgs = pendingMessages.get(line.getId());
+        LinkedHashSet<LineMessage> msgs = pendingMessages.get(line.getId());
         if (msgs == null) {
             msgs = new LinkedHashSet<LineMessage>();
             pendingMessages.put(line.getId(), msgs);
@@ -2762,6 +2860,24 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         for (CacheListener listener : listeners) {
             try {
                 listener.evicted(this, line.getId());
+            } catch (Exception e) {
+                LOG.error("Listener threw an exception.", e);
+            }
+        }
+    }
+
+    private void fireLineKilled(CacheLine line) {
+        LOG.debug("fireLineEviceted {}", line);
+        if (line.getListener() != null) {
+            try {
+                line.getListener().killed(this, line.getId());
+            } catch (Exception e) {
+                LOG.error("Listener threw an exception.", e);
+            }
+        }
+        for (CacheListener listener : listeners) {
+            try {
+                listener.killed(this, line.getId());
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }

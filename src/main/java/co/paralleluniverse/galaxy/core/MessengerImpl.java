@@ -75,7 +75,7 @@ public class MessengerImpl extends Component implements Messenger {
                     // do nothing - at least in this version
                 } else
                     MessengerImpl.this.receive((MSG) message);
-            }
+                }
         });
     }
 
@@ -179,20 +179,20 @@ public class MessengerImpl extends Component implements Messenger {
     private void sendToNode(short node, Msg msg) {
         if (LOG.isDebugEnabled())
             LOG.debug("Sending to node {}: {}", node, msg);
-        cache.send(Message.MSG(node, -1, Streamables.toByteArray(msg)));
+        cache.send(Message.MSG(node, -1, true, Streamables.toByteArray(msg)));
     }
 
     private void sendToOwnerOf(long line, Msg msg) throws TimeoutException {
         if (LOG.isDebugEnabled())
             LOG.debug("Sending to owner of {}: {}", Long.toHexString(line), msg);
-        final LineMessage message = Message.MSG((short) -1, line, Streamables.toByteArray(msg));
+        final LineMessage message = Message.MSG((short) -1, line, true, Streamables.toByteArray(msg));
         cache.doOp(Type.SEND, line, null, message, null);
     }
 
     private ListenableFuture<Void> sendToOwnerOfAsync(long line, Msg msg) {
         if (LOG.isDebugEnabled())
             LOG.debug("Sending to owner of {}: {}", Long.toHexString(line), msg);
-        final LineMessage message = Message.MSG((short) -1, line, Streamables.toByteArray(msg));
+        final LineMessage message = Message.MSG((short) -1, line, true, Streamables.toByteArray(msg));
         return (ListenableFuture<Void>) (Object) cache.doOpAsync(Type.SEND, line, null, message, null);
     }
 

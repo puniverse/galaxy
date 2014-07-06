@@ -14,6 +14,7 @@
 package co.paralleluniverse.galaxy;
 
 import co.paralleluniverse.common.io.Persistable;
+import co.paralleluniverse.common.io.Streamable;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 
@@ -946,4 +947,42 @@ public interface Store extends Cache {
      * @param id The item's ID.
      */
     long getVersion(long id);
+
+    /**
+     * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
+     * on the item's owning node.
+     *
+     * @param id  The item's ID.
+     * @param msg The message.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    void send(long id, Streamable data) throws TimeoutException;
+
+    /**
+     * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
+     * on the item's owning node.
+     *
+     * @param id  The item's ID.
+     * @param msg The message.
+     * @throws TimeoutException This exception is thrown if the operation has times-out.
+     */
+    void send(long id, byte[] msg) throws TimeoutException;
+
+    /**
+     * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
+     * on the item's owning node.
+     *
+     * @param id  The item's ID.
+     * @param msg The message.
+     */
+    ListenableFuture<Void> sendAsync(long id, Streamable msg);
+
+    /**
+     * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
+     * on the item's owning node.
+     *
+     * @param id  The item's ID.
+     * @param msg The message.
+     */
+    ListenableFuture<Void> sendAsync(long id, byte[] msg);
 }

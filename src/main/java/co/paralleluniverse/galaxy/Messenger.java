@@ -143,7 +143,6 @@ public interface Messenger {
      * @param ref The grid ref to whose owner the message is to be sent.
      * @param topic The message's topic.
      * @param data The message.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Void> sendToOwnerOfAsync(long ref, long topic, byte[] data);
 
@@ -153,7 +152,6 @@ public interface Messenger {
      * @param ref The grid ref to whose owner the message is to be sent.
      * @param topic The message's topic.
      * @param data The message.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Void> sendToOwnerOfAsync(long ref, String topic, byte[] data);
 
@@ -163,7 +161,6 @@ public interface Messenger {
      * @param ref The grid ref to whose owner the message is to be sent.
      * @param topic The message's topic.
      * @param data The message.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Void> sendToOwnerOfAsync(long ref, long topic, Streamable data);
 
@@ -173,7 +170,6 @@ public interface Messenger {
      * @param ref The grid ref to whose owner the message is to be sent.
      * @param topic The message's topic.
      * @param data The message.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Void> sendToOwnerOfAsync(long ref, String topic, Streamable data);
 }
