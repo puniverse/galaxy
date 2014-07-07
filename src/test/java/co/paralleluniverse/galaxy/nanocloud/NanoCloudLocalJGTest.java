@@ -1,5 +1,6 @@
 package co.paralleluniverse.galaxy.nanocloud;
 
+import static co.paralleluniverse.galaxy.testing.GalaxyTestingUtils.*;
 import java.util.concurrent.ExecutionException;
 import org.gridkit.vicluster.ViManager;
 import org.gridkit.vicluster.telecontrol.jvm.JvmProps;

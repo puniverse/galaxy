@@ -100,7 +100,6 @@ dependencies {
         exclude group: "org.slf4j", module: '*'
         exclude group: "org.ow2.asm", module: '*'
     }
-    testCompile 'org.apache.commons:commons-io:1.3.2'
 }
 
 ///////// Doduments

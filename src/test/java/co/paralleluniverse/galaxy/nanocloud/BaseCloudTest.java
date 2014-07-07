@@ -1,7 +1,6 @@
 package co.paralleluniverse.galaxy.nanocloud;
 
 import co.paralleluniverse.galaxy.Grid;
-import co.paralleluniverse.galaxy.Server;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.FileInputStream;
@@ -14,7 +13,8 @@ import org.gridkit.vicluster.ViManager;
 import org.gridkit.vicluster.ViProps;
 import org.junit.After;
 import org.junit.Before;
-
+import static co.paralleluniverse.galaxy.testing.GalaxyTestingUtils.*;
+        
 public abstract class BaseCloudTest {
 
     protected ViManager cloud;
@@ -35,24 +35,6 @@ public abstract class BaseCloudTest {
         ViManager vim = CloudFactory.createCloud();
         ViProps.at(vim.node("**")).setLocalType();
         return vim;
-    }
-
-    public static String pathToResource(final String name) {
-        return ClassLoader.getSystemClassLoader().getResource(name).getPath();
-    }
-
-    public static Runnable startGlxServer(final String serverConfig, final String serverProps) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                Server.start(pathToResource(serverConfig), pathToResource(serverProps));
-                try {
-                    Thread.sleep(Long.MAX_VALUE);
-                } catch (InterruptedException ex) {
-                    System.out.println("Interrupted.....");
-                }
-            }
-        };
     }
 
     public static Callable<Short> startWaitForLargerPeer(final int peerNum, final String configpeerxml) {
@@ -108,5 +90,4 @@ public abstract class BaseCloudTest {
     static final String SERVER_PROPS = "config/server.properties";
     static final String SERVER_ZK_CFG = "config/serverZK.xml";
     static final String SERVER_JG_CFG = "config/serverJG.xml";
-
 }
