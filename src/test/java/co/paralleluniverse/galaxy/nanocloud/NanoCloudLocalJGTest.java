@@ -4,8 +4,10 @@ import java.util.concurrent.ExecutionException;
 import org.gridkit.vicluster.ViManager;
 import org.gridkit.vicluster.telecontrol.jvm.JvmProps;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class NanoCloudLocalJGTest extends BaseCloudTest {
     @Test
     public void clusterAddTest() throws InterruptedException, ExecutionException {
