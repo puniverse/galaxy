@@ -283,6 +283,7 @@ task javancss(dependsOn: 'classes') << {
 /////// Others
 tasks.withType(Test) { 
     systemProperty "log4j.configurationFile", "log4j.xml"
+    systemProperty "jgroups.bind_addr", "127.0.0.1"
     systemProperty "Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector"
     useJUnit()
     doLast() {

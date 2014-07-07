@@ -1,79 +1,106 @@
 package co.paralleluniverse.galaxy.nanocloud;
 
-
-
+import co.paralleluniverse.galaxy.Grid;
+import co.paralleluniverse.galaxy.Server;
+import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
+import com.google.common.util.concurrent.SettableFuture;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.URLClassLoader;
-import java.util.Arrays;
+import java.util.Properties;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import org.gridkit.nanocloud.CloudFactory;
 
 import org.gridkit.vicluster.ViManager;
 import org.gridkit.vicluster.ViNode;
 import org.gridkit.vicluster.ViNodeSet;
+import org.gridkit.vicluster.ViProps;
 import org.junit.After;
 
 public abstract class BaseCloudTest {
 
-	protected ViManager cloud;
+    protected ViManager cloud;
 
-	@After
-	public void recycleCloud() {
-		if (cloud != null) {
-			cloud.shutdown();
-		}
-	}	
-	
-	protected void sayHelloWorld(ViNodeSet cloud) {
+    @After
+    public void recycleCloud() {
+        if (cloud != null) {
+            cloud.shutdown();
+        }
+    }
 
-		// two starts will match any node name
-		ViNode allNodes = cloud.node("**");
-		
-		allNodes.exec(new Callable<Void>() {
+    public static ViManager createLocalCloud() {
+        ViManager vim = CloudFactory.createCloud();
+        ViProps.at(vim.node("**")).setLocalType();
+        return vim;
+    }
 
-			@Override
-			public Void call() throws Exception {
-				String jvmName = ManagementFactory.getRuntimeMXBean().getName();
-				System.out.println("My name is '" + jvmName + "'. Hello!");
-				return null;
-			}
-		});
-	}
+    public static String pathToResource(final String name) {
+        return ClassLoader.getSystemClassLoader().getResource(name).getPath();
+    }
 
-	protected void reportMemory(ViNodeSet cloud) {
-		
-		// two starts will match any node name
-		ViNode allNodes = cloud.node("**");
-		
-		allNodes.exec(new Callable<Void>() {
-			
-			@Override
-			public Void call() throws Exception {
-				String jvmName = ManagementFactory.getRuntimeMXBean().getName();
-				long totalMemory = Runtime.getRuntime().maxMemory();
-				System.out.println("My name is '" + jvmName + "'. Memory limit is " + (totalMemory >> 20) + "MiB");
-				return null;
-			}
-		});
-	}
+    public static Runnable startGlxServer() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                Server.start(pathToResource("config/server.xml"), pathToResource("config/server.properties"));
+                try {
+                    Thread.sleep(Long.MAX_VALUE);
+                } catch (InterruptedException ex) {
+                    System.out.println("Interrupted.....");
+                }
+            }
+        };
+    }
 
-	/**
-	 * This method will force initialization of all declared nodes.
-	 */
-	protected void warmUp(ViNodeSet cloud) {
-		// two starts will match any node name
-		ViNode allNodes = cloud.node("**");
-		
-		// ViNode object may represent a single node or a group
-		
-		// ViNode.exec(...) call has blocking semantic so it will force all 
-		// lazy initialization to finish and wait until runnable is executed 
-		// on every node in group 
-		allNodes.exec(new Runnable() {
-			@Override
-			public void run() {
-				// do nothing
-			}
-		});
-                
-	}		
+    public static Callable<Short> startWaitForLargerPeer(final int peerNum, final String configpeerxml) {
+        return new Callable<Short>() {
+            @Override
+            public Short call() throws IOException, InterruptedException, ExecutionException {
+                System.out.println("STARTING PEER " + peerNum);
+                Properties props = new Properties();
+                props.load(new FileInputStream(pathToResource("config/server.properties")));
+                props.setProperty("galaxy.nodeId", Integer.toString(peerNum));
+                props.setProperty("galaxy.port", Integer.toString(7050 + peerNum));
+                props.setProperty("galaxy.slave_port", Integer.toString(8050 + peerNum));
+                props.setProperty("galaxy.multicast.address", "225.0.0.1");
+                props.setProperty("galaxy.multicast.port", Integer.toString(7050));
+
+                final Grid grid = Grid.getInstance(pathToResource(configpeerxml), props);
+                grid.goOnline();
+                final SettableFuture<Short> future = SettableFuture.create();
+                grid.cluster().addNodeChangeListener(new NodeChangeListener() {
+                    @Override
+                    public void nodeAdded(short id) {
+                        if (id > grid.cluster().getMyNodeId()) {
+                            System.out.println("Larger peer added !!");
+                            future.set(id);
+                        }
+                    }
+
+                    @Override
+                    public void nodeSwitched(short id) {
+                    }
+
+                    @Override
+                    public void nodeRemoved(short id) {
+                    }
+                });
+                for (Short node : grid.cluster().getNodes()) {
+                    if (node > grid.cluster().getMyNodeId()) {
+                        System.out.println("Larger peer have already up !!");
+                        return node;
+                    }
+                }
+                return future.get();
+            }
+        };
+    }
+
+    static final String SERVER = "server";
+    static final String PEER2 = "peer2";
+    static final String PEER1 = "peer1";
+    static final String PEER_NO_SERVER_CFG = "config/peerNoServer.xml";
+    static final String PEER_WITH_SERVER_CFG = "config/peerWithServer.xml";
+
 }
