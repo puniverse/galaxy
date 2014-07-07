@@ -25,14 +25,14 @@ public interface Persistable {
     int size();
 
     /**
-     * Writes the object to the given {@link ByteBuffer}.<br/>
+     * Writes the object to the given {@link ByteBuffer}.<br>
      * Upon return from this method, the buffer's {@link ByteBuffer#position() position} will have advanced past the written data.
      * @param buffer The buffer to which the object is to be written.
      */
     void write(ByteBuffer buffer);
 
     /**
-     * Reads the object from the given {@link ByteBuffer}.<br/>
+     * Reads the object from the given {@link ByteBuffer}.<br>
      * Upon return from this method, the buffer's {@link ByteBuffer#position() position} will have advanced past the read data.
      * @param buffer The buffer from which the object is to be read.
      */

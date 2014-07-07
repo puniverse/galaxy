@@ -20,18 +20,18 @@ import java.util.List;
  * <p>
  * Nodes in the tree are organized in a directory structure: each tree-node (not to be confused with <i>cluster nodes</i>, or machines) may have sub-nodes (children) as well as byte data associated
  * with it (the node's <i>contents</i>). The nodes are named in the following manner: the root of the tree is called "/", and generations are separated by the '/' (forward-slash) character. A node may
- * have the <i>simple name</i> "mynode" and its <i>full path</i> may be "/grandparent/parent/mynode". All full paths must begin with a "/".<br/>
+ * have the <i>simple name</i> "mynode" and its <i>full path</i> may be "/grandparent/parent/mynode". All full paths must begin with a "/".<br>
  *
  * The tree is available to all nodes (machines) in the cluster, and any change is immediately visible to all of them. The tree provides an important <i>ordering guarantee</i>: All children (of a
  * certain node) appear (throughout the cluster) <b>in the order in which they've been created</b>.
- * <p/>
+ * <p>
  * The tree also provides <i>ephemeral</i> nodes: those are automatically deleted when the creating cluster-node (machine) goes offline, i.e. disconnected from the cluster for whatever reason -
  * intentional or due to some fault.
  */
 public interface DistributedTree {
     /**
      * Creates a new node in the tree. All nonexistent parent nodes are also created (i.e. all nonexistent nodes along the path).
-     * <p/>
+     * <p>
      * The node can be <i>ephemeral</i> in which case, it and all its descendents will be deleted automatically when the creating cluster-node (this machine) goes offline, i.e. disconnected from the
      * cluster for whatever reason - intentional or due to some fault. Non-ephemeral (<i>permanent</i>) nodes persist in the tree until the entire cluster is taken down.<br/>
      *

@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
  */
 public interface VersionedPersistable extends Persistable {
     /**
-     * Reads the object from the given {@link ByteBuffer}.<br/>
+     * Reads the object from the given {@link ByteBuffer}.<br>
      * Upon return from this method, the buffer's {@link ByteBuffer#position() position} will have advanced past the read data.
      * 
      * @param version The version of the object's persisted data.

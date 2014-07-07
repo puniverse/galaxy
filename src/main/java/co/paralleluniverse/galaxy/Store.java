@@ -81,7 +81,7 @@ public interface Store extends Cache {
     /**
      * Gets or possibly creates a root data item. The same item ID will be returned when this method is called on any
      * cluster node with the same root name.
-     * <p/>
+     * <p>
      * You can test if the root has been newly created by this transaction by calling .
      *
      * @param rootName The root's name.
@@ -94,7 +94,7 @@ public interface Store extends Cache {
     /**
      * Gets or possibly creates a root data item. The same item ID will be returned when this method is called on any
      * cluster node with the same root name.
-     * <p/>
+     * <p>
      * You can test if the root has been newly created by this transaction by calling .
      *
      * @param rootName The root's name.
@@ -142,9 +142,9 @@ public interface Store extends Cache {
     CacheListener getListener(long id);
 
     /**
-     * Allocates one or more new (and empty) items in the store.<p/>
+     * Allocates one or more new (and empty) items in the store.<p>
      * When allocating a single item, it's better to use {@link #put(byte[], StoreTransaction) put()}, but some data
-     * structures might require allocating an array of items.<br/>
+     * structures might require allocating an array of items.<br>
      *
      * @param count The number of items to allocate.
      * @param txn   The current transaction. May not be null.
@@ -155,7 +155,7 @@ public interface Store extends Cache {
     long alloc(int count, StoreTransaction txn) throws TimeoutException;
 
     /**
-     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     * Puts a new item into the store and returns its (newly allocated) ID.<p>
      *
      * @param data The item's contents.
      * @param txn  The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -165,7 +165,7 @@ public interface Store extends Cache {
     long put(byte[] data, StoreTransaction txn) throws TimeoutException;
 
     /**
-     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     * Puts a new item into the store and returns its (newly allocated) ID.<p>
      *
      * @param data The item's contents.
      * @param txn  The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -175,7 +175,7 @@ public interface Store extends Cache {
     long put(ByteBuffer data, StoreTransaction txn) throws TimeoutException;
 
     /**
-     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     * Puts a new item into the store and returns its (newly allocated) ID.<p>
      *
      * @param object The item's contents.
      * @param txn    The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -204,7 +204,7 @@ public interface Store extends Cache {
 
     /**
      * Retrieves a given data item, using a hint as to its {@link #getx(long, StoreTransaction) owner} in the
-     * cluster.<br/>
+     * cluster.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -218,7 +218,7 @@ public interface Store extends Cache {
 
     /**
      * Retrieves a given data item into a {@link Persistable}, using a hint as to its {@link #getx(long, StoreTransaction) owner}
-     * in the cluster.<br/>
+     * in the cluster.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -233,7 +233,7 @@ public interface Store extends Cache {
     /**
      * Retrieves a given data item, using a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster.
      * Unlike the direct hint given in {@link #get(long, short) get(long, short)}, the hinted node here is the owner of
-     * a given item.<br/>
+     * a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -248,7 +248,7 @@ public interface Store extends Cache {
     /**
      * Retrieves a given data item, using a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster.
      * Unlike the direct hint given in {@link #get(long, short, Persistable) get(long, short, Persistable)}, the hinted
-     * node here is the owner of a given item.<br/>
+     * node here is the owner of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -289,7 +289,7 @@ public interface Store extends Cache {
      * Retrieves a given data item with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster, and
      * pins the shared (cached) instance to this node. What this means is that while other nodes will be able to read
      * the same item, no node will be able to update it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it. <br/>
+     * or {@link #release(long) release} it. <br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -306,7 +306,7 @@ public interface Store extends Cache {
      * Retrieves a given data item into a {@link Persistable} with a hint as to its {@link #getx(long, StoreTransaction) owner}
      * in the cluster, and pins the shared (cached) instance to this node. What this means is that while other nodes
      * will be able to read the same item, no node will be able to update it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it.<br/>
+     * or {@link #release(long) release} it.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -324,7 +324,7 @@ public interface Store extends Cache {
      * pins the shared (cached) instance to this node. What this means is that while other nodes will be able to update
      * it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction} or {@link #release(long) release}
      * it. Unlike the direct hint given in
-     * {@link #gets(long, short, StoreTransaction)}, the hinted node here is the owner of a given item.<br/>
+     * {@link #gets(long, short, StoreTransaction)}, the hinted node here is the owner of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -341,8 +341,8 @@ public interface Store extends Cache {
      * Retrieves a given data item with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster, and
      * pins the shared (cached) instance to this node. What this means is that while other nodes will be able to read
      * the same item, no node will be able to update it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it.<br/> Unlike the direct hint given in {@link #gets(long, short, Persistable, StoreTransaction)},
-     * the hinted node here is the owner of a given item.<br/>
+     * or {@link #release(long) release} it.<br> Unlike the direct hint given in {@link #gets(long, short, Persistable, StoreTransaction)},
+     * the hinted node here is the owner of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -383,7 +383,7 @@ public interface Store extends Cache {
      * Retrieves a given data item with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster,
      * makes this node its exclusive owner, and pins it. What this means is that no other node will be able to read or
      * update the same item until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it.<br/>
+     * or {@link #release(long) release} it.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -400,7 +400,7 @@ public interface Store extends Cache {
      * Retrieves a given data item with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster,
      * makes this node its exclusive owner, and pins it. What this means is that no other node will be able to read or
      * update the same item until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction} or {@link #release(long) release}
-     * it.<br/>
+     * it.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -420,7 +420,7 @@ public interface Store extends Cache {
      * it.
      *
      * Unlike the direct hint given in {@link #getx(long, short, StoreTransaction)}, the hinted node here is the owner
-     * of a given item.<br/>
+     * of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -440,7 +440,7 @@ public interface Store extends Cache {
      * it.
      *
      * Unlike the direct hint given in {@link #getx(long, short, Persistable, StoreTransaction)}, the hinted node here
-     * is the owner of a given item.<br/>
+     * is the owner of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -497,9 +497,9 @@ public interface Store extends Cache {
     <T> T invoke(long id, LineFunction<T> function) throws TimeoutException;
 
     /**
-     * Allocates one or more new (and empty) items in the store.<p/>
+     * Allocates one or more new (and empty) items in the store.<p>
      * When allocating a single item, it's better to use {@link #put(byte[], StoreTransaction) put()}, but some data
-     * structures might require allocating an array of items.<br/>
+     * structures might require allocating an array of items.<br>
      *
      * @param count The number of items to allocate.
      * @param txn   The current transaction. May not be null.
@@ -510,7 +510,7 @@ public interface Store extends Cache {
     ListenableFuture<Long> allocAsync(int count, StoreTransaction txn);
 
     /**
-     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     * Puts a new item into the store and returns its (newly allocated) ID.<p>
      *
      * @param data The item's contents.
      * @param txn  The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -520,7 +520,7 @@ public interface Store extends Cache {
     ListenableFuture<Long> putAsync(byte[] data, StoreTransaction txn);
 
     /**
-     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     * Puts a new item into the store and returns its (newly allocated) ID.<p>
      *
      * @param data The item's contents.
      * @param txn  The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
@@ -530,12 +530,11 @@ public interface Store extends Cache {
     ListenableFuture<Long> putAsync(ByteBuffer data, StoreTransaction txn);
 
     /**
-     * Puts a new item into the store and returns its (newly allocated) ID.<p/>
+     * Puts a new item into the store and returns its (newly allocated) ID.<p>
      *
      * @param object The item's contents.
      * @param txn    The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return The item's (newly allocated) ID.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Long> putAsync(Persistable object, StoreTransaction txn);
 
@@ -565,7 +564,7 @@ public interface Store extends Cache {
 
     /**
      * Retrieves a given data item asynchronously, using a hint as to its {@link #getx(long, StoreTransaction) owner} in
-     * the cluster. <br/>If the item is indeed found on the hinted node, the retrieval performance might be superior. If
+     * the cluster. <br>If the item is indeed found on the hinted node, the retrieval performance might be superior. If
      * not, the method will still work, but performance may be worse.
      *
      * <p>
@@ -579,7 +578,7 @@ public interface Store extends Cache {
 
     /**
      * Retrieves a given data item asynchronously into a {@link Persistable}, using a hint as to its {@link #getx(long, StoreTransaction) owner}
-     * in the cluster. <br/>If the item is indeed found on the hinted node, the retrieval performance might be superior.
+     * in the cluster. <br>If the item is indeed found on the hinted node, the retrieval performance might be superior.
      * If not, the method will still work, but performance may be worse.
      *
      * <p>
@@ -596,7 +595,7 @@ public interface Store extends Cache {
     /**
      * Retrieves a given data item asynchronously, using a hint as to its {@link #getx(long, StoreTransaction) owner} in
      * the cluster. Unlike the direct hint given in {@link #get(long, short) get(long, short)}, the hinted node here is
-     * the owner of a given item. <br/>If the item is indeed found on the hinted node, the retrieval performance might
+     * the owner of a given item. <br>If the item is indeed found on the hinted node, the retrieval performance might
      * be superior. If not, the method will still work, but performance may be worse.
      *
      * <p>
@@ -611,7 +610,7 @@ public interface Store extends Cache {
     /**
      * Retrieves a given data item asynchronously, using a hint as to its {@link #getx(long, StoreTransaction) owner} in
      * the cluster. Unlike the direct hint given in {@link #get(long, short, Persistable) get(long, short, Persistable)},
-     * the hinted node here is the owner of a given item. <br/>If the item is indeed found on the hinted node, the
+     * the hinted node here is the owner of a given item. <br>If the item is indeed found on the hinted node, the
      * retrieval performance might be superior. If not, the method will still work, but performance may be worse.
      *
      * <p>
@@ -658,7 +657,7 @@ public interface Store extends Cache {
      * Retrieves a given data item asynchronously with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster,
      * and pins the shared (cached) instance to this node. What this means is that while other nodes will be able to
      * read the same item, no node will be able to update it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it. <br/>
+     * or {@link #release(long) release} it. <br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -677,7 +676,7 @@ public interface Store extends Cache {
      * Retrieves a given data asynchronously item into a {@link Persistable} with a hint as to its {@link #getx(long, StoreTransaction) owner}
      * in the cluster, and pins the shared (cached) instance to this node. What this means is that while other nodes
      * will be able to read the same item, no node will be able to update it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it.<br/>
+     * or {@link #release(long) release} it.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -698,7 +697,7 @@ public interface Store extends Cache {
      * and pins the shared (cached) instance to this node. What this means is that while other nodes will be able to
      * update it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
      * or {@link #release(long) release} it. Unlike the direct hint given in
-     * {@link #gets(long, short, StoreTransaction)}, the hinted node here is the owner of a given item.<br/>
+     * {@link #gets(long, short, StoreTransaction)}, the hinted node here is the owner of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -717,8 +716,8 @@ public interface Store extends Cache {
      * Retrieves a given data item asynchronously with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster, and
      * pins the shared (cached) instance to this node. What this means is that while other nodes will be able to read
      * the same item, no node will be able to update it until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it.<br/> Unlike the direct hint given in {@link #gets(long, short, Persistable, StoreTransaction)},
-     * the hinted node here is the owner of a given item.<br/>
+     * or {@link #release(long) release} it.<br> Unlike the direct hint given in {@link #gets(long, short, Persistable, StoreTransaction)},
+     * the hinted node here is the owner of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -767,7 +766,7 @@ public interface Store extends Cache {
      * Retrieves a given data item asynchronously with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster,
      * makes this node its exclusive owner, and pins it. What this means is that no other node will be able to read or
      * update the same item until until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction}
-     * or {@link #release(long) release} it.<br/>
+     * or {@link #release(long) release} it.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -786,7 +785,7 @@ public interface Store extends Cache {
      * Retrieves a given data item asynchronously with a hint as to its {@link #getx(long, StoreTransaction) owner} in the cluster,
      * makes this node its exclusive owner, and pins it. What this means is that no other node will be able to read or
      * update the same item until we {@link #commit(co.paralleluniverse.galaxy.StoreTransaction) end the transaction} or {@link #release(long) release}
-     * it.<br/>
+     * it.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -809,7 +808,7 @@ public interface Store extends Cache {
      * it.
      *
      * Unlike the direct hint given in {@link #getx(long, short, StoreTransaction)}, the hinted node here is the owner
-     * of a given item.<br/>
+     * of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -831,7 +830,7 @@ public interface Store extends Cache {
      * it.
      *
      * Unlike the direct hint given in {@link #getx(long, short, Persistable, StoreTransaction)}, the hinted node here
-     * is the owner of a given item.<br/>
+     * is the owner of a given item.<br>
      *
      * If the item is indeed found on the hinted node, the retrieval performance might be superior. If not, the method
      * will still work, but performance may be worse.
@@ -891,7 +890,7 @@ public interface Store extends Cache {
     ListenableFuture<Void> delAsync(long id, StoreTransaction txn);
 
     /**
-     * Makes the given item available in the given nodes' cache. <br/>
+     * Makes the given item available in the given nodes' cache. <br>
      *
      * While this method is never necessary for the correct operation of the grid, in some special circumstances it
      * might improve performance if we know that the given nodes will soon be interested in reading the item (e.g. as a
@@ -903,7 +902,7 @@ public interface Store extends Cache {
     void push(long id, short... toNodes);
 
     /**
-     * Makes the given item available in the given node's cache, and makes that node the owner of the item. <br/>
+     * Makes the given item available in the given node's cache, and makes that node the owner of the item. <br>
      *
      * While this method is never necessary for the correct operation of the grid, in some special circumstances it
      * might improve performance if we know that the given node will soon be interested in reading or updating the item
@@ -956,7 +955,7 @@ public interface Store extends Cache {
      * @param msg The message.
      * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
-    void send(long id, Streamable data) throws TimeoutException;
+    void send(long id, Streamable msg) throws TimeoutException;
 
     /**
      * Sends a message to an item, which will be received by {@link CacheListener#messageReceived(byte[]) CacheListener.messageReceived}
