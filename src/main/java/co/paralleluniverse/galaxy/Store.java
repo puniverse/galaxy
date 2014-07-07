@@ -505,7 +505,6 @@ public interface Store extends Cache {
      * @param txn   The current transaction. May not be null.
      * @return The id of the first item in the allocated array. The following {@code count - 1} IDs belong to the
      *         following elements of the array.
-     * @throws TimeoutException
      */
     ListenableFuture<Long> allocAsync(int count, StoreTransaction txn);
 
@@ -515,7 +514,6 @@ public interface Store extends Cache {
      * @param data The item's contents.
      * @param txn  The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return The item's (newly allocated) ID.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Long> putAsync(byte[] data, StoreTransaction txn);
 
@@ -525,7 +523,6 @@ public interface Store extends Cache {
      * @param data The item's contents.
      * @param txn  The current transaction. May be null, in which case you must later call {@link #release(long) release(id)}.
      * @return The item's (newly allocated) ID.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Long> putAsync(ByteBuffer data, StoreTransaction txn);
 
@@ -588,7 +585,6 @@ public interface Store extends Cache {
      * @param nodeHint The ID of the node the data item is probably owned by.
      * @param object   The object into which the contents of the item will be written.
      * @return A future that will return the passed object.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Persistable> getAsync(long id, short nodeHint, Persistable object);
 
@@ -855,7 +851,6 @@ public interface Store extends Cache {
      * @param data The contents to write into the item.
      * @param txn  The current transaction. May be null.
      * @return A Void future (that always returns null) that waits for the completion of this operation.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Void> setAsync(long id, byte[] data, StoreTransaction txn);
 
@@ -868,7 +863,6 @@ public interface Store extends Cache {
      * @param data The contents to write into the item.
      * @param txn  The current transaction. May be null.
      * @return A Void future (that always returns null) that waits for the completion of this operation.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Void> setAsync(long id, ByteBuffer data, StoreTransaction txn);
 
@@ -881,7 +875,6 @@ public interface Store extends Cache {
      * @param object The contents to write into the item.
      * @param txn    The current transaction. May be null.
      * @return A Void future (that always returns null) that waits for the completion of this operation.
-     * @throws TimeoutException This exception is thrown if the operation has times-out.
      */
     ListenableFuture<Void> setAsync(long id, Persistable object, StoreTransaction txn);
 

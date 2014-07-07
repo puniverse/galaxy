@@ -33,7 +33,7 @@ public interface DistributedTree {
      * Creates a new node in the tree. All nonexistent parent nodes are also created (i.e. all nonexistent nodes along the path).
      * <p>
      * The node can be <i>ephemeral</i> in which case, it and all its descendents will be deleted automatically when the creating cluster-node (this machine) goes offline, i.e. disconnected from the
-     * cluster for whatever reason - intentional or due to some fault. Non-ephemeral (<i>permanent</i>) nodes persist in the tree until the entire cluster is taken down.<br/>
+     * cluster for whatever reason - intentional or due to some fault. Non-ephemeral (<i>permanent</i>) nodes persist in the tree until the entire cluster is taken down.<br>
      *
      * If the node is marked as ephemeral, all <b>nonexistent</b> ancestors that will be created in the process will be ephemeral as well.
      *

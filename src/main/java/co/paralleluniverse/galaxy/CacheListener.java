@@ -26,7 +26,7 @@ public interface CacheListener {
     void invalidated(Cache cache, long id);
 
     /**
-     * The data item has been updated by another node. This is the opposite of the {@link #invalidated(long) invalidated} event. This method is not called when the item is 
+     * The data item has been updated by another node. This is the opposite of the {@link #invalidated(Cache, long) invalidated} event. This method is not called when the item is 
      * modified locally by a {@link Store#set(long, byte[], StoreTransaction) set()}.
      * 
      * @param id The item's ID.
@@ -51,7 +51,6 @@ public interface CacheListener {
      * Called when a message has been received.
      *
      * @param message  The message's contents.
-     * @return {@code true} if the message has been processed; {@code false} otherwise, 
      */
     void messageReceived(byte[] message);
 }
