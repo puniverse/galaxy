@@ -78,7 +78,12 @@
     <pbcast.GMS print_local_addr="true" join_timeout="3000"
 
                 view_bundling="true"/>
-    <MFC max_credits="2M"
+                    <SEQUENCER />
+                    <UFC max_credits="2M"
+                         min_threshold="0.4"/>
+                        <COUNTER bypass_bundling="true" 
+                             timeout="5000"/>
+<MFC max_credits="2M"
          min_threshold="0.4"/>
     <FRAG2 frag_size="60K"  />
     <!--RSVP resend_interval="2000" timeout="10000"/-->

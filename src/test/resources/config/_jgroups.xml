@@ -25,16 +25,14 @@
                     <UDP
                         mcast_port="${jgroups.udp.mcast_port:45588}"
                         tos="8"
-                        ucast_recv_buf_size="20M"
+                        ucast_recv_buf_size="4M"
                         ucast_send_buf_size="640K"
-                        mcast_recv_buf_size="25M"
+                        mcast_recv_buf_size="4M"
                         mcast_send_buf_size="640K"
                         loopback="true"
-                        discard_incompatible_packets="true"
                         max_bundle_size="64K"
                         max_bundle_timeout="30"
                         ip_ttl="${jgroups.udp.ip_ttl:8}"
-                        enable_bundling="true"
                         enable_diagnostics="true"
                         thread_naming_pattern="cl"
 

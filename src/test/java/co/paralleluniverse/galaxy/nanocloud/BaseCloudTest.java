@@ -6,21 +6,23 @@ import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import org.gridkit.nanocloud.CloudFactory;
-
 import org.gridkit.vicluster.ViManager;
-import org.gridkit.vicluster.ViNode;
-import org.gridkit.vicluster.ViNodeSet;
 import org.gridkit.vicluster.ViProps;
 import org.junit.After;
+import org.junit.Before;
 
 public abstract class BaseCloudTest {
 
     protected ViManager cloud;
+
+    @Before
+    public void defineCloud() {
+        cloud = createLocalCloud();
+    }
 
     @After
     public void recycleCloud() {
@@ -39,11 +41,11 @@ public abstract class BaseCloudTest {
         return ClassLoader.getSystemClassLoader().getResource(name).getPath();
     }
 
-    public static Runnable startGlxServer() {
+    public static Runnable startGlxServer(final String serverConfig, final String serverProps) {
         return new Runnable() {
             @Override
             public void run() {
-                Server.start(pathToResource("config/server.xml"), pathToResource("config/server.properties"));
+                Server.start(pathToResource(serverConfig), pathToResource(serverProps));
                 try {
                     Thread.sleep(Long.MAX_VALUE);
                 } catch (InterruptedException ex) {
@@ -59,7 +61,7 @@ public abstract class BaseCloudTest {
             public Short call() throws IOException, InterruptedException, ExecutionException {
                 System.out.println("STARTING PEER " + peerNum);
                 Properties props = new Properties();
-                props.load(new FileInputStream(pathToResource("config/server.properties")));
+                props.load(new FileInputStream(pathToResource(SERVER_PROPS)));
                 props.setProperty("galaxy.nodeId", Integer.toString(peerNum));
                 props.setProperty("galaxy.port", Integer.toString(7050 + peerNum));
                 props.setProperty("galaxy.slave_port", Integer.toString(8050 + peerNum));
@@ -101,6 +103,10 @@ public abstract class BaseCloudTest {
     static final String PEER2 = "peer2";
     static final String PEER1 = "peer1";
     static final String PEER_NO_SERVER_CFG = "config/peerNoServer.xml";
-    static final String PEER_WITH_SERVER_CFG = "config/peerWithServer.xml";
+    static final String PEER_WITH_ZK_SERVER_CFG = "config/peerWithZKServer.xml";
+    static final String PEER_WITH_JG_SERVER_CFG = "config/peerWithJGServer.xml";
+    static final String SERVER_PROPS = "config/server.properties";
+    static final String SERVER_ZK_CFG = "config/serverZK.xml";
+    static final String SERVER_JG_CFG = "config/serverJG.xml";
 
 }
