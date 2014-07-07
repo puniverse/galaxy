@@ -53,7 +53,7 @@ public final class Streamables {
     /**
      * Reads a {@link Streamable}'s serialized contents from a byte array.
      * The serialized form begins in the beginning of the array and extends to the end of the array.
-     * <p/>
+     * <p>
      * Same as calling {@link #fromByteArray(co.paralleluniverse.common.io.Streamable, byte[], int, int) fromByteArray(streamable, array, 0, array.length)}.
      * 
      * @param streamable The object whose contents are to be read.
@@ -66,7 +66,7 @@ public final class Streamables {
     /**
      * Reads a {@link Streamable}'s serialized contents from a byte array.
      * The serialized form begins in the given offset and extends to the end of the array.
-     * <p/>
+     * <p>
      * Same as calling {@link #fromByteArray(co.paralleluniverse.common.io.Streamable, byte[], int, int) fromByteArray(streamable, array, offset, array.length - offset)}.
      * 
      * @param streamable The object whose contents are to be read.

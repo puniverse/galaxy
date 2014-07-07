@@ -20,6 +20,7 @@ if (!project.hasProperty("sonatypeUsername") || !project.hasProperty("sonatypePa
     sonatypeUsername = ""
     sonatypePassword = ""
 }
+
 configurations {
     all*.exclude group: 'javax.jms', module: 'jms'
     all*.exclude group: 'com.sun.jdmk', module: 'jmxtools'
@@ -46,18 +47,20 @@ dependencies {
     compile "net.sf.trove4j:trove4j:3.0.3"
     compile "org.springframework:spring-beans:4.0.5.RELEASE"
     compile "org.springframework:spring-context:4.0.5.RELEASE"
-    compile "com.codahale.metrics:metrics-core:3.0.2" 
-    compile "io.netty:netty:3.9.1.Final"
+    compile ("com.codahale.metrics:metrics-core:3.0.2") {
+        exclude group: "org.slf4j", module: '*'
+    }
+    compile "io.netty:netty:3.9.2.Final"
     compile "org.jgroups:jgroups:3.4.4.Final"
     compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4"
     compile "com.sleepycat:je:5.0.73"
     compile "co.parallelunivese:high-scale-lib:" // non-Maven
-    runtime "org.slf4j:slf4j-api:1.7.5"
-    runtime "org.slf4j:jcl-over-slf4j:1.7.5"
-    runtime "org.slf4j:log4j-over-slf4j:1.7.5"   
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-rc1"
-    runtime "org.apache.logging.log4j:log4j-api:2.0-rc1"
-    runtime "org.apache.logging.log4j:log4j-core:2.0-rc1"
+    compile "org.slf4j:slf4j-api:1.7.7"
+    runtime "org.slf4j:jcl-over-slf4j:1.7.7"
+    runtime "org.slf4j:log4j-over-slf4j:1.7.7"
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-rc2"
+    runtime "org.apache.logging.log4j:log4j-api:2.0-rc2"
+    runtime "org.apache.logging.log4j:log4j-core:2.0-rc2"
     runtime "com.lmax:disruptor:3.2.1" // required for log4j
     compile("org.apache.zookeeper:zookeeper:3.4.6") {
         exclude group: "org.slf4j", module: '*'
@@ -87,6 +90,9 @@ dependencies {
         exclude group: "com.esotericsoftware.kryo", module: '*'
     }
     testCompile "junit:junit:4.11"
+    testCompile ('org.truth0:truth:0.22') {
+        exclude group: 'junit', module: '*'
+    }
     testCompile "org.hamcrest:hamcrest-core:1.3"
     testCompile "org.hamcrest:hamcrest-library:1.3"
     testCompile "org.mockito:mockito-all:1.9.5"
@@ -186,7 +192,7 @@ apply plugin: 'github-pages'
 //githubPages { repoUri = 'https://github.com/puniverse/galaxy.git' }
 buildscript {
     repositories { mavenCentral() }
-    dependencies { classpath 'org.ajoberstar:gradle-git:0.8.0' }
+    dependencies { classpath 'org.ajoberstar:gradle-git:0.9.0' }
 }
 
 ///////// Publish Artifacts 
@@ -201,8 +207,10 @@ artifacts {
 }
 
 signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
 }
+
 // remove high scale lib from local install pom
 configure(install.repositories.mavenInstaller) {
     pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
@@ -291,6 +299,21 @@ tasks.withType(Test) {
     }    
 }
 
+test {
+    beforeTest { desc ->
+        logger.quiet("Running test: " + desc)
+    }
+        
+    afterTest { desc, result -> 
+        if(result.resultType == TestResult.ResultType.FAILURE) {
+            logger.quiet("Failed test ${desc.name} [${desc.className}] with exception: ${result.exception}")
+            if(result.exception != null) {
+                result.exception.printStackTrace()
+            }
+        }
+    }
+}
+    
 task wrapper(type: Wrapper) {
     gradleVersion = '1.10'
 }

@@ -88,7 +88,7 @@ public final class Persistables {
     }
 
     /**
-     * Returns an array containing a {@link ByteBuffer}'s {@link ByteBuffer#remaining() remaining} contents. <br/> Upon returning
+     * Returns an array containing a {@link ByteBuffer}'s {@link ByteBuffer#remaining() remaining} contents. <br> Upon returning
      * from this method, the buffer's {@link ByteBuffer#position() position} will remain unchanged.
      *
      * @param buffer The buffer to write into the array.
@@ -110,10 +110,10 @@ public final class Persistables {
     }
 
     /**
-     * Returns a newly-allocated copy of a given {@link ByteBuffer}'s {@link ByteBuffer#remaining() remaining} contents. <br/>
+     * Returns a newly-allocated copy of a given {@link ByteBuffer}'s {@link ByteBuffer#remaining() remaining} contents. <br>
      * Upon return from this method, the original buffer's {@link ByteBuffer#position() position} will be unchanged, and the
      * returned buffer's position will be 0.
-     * <p/>
+     * <p>
      * This method is not thread-safe.
      *
      * @param buffer The buffer to copy.
@@ -135,9 +135,9 @@ public final class Persistables {
 
     /**
      * Returns a newly allocated {@link ByteBuffer#slice()} of a given {@link ByteBuffer}. The slice and the original buffer will
-     * share their contents. <br/> Upon return from this method, the original buffer's {@link ByteBuffer#position() position} will
+     * share their contents. <br> Upon return from this method, the original buffer's {@link ByteBuffer#position() position} will
      * be unchanged, and the returned buffer's position will be 0.
-     * <p/>
+     * <p>
      * This method is not thread-safe.
      *
      * @param buffer The buffer to slice.
@@ -159,10 +159,10 @@ public final class Persistables {
 
     /**
      * Returns a newly allocated {@link ByteBuffer#slice()}, starting from the current {@link ByteBuffer#position() position}, of
-     * a given {@link ByteBuffer}. The slice and the original buffer will share their contents. <br/> Upon return from this
+     * a given {@link ByteBuffer}. The slice and the original buffer will share their contents. <br> Upon return from this
      * method, the original buffer's {@link ByteBuffer#position() position} will have advanced by {@code length}, and the returned
      * buffer's position will be 0.
-     * <p/>
+     * <p>
      * This method is not thread-safe.
      *
      * @param buffer The buffer to slice.

@@ -188,7 +188,7 @@ public interface Cluster {
      * Adds a new node property that will be visible on the cluster. <p> If {@code required} is true, tells the cluster that each node must have the given property set to a non-null value in order to
      * be online. This would not normally be done by a user process, as it would require that his method be called during the Spring container initialization, i.e. in a {@link Component}'s {@link Component#init() init()}
      * or {@link Component#postInit() postInit()}.
-     * <p/>
+     * <p>
      * @param property The property's name.
      * @param requiredForPeer Whether a non-null value for this property is required for the a peer to be online. For properties added by user processes, this should be {@code false}.
      * @param requiredForServer Whether a non-null value for this property is required for a server node to be online. For properties added by user processes, this should be {@code false}.

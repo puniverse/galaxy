@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Helps deal with a branch of a distributed tree, when we want to consider the nodes only when they have given sub-nodes ("required properties").
- * <p/>
+ * <p>
  * If the underlying nodes are ordered and the helper is constructed with the ordered option, the handlers are called in the order the main nodes
  * (the branch's children) were originally created, not the order in which they've become "completed" (their required properties satisfied)! <b>Important:</b> Assumes that once required properties are
  * set they are never removed or unset (set to null), though they can be changed.
