@@ -137,9 +137,7 @@ public class SQLDB extends Component implements MainMemoryDB {
 
     private void initTable() throws SQLException {
         try {
-            Statement stmt = null;
-            try {
-                stmt = conn.createStatement();
+            try (Statement stmt = conn.createStatement()) {
                 String createTable = "CREATE TABLE " + table + " "
                         + "(id " + bigintType + " PRIMARY KEY, "
                         + "owner " + smallintType + " NOT NULL, "
@@ -149,9 +147,6 @@ public class SQLDB extends Component implements MainMemoryDB {
                 LOG.debug("Creating table: {}", createTable);
                 stmt.executeUpdate(createTable);
                 stmt.executeUpdate("CREATE INDEX owner_index ON " + table + "(owner)");
-            } finally {
-                if (stmt != null)
-                    stmt.close();
             }
         } catch (SQLException e) {
             LOG.debug("SQLException caught: {} - {}", e.getClass().getName(), e.getMessage());
@@ -178,13 +173,13 @@ public class SQLDB extends Component implements MainMemoryDB {
         if (bigintType == null || smallintType == null || varbinaryType == null) {
             final Map<Integer, String> types = new HashMap<Integer, String>();
             final DatabaseMetaData dmd = conn.getMetaData();
-            final ResultSet rs = dmd.getTypeInfo();
-            while (rs.next()) {
-                final int jdbcType = rs.getInt("DATA_TYPE");
-                final String typeName = rs.getString("TYPE_NAME");
-                types.put(jdbcType, typeName);
+            try (ResultSet rs = dmd.getTypeInfo()) {
+                while (rs.next()) {
+                    final int jdbcType = rs.getInt("DATA_TYPE");
+                    final String typeName = rs.getString("TYPE_NAME");
+                    types.put(jdbcType, typeName);
+                }
             }
-            rs.close();
 
             if (bigintType == null)
                 bigintType = types.get(Types.BIGINT);
@@ -480,9 +475,7 @@ public class SQLDB extends Component implements MainMemoryDB {
         try {
             ps.println("MEMORY");
             ps.println("===========");
-            ResultSet rs = null;
-            try {
-                rs = selectAll.executeQuery();
+            try (ResultSet rs = selectAll.executeQuery()) {
                 while (rs.next()) {
                     final long id = rs.getLong("id");
                     final short owner = rs.getShort("owner");
@@ -491,9 +484,6 @@ public class SQLDB extends Component implements MainMemoryDB {
                     ps.println("Id : " + hex(id) + " owner: " + owner + " version: " + version + " data: (" + data.length + " bytes).");
                 }
                 conn.commit();
-            } finally {
-                if (rs != null)
-                    rs.close();
             }
         } catch (SQLException e) {
             throw Throwables.propagate(e);
