@@ -63,7 +63,7 @@ class OffHeapLocalStorage extends Component implements CacheStorage {
 
         int numGroups = 0;
         int tmpSize = 1 << MIN_POWER;
-        while (tmpSize <= maxItemSize) {
+        while (tmpSize <= this.maxItemSize) {
             numGroups++;
             tmpSize <<= 1;
         }
