@@ -247,7 +247,7 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
 
     private void handleMessageAllocRef(Message.ALLOC_REF msg) {
         final int num = msg.getNum();
-        final long end = refCounter.getAndAdd(num);
+        final long end = refCounter.addAndGet(num);
         final long start = end - num;
         store.allocate(msg.getNode(), start, num);
         send(Message.ALLOCED_REF(msg, start, num));

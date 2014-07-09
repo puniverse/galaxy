@@ -1314,7 +1314,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         @Override
         public String partialToString() {
-            return super.partialToString() + ", start: " + start + ", num: " + num;
+            return super.partialToString() + ", start: " + Long.toHexString(start) + ", num: " + num;
         }
     }
 
