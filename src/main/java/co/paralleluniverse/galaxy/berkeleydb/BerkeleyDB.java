@@ -66,6 +66,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
     private Database ownerDirectory;
     private SecondaryDatabase ownerIndex;
     private Database mainStore;
+    private Database allocationDirectory;
     private final TupleBinding<MainMemoryEntry> entryBinding;
     private static final DatabaseEntry SERVER = new DatabaseEntry(Shorts.toByteArray((short) 0));
     private final String envHome;
@@ -116,6 +117,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
             ownerIndex.close();
             ownerDirectory.close();
             mainStore.close();
+            allocationDirectory.close();
             truncate();
         }
         openOrCreate();
@@ -137,6 +139,9 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
 
         this.mainStore = env.openDatabase(null, "mainStore",
                 new DatabaseConfig().setAllowCreate(true).setTransactional(true));
+
+        this.allocationDirectory = env.openDatabase(null, "allocationDirectory",
+                new DatabaseConfig().setAllowCreate(true).setTransactional(true));
     }
 
     public void truncate() {
@@ -147,6 +152,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
             env.truncateDatabase(txn, "ownerIndex", false);
             txn.commit();
             env.truncateDatabase(null, "mainStore", false);
+            env.truncateDatabase(null, "allocationDirectory", false);
         } catch (Exception e) {
             LOG.error("Exception while truncating database. Aborting.", e);
             txn.abort();
@@ -217,8 +223,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         final DatabaseEntry pKey = new DatabaseEntry();
         final DatabaseEntry data = new DatabaseEntry();
 
-        final SecondaryCursor cursor = ownerIndex.openCursor(txn, null);
-        try {
+        try (SecondaryCursor cursor = ownerIndex.openCursor(txn, null)) {
             OperationStatus retVal = cursor.getSearchKey(sKey, pKey, data, LockMode.DEFAULT);
             while (retVal == OperationStatus.SUCCESS) {
                 final long id = Longs.fromByteArray(pKey.getData());
@@ -228,8 +233,6 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
                 lines.add(id); // cursor.getPrimaryDatabase().put(null, pKey, SERVER); - causes deadlock
                 retVal = cursor.getNextDup(sKey, pKey, data, LockMode.DEFAULT);
             }
-        } finally {
-            cursor.close();
         }
 
         byte[] longArray = new byte[8];
@@ -252,9 +255,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         final DatabaseEntry key = new DatabaseEntry();
         final DatabaseEntry data = new DatabaseEntry();
 
-        final DiskOrderedCursor cursor = ownerDirectory.openCursor(new DiskOrderedCursorConfig().setKeysOnly(true));
-
-        try {
+        try (DiskOrderedCursor cursor = ownerDirectory.openCursor(new DiskOrderedCursorConfig().setKeysOnly(true))) {
             OperationStatus retVal = cursor.getNext(key, data, null);
             while (retVal == OperationStatus.SUCCESS) {
                 if (trace)
@@ -263,8 +264,45 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
                 ownerDirectory.put(null, key, SERVER);
                 retVal = cursor.getNext(key, data, null);
             }
-        } finally {
-            cursor.close();
+        }
+    }
+
+    @Override
+    public void allocate(short owner, long start, int num) {
+        final DatabaseEntry key = new DatabaseEntry(Longs.toByteArray(start + num - 1));
+        final DatabaseEntry value = new DatabaseEntry(Shorts.toByteArray(owner));
+
+        final Transaction txn = null; // env.beginTransaction(null, null);
+        try {
+            OperationStatus status = allocationDirectory.putNoOverwrite(txn, key, value);
+            if (status != OperationStatus.SUCCESS) {
+                LOG.debug("Bad status: {}", status);
+                throw new AssertionError();
+            }
+            if (txn != null)
+                txn.commit();
+        } catch (Exception e) {
+            LOG.error("Exception during DB operation. Aborting transaction.", e);
+            if (txn != null)
+                txn.abort();
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public short findAllocation(long ref) {
+        final DatabaseEntry key = new DatabaseEntry();
+        final DatabaseEntry data = new DatabaseEntry();
+
+        try (Cursor cursor = allocationDirectory.openCursor(null, CursorConfig.DEFAULT)) {
+            OperationStatus retVal = cursor.getSearchKeyRange(key, data, null);
+
+            if (retVal == OperationStatus.SUCCESS) {
+                ownerDirectory.put(null, key, SERVER);
+                return Shorts.fromByteArray(data.getData());
+            } else if (retVal == OperationStatus.NOTFOUND)
+                return (short) -1;
+            throw new AssertionError();
         }
     }
 
@@ -318,29 +356,29 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
 
     @Override
     public long getMaxId() {
-        final long ownerDirecotryMaxId = getMaxId(ownerDirectory);
-        final long mainStoreMaxId = getMaxId(mainStore);
+        final long allocationDirectoryMaxId = getMaxId(allocationDirectory);
+//        final long ownerDirecotryMaxId = getMaxId(ownerDirectory);
+//        final long mainStoreMaxId = getMaxId(mainStore);
 
-        LOG.info("OwnerDirectory max id: {}", ownerDirecotryMaxId);
-        LOG.info("MainStore max id: {}", mainStoreMaxId);
-
-        return Math.max(ownerDirecotryMaxId, mainStoreMaxId);
+        LOG.info("AllocationDirectory max id: {}", allocationDirectoryMaxId);
+//        LOG.info("OwnerDirectory max id: {}", ownerDirecotryMaxId);
+//        LOG.info("MainStore max id: {}", mainStoreMaxId);
+//
+//        return Math.max(ownerDirecotryMaxId, mainStoreMaxId);
+        
+        return allocationDirectoryMaxId;
     }
 
     private long getMaxId(Database db) {
         final DatabaseEntry key = new DatabaseEntry();
         final DatabaseEntry value = new DatabaseEntry();
-        final Cursor cursor = db.openCursor(null, CursorConfig.DEFAULT);
-        try {
+        try (Cursor cursor = db.openCursor(null, CursorConfig.DEFAULT)) {
             final OperationStatus status = cursor.getLast(key, value, null);
             if (status == OperationStatus.SUCCESS)
                 return Longs.fromByteArray(key.getData());
             else
                 return 0;
-        } finally {
-            cursor.close();
         }
-
     }
 
     @Override
@@ -410,15 +448,12 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         ps.println("======");
         final DatabaseEntry key = new DatabaseEntry();
         final DatabaseEntry value = new DatabaseEntry();
-        final Cursor cursor = ownerDirectory.openCursor(null, CursorConfig.DEFAULT);
-        try {
+        try (Cursor cursor = ownerDirectory.openCursor(null, CursorConfig.DEFAULT)) {
             while (cursor.getNext(key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
                 long id = Longs.fromByteArray(key.getData());
                 short owner = Shorts.fromByteArray(value.getData());
                 ps.println("Id : " + hex(id) + " owner: " + owner + "");
             }
-        } finally {
-            cursor.close();
         }
     }
 
@@ -427,15 +462,12 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         ps.println("==========");
         final DatabaseEntry key = new DatabaseEntry();
         final DatabaseEntry value = new DatabaseEntry();
-        final Cursor cursor = mainStore.openCursor(null, CursorConfig.DEFAULT);
-        try {
+        try (Cursor cursor = mainStore.openCursor(null, CursorConfig.DEFAULT)) {
             while (cursor.getNext(key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
                 long id = Longs.fromByteArray(key.getData());
                 final MainMemoryEntry entry = entryBinding.entryToObject(value);
                 ps.println("Id : " + hex(id) + " version: " + entry.version + " data: (" + entry.data.length + " bytes).");
             }
-        } finally {
-            cursor.close();
         }
     }
 
@@ -445,15 +477,12 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         final DatabaseEntry sKey = new DatabaseEntry();
         final DatabaseEntry pKey = new DatabaseEntry();
         final DatabaseEntry value = new DatabaseEntry();
-        final SecondaryCursor cursor = ownerIndex.openCursor(null, CursorConfig.DEFAULT);
-        try {
+        try (SecondaryCursor cursor = ownerIndex.openCursor(null, CursorConfig.DEFAULT)) {
             while (cursor.getNext(sKey, pKey, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
                 long id = Longs.fromByteArray(pKey.getData());
                 short owner = Shorts.fromByteArray(sKey.getData());
                 ps.println("Owner: " + owner + " id : " + hex(id));
             }
-        } finally {
-            cursor.close();
         }
     }
 

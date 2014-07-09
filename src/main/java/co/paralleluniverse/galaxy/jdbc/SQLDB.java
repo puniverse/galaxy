@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
  * @author pron
  */
 public class SQLDB extends Component implements MainMemoryDB {
-
     private static final Logger LOG = LoggerFactory.getLogger(SQLDB.class);
     private final DataSource dataSource;
     private String username;
@@ -46,6 +45,8 @@ public class SQLDB extends Component implements MainMemoryDB {
     private String schema = "pugalaxy";
     private String tableName = "memory";
     private String table;
+    private String allocationTableName = "allocation";
+    private String allocTable;
     private String bigintType;
     private String smallintType;
     private String varbinaryType;
@@ -61,6 +62,8 @@ public class SQLDB extends Component implements MainMemoryDB {
     private PreparedStatement deleteLine;
     private PreparedStatement selectAll;
     private PreparedStatement getMaxId;
+    private PreparedStatement addAllocation;
+    private PreparedStatement getAllocation;
     private static final Object TRANSACTION = new Object();
 
     @ConstructorProperties({"name", "dataSource"})
@@ -87,6 +90,11 @@ public class SQLDB extends Component implements MainMemoryDB {
     public void setTableName(String tableName) {
         assertDuringInitialization();
         this.tableName = tableName;
+    }
+
+    public void setAllocationTableName(String tableName) {
+        assertDuringInitialization();
+        this.allocationTableName = tableName;
     }
 
     public void setMaxItemSize(int maxItemSize) {
@@ -128,6 +136,7 @@ public class SQLDB extends Component implements MainMemoryDB {
         initDbTypes();
 
         this.table = schema + "." + tableName;
+        this.allocTable = schema + "." + allocationTableName;
         initTable();
         initPreparedStatements();
 
@@ -147,6 +156,14 @@ public class SQLDB extends Component implements MainMemoryDB {
                 LOG.debug("Creating table: {}", createTable);
                 stmt.executeUpdate(createTable);
                 stmt.executeUpdate("CREATE INDEX owner_index ON " + table + "(owner)");
+
+                createTable = "CREATE TABLE " + allocTable + " "
+                        + "(id " + bigintType + " PRIMARY KEY, "
+                        + "end " + bigintType + " NOT NULL, "
+                        + "owner " + smallintType + " NOT NULL "
+                        + ")";
+                LOG.debug("Creating table: {}", createTable);
+                stmt.executeUpdate(createTable);
             }
         } catch (SQLException e) {
             LOG.debug("SQLException caught: {} - {}", e.getClass().getName(), e.getMessage());
@@ -167,6 +184,8 @@ public class SQLDB extends Component implements MainMemoryDB {
             casOwnerUpdate(0, (short) 0, (short) 0);
             getOwner(0);
         }
+        allocate((short) 0, 0, 0);
+        findAllocation(0);
     }
 
     private void initDbTypes() throws SQLException {
@@ -274,18 +293,13 @@ public class SQLDB extends Component implements MainMemoryDB {
         }
 
         try {
-            ResultSet rs = null;
-            try {
-                getLine.setLong(1, id);
-                rs = getLine.executeQuery();
+            getLine.setLong(1, id);
+            try (ResultSet rs = getLine.executeQuery()) {
                 rs.next();
                 final long version = rs.getLong(1);
                 final byte[] data = rs.getBytes(2);
                 conn.commit();
                 return new MainMemoryEntry(version, data);
-            } finally {
-                if (rs != null)
-                    rs.close();
             }
         } catch (SQLException e) {
             throw Throwables.propagate(e);
@@ -324,11 +338,9 @@ public class SQLDB extends Component implements MainMemoryDB {
             return 0;
         }
 
-        ResultSet rs = null;
-        try {
-            final short res;
-            casOwner.setLong(1, id);
-            rs = casOwner.executeQuery();
+        final short res;
+        casOwner.setLong(1, id);
+        try (ResultSet rs = casOwner.executeQuery()) {
             if (rs.next()) {
                 final short currentOwner = rs.getShort(1);
                 if (currentOwner != oldNode) {
@@ -345,9 +357,6 @@ public class SQLDB extends Component implements MainMemoryDB {
                 LOG.debug("CAS owner failed (UC).");
                 return -1;
             }
-        } finally {
-            if (rs != null)
-                rs.close();
         }
     }
 
@@ -367,7 +376,7 @@ public class SQLDB extends Component implements MainMemoryDB {
             res = newNode;
         } else {
             LOG.debug("CAS owner failed.");
-            res = getOwner(id); // will fail if the line doesn't exist and go to insert
+            res = getOwner(id);
         }
         conn.commit();
         return res;
@@ -379,17 +388,11 @@ public class SQLDB extends Component implements MainMemoryDB {
             return 0;
         }
 
-        ResultSet rs = null;
-        try {
-            getOwner.setLong(1, id);
-            rs = getOwner.executeQuery();
-            rs.next();
-            final short res = rs.getShort(1);
+        getOwner.setLong(1, id);
+        try (ResultSet rs = getOwner.executeQuery()) {
+            final short res = rs.next() ? rs.getShort(1) : (short) -1;
             conn.commit();
             return res;
-        } finally {
-            if (rs != null)
-                rs.close();
         }
     }
 
@@ -442,27 +445,56 @@ public class SQLDB extends Component implements MainMemoryDB {
     }
 
     @Override
-    public long getMaxId() {
-        if (getMaxId == null) {
-            getMaxId = prepareStatement("SELECT MAX(id) FROM " + table);
+    public void allocate(short owner, long start, int num) {
+        if (owner <= 0) {
+            addAllocation = prepareStatement("INSERT INTO " + allocTable + " (id, end, owner) VALUES (?, ?, ?)");
+            return;
+        }
+
+        try {
+            addAllocation.setLong(1, start);
+            addAllocation.setLong(2, start + num);
+            addAllocation.setShort(3, owner);
+            addAllocation.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public short findAllocation(long ref) {
+        if (ref <= 0) {
+            getAllocation = prepareStatement("SELECT owner FROM " + allocTable + " WHERE id <= ? AND end > ?");
             return 0;
         }
 
-        ResultSet rs = null;
         try {
-            rs = getMaxId.executeQuery();
-            rs.next();
-            final long res = rs.getLong(1);
+            getAllocation.setLong(1, ref);
+            getAllocation.setLong(2, ref);
+            try (ResultSet rs = getAllocation.executeQuery()) {
+                final short res = rs.next() ? rs.getShort(1) : -1;
+                conn.commit();
+                return res;
+            }
+        } catch (SQLException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public long getMaxId() {
+        if (getMaxId == null) {
+            getMaxId = prepareStatement("SELECT MAX(id) FROM " + allocTable);
+            return 0;
+        }
+
+        try (ResultSet rs = getMaxId.executeQuery()) {
+            final long res = rs.next() ? rs.getLong(1) : 0;
             conn.commit();
             return res;
         } catch (SQLException e) {
             throw Throwables.propagate(e);
-        } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException e) {
-            }
         }
     }
 

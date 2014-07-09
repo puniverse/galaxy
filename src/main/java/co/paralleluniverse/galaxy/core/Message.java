@@ -46,6 +46,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
         INVOKE, INVRES,
         BACKUP, BACKUPACK,
         BACKUP_PACKET, BACKUP_PACKETACK,
+        ALLOC_REF, ALLOCED_REF,
         MSG, MSGACK,
         ACK;
         // INVACK can be sent w/o an INV (e.g. eviction). replied by ack. INVACKs don't timeout.
@@ -144,6 +145,14 @@ public class Message implements Streamable, Externalizable, Cloneable {
         return new BACKUP_PACKETACK(responseTo);
     }
 
+    public static ALLOC_REF ALLOC_REF(short node, int num) {
+        return new ALLOC_REF(node, num);
+    }
+
+    public static ALLOCED_REF ALLOCED_REF(ALLOC_REF responseTo, long start, int num) {
+        return new ALLOCED_REF(responseTo, start, num);
+    }
+
     public static MSG MSG(MSG responseTo, byte[] data) {
         return new MSG(responseTo, data);
     }
@@ -220,6 +229,10 @@ public class Message implements Streamable, Externalizable, Cloneable {
                 return new BACKUP_PACKET();
             case BACKUP_PACKETACK:
                 return new BACKUP_PACKETACK();
+            case ALLOC_REF:
+                return new ALLOC_REF();
+            case ALLOCED_REF:
+                return new ALLOCED_REF();
             case MSG:
                 return new MSG();
             case ACK:
@@ -1214,6 +1227,94 @@ public class Message implements Streamable, Externalizable, Cloneable {
         @Override
         public String partialToString() {
             return super.partialToString() + ", id: " + id;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    public static class ALLOC_REF extends Message {
+        private int num;
+
+        public ALLOC_REF(short node, int num) {
+            super(node, Type.ALLOC_REF);
+            this.num = num;
+        }
+
+        public ALLOC_REF() {
+            super(Type.ALLOC_REF);
+        }
+
+        public int getNum() {
+            return num;
+        }
+
+        @Override
+        public int size1() {
+            return super.size1() + 4;
+        }
+
+        @Override
+        public void write1(DataOutput out) throws IOException {
+            super.write1(out);
+            out.writeInt(num);
+        }
+
+        @Override
+        public void read1(DataInput in) throws IOException {
+            super.read1(in);
+            num = in.readInt();
+        }
+
+        @Override
+        public String partialToString() {
+            return super.partialToString() + ", num: " + num;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    public static class ALLOCED_REF extends Message {
+        private long start;
+        private int num;
+
+        public ALLOCED_REF(ALLOC_REF responseTo, long start, int num) {
+            super(responseTo, Type.ALLOCED_REF);
+            this.start = start;
+            this.num = num;
+        }
+
+        public ALLOCED_REF() {
+            super(Type.ALLOCED_REF);
+        }
+
+        public long getStart() {
+            return start;
+        }
+
+        public int getNum() {
+            return num;
+        }
+
+        @Override
+        public int size1() {
+            return super.size1() + 8 + 4;
+        }
+
+        @Override
+        public void write1(DataOutput out) throws IOException {
+            super.write1(out);
+            out.writeLong(start);
+            out.writeInt(num);
+        }
+
+        @Override
+        public void read1(DataInput in) throws IOException {
+            super.read1(in);
+            start = in.readLong();
+            num = in.readInt();
+        }
+
+        @Override
+        public String partialToString() {
+            return super.partialToString() + ", start: " + start + ", num: " + num;
         }
     }
 

@@ -127,11 +127,26 @@ public class MainMemoryTest {
     }
 
     /**
+     * When GET is received and owner is not found, then find allocation
+     */
+    @Test
+    public void whenGETAndNoOwnerThenFindAllocation() throws Exception {
+        when(store.casOwner(id(154), sh(0), sh(10))).thenReturn(sh(-1));
+        when(store.findAllocation(id(154))).thenReturn(sh(3));
+
+        final LineMessage get = Message.GET(sh(10), id(154));
+        mm.receive(get);
+
+        verify(comm).send(argThat(equalTo(Message.CHNGD_OWNR(get, id(154), sh(3), true))));
+    }
+
+    /**
      * When GET is received and owner is not found, reply with NOT_FOUND
      */
     @Test
     public void whenGETAndNoOwnerThenReplyNOT_FOUND() throws Exception {
         when(store.casOwner(id(154), sh(0), sh(10))).thenReturn(sh(-1));
+        when(store.findAllocation(id(154))).thenReturn(sh(-1));
 
         final LineMessage get = Message.GET(sh(10), id(154));
         mm.receive(get);

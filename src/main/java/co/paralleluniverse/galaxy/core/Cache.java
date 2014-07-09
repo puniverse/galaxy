@@ -155,7 +155,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         this.monitor = monitor;
 
         this.backup = backup; // new Backup(comm, null);
-        this.idAllocator = new IdAllocator(this, (RefAllocator) cluster);
+        this.idAllocator = new IdAllocator(this, hasServer ? new ServerRefAllocator(comm) : (RefAllocator) cluster);
 
         if (STALE_READS) {
             this.ownerClocks = new NonBlockingHashMapLong<OwnerClock>();
@@ -323,6 +323,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return owned.values().iterator();
     }
 
+    RefAllocator getRefAllocator() {
+        return idAllocator.getRefAllocator();
+    }
+    
     boolean tryLock(long id, ItemState state, Transaction txn) {
         final CacheLine line = getLine(id);
         if (line == null)
@@ -884,6 +888,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             case BACKUP_PACKETACK:
                 backup.receive(message);
                 return;
+            case ALLOCED_REF:
+                if (idAllocator.getRefAllocator() instanceof MessageReceiver) {
+                    ((MessageReceiver) idAllocator.getRefAllocator()).receive(message);
+                    return;
+                }
+                break;
             default:
         }
         runMessage((LineMessage) message);

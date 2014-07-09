@@ -39,6 +39,10 @@ class IdAllocator implements RefAllocator.RefAllocationsListener {
         refAllocator.addRefAllocationsListener(this);
     }
 
+    public RefAllocator getRefAllocator() {
+        return refAllocator;
+    }
+
     @Override
     public synchronized void counterReady() {
         ready = true;

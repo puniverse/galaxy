@@ -82,6 +82,7 @@ import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.internal.util.MockUtil;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -91,6 +92,7 @@ import org.mockito.stubbing.Answer;
  */
 @RunWith(Parameterized.class)
 public class CacheTest {
+    private static final int DEFAULT_ALLOC_COUNT = 10000;
     Cache cache;
     FullCluster cluster;
     AbstractComm comm;
@@ -101,13 +103,12 @@ public class CacheTest {
     long messageId = 0;
 
 //    public CacheTest() {
-//        this.hasServer = false;
+//        this.hasServer = true;
 //    }
-
     public CacheTest(boolean hasServer) {
         this.hasServer = hasServer;
     }
-    
+
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
@@ -864,7 +865,7 @@ public class CacheTest {
      */
     @Test
     public void whenPutThenAllocateId() throws Exception {
-        final RefAllocationsListener listener = getRefAllocationListener(cluster);
+        final RefAllocationsListener listener = hasServer ? null : getRefAllocationListener(cache.getRefAllocator());
         Object res;
         Op put;
 
@@ -872,9 +873,15 @@ public class CacheTest {
         res = cache.runOp(put);
 
         assertThat(res, is(PENDING));
-        verify(cluster).allocateRefs(anyInt());
+        if (hasServer)
+            verify(comm).send(argThat(equalTo(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT))));
+        else
+            verify(cluster).allocateRefs(anyInt());
 
-        listener.refsAllocated(100, 3);
+        if (hasServer)
+            cache.receive(Message.ALLOCED_REF(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT), 100, 3));
+        else
+            listener.refsAllocated(100, 3);
 
         res = put.getResult();
 
@@ -892,7 +899,10 @@ public class CacheTest {
         res = get(101L);
         assertThat((String) res, is("2222"));
 
-        verify(cluster, times(2)).allocateRefs(anyInt()); // allocates after id > (min + max) / 2
+        if (hasServer)
+            verify(comm, times(2)).send(argThat(equalTo(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT))));
+        else
+            verify(cluster, times(2)).allocateRefs(anyInt()); // allocates after id > (min + max) / 2
 
         res = doOp(PUT, -1L, serialize("3333"));
         assertThat((Long) res, is(102L));
@@ -906,7 +916,10 @@ public class CacheTest {
 
         assertThat(res, is(PENDING));
 
-        listener.refsAllocated(200, 3);
+        if (hasServer)
+            cache.receive(Message.ALLOCED_REF(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT), 200, 3));
+        else
+            listener.refsAllocated(200, 3);
 
         res = put.getResult();
 
@@ -924,7 +937,10 @@ public class CacheTest {
         res = get(201L);
         assertThat((String) res, is("5555"));
 
-        verify(cluster, times(3)).allocateRefs(anyInt()); // allocates after id > (min + max) / 2
+        if (hasServer)
+            verify(comm, times(3)).send(argThat(equalTo(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT))));
+        else
+            verify(cluster, times(3)).allocateRefs(anyInt()); // allocates after id > (min + max) / 2
 
         res = doOp(PUT, -1L, serialize("6666"));
         assertThat((Long) res, is(202L));
@@ -2009,11 +2025,11 @@ public class CacheTest {
         GETX(1234, sh(30));
 
         verify(comm, never()).send(argThat(equalTo(Message.PUTX(Message.GET(sh(30), 1234L), 1234L, new short[0], 2, 1, toBuffer("xxx")))));
-        
+
         cache.receive(Message.MSG(sh(20), 1234L, false, true, serialize("foo")));
 
         verify(comm, never()).send(argThat(equalTo(Message.PUTX(Message.GET(sh(30), 1234L), 1234L, new short[0], 2, 1, toBuffer("xxx")))));
-        
+
         cache.receive(Message.MSG(sh(20), 1234L, false, true, serialize("bar")));
 
         InOrder inOrder = inOrder(comm);
@@ -2238,7 +2254,7 @@ public class CacheTest {
      */
     @Test
     public void testAlloc() throws Exception {
-        final RefAllocationsListener listener = getRefAllocationListener(cluster);
+        final RefAllocationsListener listener = hasServer ? null : getRefAllocationListener(cache.getRefAllocator());
         Object res;
         Op alloc;
 
@@ -2247,13 +2263,23 @@ public class CacheTest {
         res = cache.runOp(alloc);
 
         assertThat(res, is(PENDING));
-        verify(cluster).allocateRefs(anyInt());
+        if (hasServer)
+            verify(comm).send(argThat(equalTo(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT))));
+        else
+            verify(cluster).allocateRefs(anyInt());
 
-        listener.refsAllocated(100, 3);
+        if (hasServer)
+            cache.receive(Message.ALLOCED_REF(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT), 100, 3));
+        else
+            listener.refsAllocated(100, 3);
 
         assertThat(alloc.getFuture().isDone(), is(false));
 
-        listener.refsAllocated(200, 30);
+        if (hasServer)
+            cache.receive(Message.ALLOCED_REF(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT), 200, 30));
+        else
+            listener.refsAllocated(200, 30);
+
         res = alloc.getResult();
 
         assertThat((Long) res, is(200L));
@@ -2272,13 +2298,23 @@ public class CacheTest {
         res = cache.runOp(alloc);
 
         assertThat(res, is(PENDING));
-        verify(cluster, atLeastOnce()).allocateRefs(anyInt());
+        if (hasServer)
+            verify(comm, atLeastOnce()).send(argThat(equalTo(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT))));
+        else
+            verify(cluster, atLeastOnce()).allocateRefs(anyInt());
 
-        listener.refsAllocated(300, 10);
+        if (hasServer)
+            cache.receive(Message.ALLOCED_REF(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT), 300, 10));
+        else
+            listener.refsAllocated(300, 10);
 
         assertThat(alloc.getFuture().isDone(), is(false));
 
-        listener.refsAllocated(400, 50);
+        if (hasServer)
+            cache.receive(Message.ALLOCED_REF(Message.ALLOC_REF(Comm.SERVER, DEFAULT_ALLOC_COUNT), 400, 50));
+        else
+            listener.refsAllocated(400, 50);
+
         res = alloc.getResult();
 
         assertThat((Long) res, is(400L));
@@ -2359,7 +2395,7 @@ public class CacheTest {
     }
 
     long put(String obj) throws Exception {
-        getRefAllocationListener(cluster).refsAllocated(100, 1000);
+        getRefAllocationListener(cache.getRefAllocator()).refsAllocated(100, 1000);
         return (Long) doOp(PUT, -1L, serialize(obj));
     }
 
@@ -2409,12 +2445,15 @@ public class CacheTest {
         };
     }
 
-    public static RefAllocationsListener getRefAllocationListener(RefAllocator mock) {
-        try {
-            return (RefAllocationsListener) capture(mock, "addRefAllocationsListener", arg(RefAllocationsListener.class));
-        } catch (Exception e) {
-            return null;
-        }
+    public static RefAllocationsListener getRefAllocationListener(RefAllocator allocator) {
+        if (new MockUtil().isMock(allocator)) {
+            try {
+                return (RefAllocationsListener) capture(allocator, "addRefAllocationsListener", arg(RefAllocationsListener.class));
+            } catch (Exception e) {
+                return null;
+            }
+        } else
+            return allocator.getRefAllocationsListeners().iterator().next();
     }
 
     void assertState(long id, State state, State nextState) {

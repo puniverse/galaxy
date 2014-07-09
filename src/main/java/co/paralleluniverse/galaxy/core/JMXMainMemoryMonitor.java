@@ -28,12 +28,14 @@ class JMXMainMemoryMonitor extends PeriodicMonitor implements MainMemoryMonitor,
     private final Counter objectsServedCounter = new Counter();
     private final Counter ownerWritesCounter = new Counter();
     private final Counter ownersServedCounter = new Counter();
+    private final Counter allocationCounter = new Counter();
     
     private long writes;
     private long transactions;
     private long objectsServed;
     private long ownerWrites;
     private long ownersServed;
+    private long allocations;
 
     @ConstructorProperties({"name"})
     public JMXMainMemoryMonitor(String name) {
@@ -47,6 +49,7 @@ class JMXMainMemoryMonitor extends PeriodicMonitor implements MainMemoryMonitor,
         objectsServed = objectsServedCounter.get();
         ownerWrites = ownerWritesCounter.get();
         ownersServed = ownersServedCounter.get();
+        allocations = allocationCounter.get();
         resetCounters();
     }
 
@@ -57,6 +60,7 @@ class JMXMainMemoryMonitor extends PeriodicMonitor implements MainMemoryMonitor,
         objectsServedCounter.reset();
         ownerWritesCounter.reset();
         ownersServedCounter.reset();
+        allocationCounter.reset();
     }
 
     @Override
@@ -78,6 +82,11 @@ class JMXMainMemoryMonitor extends PeriodicMonitor implements MainMemoryMonitor,
     @Override
     public void addOwnerServed() {
         ownersServedCounter.inc();
+    }
+
+    @Override
+    public void addAllocation(int count) {
+        allocationCounter.add(count);
     }
     
     @Override
@@ -103,5 +112,10 @@ class JMXMainMemoryMonitor extends PeriodicMonitor implements MainMemoryMonitor,
     @Override
     public int getWrites() {
         return (int)writes;
+    }
+
+    @Override
+    public int getAllocations() {
+        return (int)allocations;
     }
 }

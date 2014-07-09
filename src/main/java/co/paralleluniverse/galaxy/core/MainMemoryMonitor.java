@@ -27,4 +27,6 @@ interface MainMemoryMonitor {
     void addOwnerWrite();
 
     void addTransaction(int numWrites);
+    
+    void addAllocation(int count);
 }

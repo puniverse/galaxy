@@ -27,6 +27,7 @@ class MetricsMainMemoryMonitor implements MainMemoryMonitor {
     private final Meter objectsServed = Metrics.meter(metric("objectsServed"));
     private final Meter ownerWrites = Metrics.meter(metric("ownerWrites"));
     private final Meter ownersServed = Metrics.meter(metric("ownersServed"));
+    private final Meter allocations = Metrics.meter(metric("allocations"));
 
     protected final String metric(String name) {
         return MetricRegistry.name("co.paralleluniverse", "galaxy", "MainMemory", name);
@@ -55,5 +56,10 @@ class MetricsMainMemoryMonitor implements MainMemoryMonitor {
     public void addTransaction(int numWrites) {
         transactions.mark();
         writes.mark(numWrites);
+    }
+
+    @Override
+    public void addAllocation(int count) {
+        allocations.mark(count);
     }
 }

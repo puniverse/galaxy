@@ -18,7 +18,6 @@ package co.paralleluniverse.galaxy.monitoring;
  * @author pron
  */
 public interface MainMemoryMXBean {
-
     int getObjectsServed();
 
     int getOwnerWrites();
@@ -29,4 +28,5 @@ public interface MainMemoryMXBean {
 
     int getWrites();
     
+    int getAllocations();
 }

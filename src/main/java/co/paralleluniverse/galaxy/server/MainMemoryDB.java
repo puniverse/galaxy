@@ -29,6 +29,9 @@ public interface MainMemoryDB {
     
     void delete(long id, Object txn);
     
+    void allocate(short owner, long start, int num);
+    short findAllocation(long ref);
+    
     long getMaxId();
     void close();
     void dump(java.io.PrintStream ps);

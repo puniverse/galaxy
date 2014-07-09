@@ -28,6 +28,7 @@ import co.paralleluniverse.galaxy.core.Message.BACKUP_PACKET;
 import co.paralleluniverse.galaxy.core.Message.INV;
 import co.paralleluniverse.galaxy.core.Message.LineMessage;
 import co.paralleluniverse.galaxy.core.Message.MSG;
+import co.paralleluniverse.galaxy.core.Message.ALLOC_REF;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -185,6 +186,17 @@ public class MessageTest {
     @Test
     public void testBACKUPACK_PACKETACKSer() {
         testSerialize(Message.BACKUP_PACKET(rand.nextLong(), Collections.EMPTY_LIST));
+    }
+
+    @Test
+    public void testALLOC_REFSer() {
+        testSerialize(Message.ALLOC_REF((short) rand.nextInt(), rand.nextInt()));
+    }
+
+    @Test
+    public void testALLOCED_REFSer() {
+        final ALLOC_REF m = Message.ALLOC_REF((short) rand.nextInt(), rand.nextInt());
+        testSerialize(Message.ALLOCED_REF(m, rand.nextLong(), rand.nextInt()));
     }
 
     @Test

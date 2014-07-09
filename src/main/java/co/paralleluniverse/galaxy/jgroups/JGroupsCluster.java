@@ -23,6 +23,7 @@ import co.paralleluniverse.galaxy.core.RootLocker;
 import static co.paralleluniverse.galaxy.jgroups.JGroupsConstants.*;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.beans.ConstructorProperties;
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,9 +47,8 @@ import org.w3c.dom.Element;
  * @author pron
  */
 class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator {
-
     private static final Logger LOG = LoggerFactory.getLogger(JGroupsCluster.class);
-    private static long INITIAL_REF_ID = 0xffffffffL + 1;
+    private static final long INITIAL_REF_ID = 0xffffffffL + 1;
     private final String jgroupsClusterName;
     private JChannel channel;
     private CounterService counterService;
@@ -173,7 +173,6 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
         if (!hasServer())
             this.setCounter(INITIAL_REF_ID);
         refAllocationExecutor.submit(new Callable<Void>() {
-
             @Override
             public Void call() throws Exception {
                 LOG.info("Waiting for id counter to be set...");
@@ -185,7 +184,6 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
                 refAllocatorSupport.fireCounterReady();
                 return null;
             }
-
         });
     }
 
@@ -215,8 +213,7 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
         return dataChannel;
     }
 
-    @Override
-    public boolean setCounter(long initialValue) {
+    private boolean setCounter(long initialValue) {
         initialValue = Math.max(initialValue, INITIAL_REF_ID);
         LOG.info("Setting ref counter to {}", initialValue);
         for (;;) {
@@ -245,6 +242,11 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
         refAllocatorSupport.addRefAllocationsListener(listener);
     }
 
+    @Override
+    public Collection<RefAllocationsListener> getRefAllocationsListeners() {
+        return refAllocatorSupport.getRefAllocationListeners();
+    }
+    
     @Override
     public void allocateRefs(final int count) {
         refAllocationExecutor.submit(new Runnable() {

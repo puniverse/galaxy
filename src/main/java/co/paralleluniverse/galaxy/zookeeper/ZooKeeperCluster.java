@@ -20,13 +20,13 @@ import co.paralleluniverse.galaxy.core.RefAllocatorSupport;
 import co.paralleluniverse.galaxy.core.RootLocker;
 import com.google.common.base.Throwables;
 import java.beans.ConstructorProperties;
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import static org.apache.curator.framework.CuratorFrameworkFactory.builder;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicLong;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class ZooKeeperCluster extends AbstractCluster implements RootLocker, RefAllocator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ZooKeeperCluster.class);
-    private static long INITIAL_REF_ID = 0xffffffffL + 1;
+    private static final long INITIAL_REF_ID = 0xffffffffL + 1;
     private static final String ROOT_LOCKS = ROOT + "/root_locks";
     private static final String REF_COUNTER = ROOT + "/ref_counter";
     private final String zkConnectString;
@@ -191,7 +191,11 @@ public class ZooKeeperCluster extends AbstractCluster implements RootLocker, Ref
     }
 
     @Override
-    public boolean setCounter(long initialValue) {
+    public Collection<RefAllocationsListener> getRefAllocationsListeners() {
+        return refAllocatorSupport.getRefAllocationListeners();
+    }
+
+    private boolean setCounter(long initialValue) {
         initialValue = Math.max(initialValue, INITIAL_REF_ID);
         LOG.info("Setting ref counter to {}", initialValue);
         try {

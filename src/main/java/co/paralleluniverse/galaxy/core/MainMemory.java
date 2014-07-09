@@ -29,6 +29,7 @@ import com.google.common.base.Throwables;
 import java.beans.ConstructorProperties;
 import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +39,12 @@ import org.slf4j.LoggerFactory;
  */
 public class MainMemory extends ClusterService implements MessageReceiver, NodeChangeListener {
     private static final Logger LOG = LoggerFactory.getLogger(MainMemory.class);
+    private static final long INITIAL_REF_ID = 0xffffffffL + 1;
     private static final short SERVER = 0;
     private final Comm comm;
     private final MainMemoryDB store;
     private final MainMemoryMonitor monitor;
+    private final AtomicLong refCounter = new AtomicLong();
 
     @ConstructorProperties({"name", "cluster", "store", "comm", "monitoringType"})
     public MainMemory(String name, Cluster cluster, MainMemoryDB store, Comm comm, MonitoringType monitoringType) {
@@ -67,7 +70,7 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
                 store.dump(System.err);
             }
 
-            ((RefAllocator) getCluster()).setCounter(store.getMaxId() + 1);
+            refCounter.set(Math.max(INITIAL_REF_ID, store.getMaxId() + 1));
         }
         setReady(true);
     }
@@ -122,6 +125,8 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
             case INVOKE:
                 handleMessageGet((LineMessage) message); // Server cant invoke, return putx, chnged_owner or notFound.
                 break;
+            case ALLOC_REF:
+                handleMessageAllocRef((Message.ALLOC_REF) message);
         }
     }
 
@@ -155,6 +160,9 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
                 send(Message.PUTX(msg, id, new short[0], 0, entry.version, ByteBuffer.wrap(entry.data)));
                 return true;
             }
+            if (owner == -1 && !isReserved(id))
+                owner = store.findAllocation(id);
+
             if (owner == -1 && !isReserved(id)) {
                 send(Message.NOT_FOUND(msg));
                 return false;
@@ -180,7 +188,6 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
         // if mesages are sent to server instead of broadcast, node B may get a putx from node A, then node A would die (before B INVs the server)
         // then node C gets the line from the server, and then node B INVs the server, we must INV B (in this case, B will wait for our response. See Cache.transitionToE())
         // so, we check to see where A got the line from (previous owner). Since it's B but we already have C as the owner, we INV instead of INVACK.
-
         short currentOwner;
         if ((currentOwner = store.casOwner(id, previousOwner, owner)) == owner) {
             if (LOG.isDebugEnabled())
@@ -236,6 +243,16 @@ public class MainMemory extends ClusterService implements MessageReceiver, NodeC
             store.abort(txn);
             throw Throwables.propagate(e);
         }
+    }
+
+    private void handleMessageAllocRef(Message.ALLOC_REF msg) {
+        final int num = msg.getNum();
+        final long end = refCounter.getAndAdd(num);
+        final long start = end - num;
+        store.allocate(msg.getNode(), start, num);
+        send(Message.ALLOCED_REF(msg, start, num));
+        
+        monitor.addAllocation(num);
     }
 
     @Override

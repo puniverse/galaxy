@@ -14,6 +14,7 @@
 package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.galaxy.core.RefAllocator.RefAllocationsListener;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,7 +23,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author pron
  */
 public class RefAllocatorSupport {
-
     private final List<RefAllocationsListener> refAllocationListeners = new CopyOnWriteArrayList<RefAllocationsListener>();
 
     public void addRefAllocationsListener(RefAllocationsListener listener) {
@@ -33,6 +33,10 @@ public class RefAllocatorSupport {
         refAllocationListeners.remove(listener);
     }
 
+    public Collection<RefAllocationsListener> getRefAllocationListeners() {
+        return refAllocationListeners;
+    }
+    
     public void fireCounterReady() {
         for (RefAllocationsListener listener : refAllocationListeners)
             listener.counterReady();
@@ -42,5 +46,4 @@ public class RefAllocatorSupport {
         for (RefAllocationsListener listener : refAllocationListeners)
             listener.refsAllocated(start, num);
     }
-
 }

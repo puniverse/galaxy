@@ -13,26 +13,24 @@
  */
 package co.paralleluniverse.galaxy.core;
 
+import java.util.Collection;
+
 /**
  *
  * @author pron
  */
 public interface RefAllocator {
-    /**
-     * Called by MainMemory only.
-     * @param id
-     * @return 
-     */
-    boolean setCounter(long id);
-    
     void allocateRefs(int count);
 
     void addRefAllocationsListener(RefAllocationsListener listener);
 
     void removeRefAllocationsListener(RefAllocationsListener listener);
 
+    Collection<RefAllocationsListener> getRefAllocationsListeners();
+
     interface RefAllocationsListener {
         void counterReady();
+
         void refsAllocated(long start, int num);
     }
 }
