@@ -326,7 +326,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     RefAllocator getRefAllocator() {
         return idAllocator.getRefAllocator();
     }
-    
+
     boolean tryLock(long id, ItemState state, Transaction txn) {
         final CacheLine line = getLine(id);
         if (line == null)
@@ -1608,6 +1608,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             send(m);
         }
 
+        fireLineInvalidated(line);
+
         return null;
     }
 
@@ -1739,6 +1741,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             send(m);
         }
 
+        if (line.getState() == State.I && !line.is(CacheLine.DELETED))
+            fireLineInvalidated(line);
+
         return change;
     }
 
@@ -1822,6 +1827,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             else if (msg.getNode() != Comm.SERVER)
                 send(Message.INVACK(msg));
         }
+
+        if (line.getState() == State.I && !line.is(CacheLine.DELETED))
+            fireLineInvalidated(line);
+
         return change;
     }
 
@@ -1843,6 +1852,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 change |= setState(line, State.I) ? LINE_STATE_CHANGED : 0;
                 setOwnerClock(line, msg);
                 send(Message.INVACK(line.getOwner(), line.getId()));
+
+                if (line.getState() == State.I && !line.is(CacheLine.DELETED))
+                    fireLineInvalidated(line);
             }
             return change;
         }
@@ -2304,8 +2316,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 deallocateSharerSet(line.id, line.sharers);
                 line.sharers = null;
             }
-            if (state == State.I && !line.is(CacheLine.DELETED))
-                fireLineInvalidated(line);
             return true;
         } else
             return false;
