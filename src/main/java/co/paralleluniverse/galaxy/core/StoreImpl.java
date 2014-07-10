@@ -24,12 +24,10 @@ import co.paralleluniverse.galaxy.StoreTransaction;
 import co.paralleluniverse.galaxy.TimeoutException;
 import static co.paralleluniverse.galaxy.core.Op.Type.*;
 import com.google.common.base.Throwables;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import co.paralleluniverse.galaxy.core.Message.LineMessage;
-import co.paralleluniverse.galaxy.core.Message.MSG;
 import co.paralleluniverse.galaxy.core.Op.Type;
 
 /**
