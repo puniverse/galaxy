@@ -111,7 +111,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private boolean broadcastsRoutedToServer;
     private boolean rollbackSupported = true;
     private boolean synchronous = false;
-    private Set<NodeEvent> nodeEvents = new CopyOnWriteArraySet<NodeEvent>();
+    private final Set<NodeEvent> nodeEvents = new CopyOnWriteArraySet<NodeEvent>();
     private long maxStaleReadMillis = 500;
     //
     private final IdAllocator idAllocator;
@@ -221,6 +221,16 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     @ManagedAttribute
     public int getMaxItemSize() {
         return maxItemSize;
+    }
+
+    public void setTimeout(long timeout) {
+        assertDuringInitialization();
+        this.timeout = timeout;
+    }
+
+    @ManagedAttribute
+    public long getTimeout() {
+        return timeout;
     }
 
     public void setReuseLines(boolean value) {

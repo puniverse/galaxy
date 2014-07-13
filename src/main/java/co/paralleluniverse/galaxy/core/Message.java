@@ -1407,7 +1407,7 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
         @Override
         public String partialToString() {
-            return super.partialToString() + ", messenger: " + flags + ", data: " + (data == null ? "null" : "(" + data.length + " bytes)" + (isPending() ? " (pending)" : ""));
+            return super.partialToString() + ", messenger: " + isMessenger() + ", pending: " + isPending() + ", data: " + (data == null ? "null" : "(" + data.length + " bytes)" + (isPending() ? " (pending)" : ""));
         }
     }
 }
