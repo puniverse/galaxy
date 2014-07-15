@@ -725,7 +725,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     break;
             }
             if (LOG.isDebugEnabled())
-                LOG.debug("handleOp: {} -> {} line: {}", op, res, line);
+                LOG.debug("handleOp: {} -> {} line: {}", op, (res instanceof byte[] ? "(" + ((byte[])res).length + " bytes)" : res), line);
             if (res == PENDING)
                 return res;
             else if (res instanceof Op)
