@@ -58,9 +58,9 @@ dependencies {
     compile "org.slf4j:slf4j-api:1.7.7"
     runtime "org.slf4j:jcl-over-slf4j:1.7.7"
     runtime "org.slf4j:log4j-over-slf4j:1.7.7"
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-rc2"
-    runtime "org.apache.logging.log4j:log4j-api:2.0-rc2"
-    runtime "org.apache.logging.log4j:log4j-core:2.0-rc2"
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0"
+    runtime "org.apache.logging.log4j:log4j-api:2.0"
+    runtime "org.apache.logging.log4j:log4j-core:2.0"
     runtime "com.lmax:disruptor:3.2.1" // required for log4j
     compile("org.apache.zookeeper:zookeeper:3.4.6") {
         exclude group: "org.slf4j", module: '*'
