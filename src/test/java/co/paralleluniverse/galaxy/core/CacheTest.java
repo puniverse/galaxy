@@ -1996,7 +1996,7 @@ public class CacheTest {
         Op send = new Op(SEND, 1234, msg, null);
         Object res = cache.runOp(send);
 
-        assertThat(res, is(not(PENDING)));
+        assertThat(res, is(PENDING));
 
         verify(listener, never()).messageReceived(any(byte[].class));
 
