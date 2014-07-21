@@ -725,7 +725,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                     break;
             }
             if (LOG.isDebugEnabled())
-                LOG.debug("handleOp: {} -> {} line: {}", op, (res instanceof byte[] ? "(" + ((byte[])res).length + " bytes)" : res), line);
+                LOG.debug("handleOp: {} -> {} line: {}", op, (res instanceof byte[] ? "(" + ((byte[]) res).length + " bytes)" : res), line);
             if (res == PENDING)
                 return res;
             else if (res instanceof Op)
@@ -805,8 +805,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             assert op.getStartTime() != 0;
             duration = (System.nanoTime() - op.getStartTime()) / 1000; // Microseconds
         }
-        if (op.hasFuture())
+        if (op.hasFuture()) {
+            if (LOG.isDebugEnabled())
+                LOG.debug("completeOp: {} -> {} line: {}", op, (res instanceof byte[] ? "(" + ((byte[]) res).length + " bytes)" : res), line);
             op.setResult(res);
+        }
         monitor.addOp(op.type, duration);
     }
 
@@ -1566,7 +1569,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         assert msg1.getMessageId() > 0;
         msg.setMessageId(msg1.getMessageId());
 
-        return msg.isMessenger() ? PENDING : null; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
+        return PENDING; // unlike other ops, this one always returns pending, and is completed by handleMessageMsgAck
     }
 
     private Object handleOpPush(CacheLine line, Object extra, int change) {
@@ -1951,10 +1954,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             } catch (Exception e) {
                 LOG.error("Listener threw an exception on messageReceived.", e);
             }
-            if (msg.isReplyRequired())
-                send(Message.MSGACK(msg));
         } else
             addPendingMessage(line, msg);
+        if (msg.isReplyRequired())
+            send(Message.MSGACK(msg));
         return change;
     }
 
