@@ -87,6 +87,3 @@ as published by the Free Software Foundation.
 ```
 
 ---
-
-
-[![githalytics.com alpha](https://cruel-carlota.gopagoda.com/fa8201ffe430046c0ae03b604c3eee83 "githalytics.com")](http://githalytics.com/puniverse/galaxy)
