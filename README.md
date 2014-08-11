@@ -1,6 +1,6 @@
 *Galaxy* - a cache-coherent in-memory data grid
 =================================================
-[![Build Status](https://travis-ci.org/puniverse/galaxy.svg?branch=master)](https://travis-ci.org/puniverse/galaxy) [![Dependency Status](https://www.versioneye.com/user/projects/52b019d7ec1375ace70000fa/badge.svg?style=flat)](https://www.versioneye.com/user/projects/52b019d7ec1375ace70000fa)
+[![Build Status](http://img.shields.io/travis/puniverse/galaxy.svg?style=flat)](https://travis-ci.org/puniverse/galaxy) [![Dependency Status](https://www.versioneye.com/user/projects/52b019d7ec1375ace70000fa/badge.svg?style=flat)](https://www.versioneye.com/user/projects/52b019d7ec1375ace70000fa) [![Version](http://img.shields.io/badge/version-1.4-blue.svg?style=flat)](https://github.com/puniverse/galaxy/releases) [![License](http://img.shields.io/badge/license-ECLIPSE-blue.svg?style=flat)](https://www.eclipse.org/legal/epl-v10.html) [![License](http://img.shields.io/badge/license-LGPL-blue.svg?style=flat)](https://www.gnu.org/licenses/lgpl.html)
 
 Galaxy is an in-memory data-grid. It's main function is to distribute data objects (stored as simple byte arrays) among cluster nodes for distributed processing. It also provides point-to-point messaging with guaranteed delivery and guaranteed ordering, as well as a cluster configuration management service.
 
