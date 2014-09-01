@@ -50,18 +50,18 @@ dependencies {
     compile ("com.codahale.metrics:metrics-core:3.0.2") {
         exclude group: "org.slf4j", module: '*'
     }
-    compile "io.netty:netty:3.9.2.Final"
-    compile "org.jgroups:jgroups:3.4.4.Final"
+    compile "io.netty:netty:3.9.3.Final"
+    compile "org.jgroups:jgroups:3.5.0.CR2"
     compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4"
     compile "com.sleepycat:je:5.0.73"
     compile "co.parallelunivese:high-scale-lib:" // non-Maven
     compile "org.slf4j:slf4j-api:1.7.7"
     runtime "org.slf4j:jcl-over-slf4j:1.7.7"
     runtime "org.slf4j:log4j-over-slf4j:1.7.7"
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0"
-    runtime "org.apache.logging.log4j:log4j-api:2.0"
-    runtime "org.apache.logging.log4j:log4j-core:2.0"
-    runtime "com.lmax:disruptor:3.2.1" // required for log4j
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0.2"
+    runtime "org.apache.logging.log4j:log4j-api:2.0.2"
+    runtime "org.apache.logging.log4j:log4j-core:2.0.2"
+    runtime "com.lmax:disruptor:3.3.0" // required for log4j
     compile("org.apache.zookeeper:zookeeper:3.4.6") {
         exclude group: "org.slf4j", module: '*'
         exclude group: "com.google.guava", module: '*'
@@ -86,7 +86,7 @@ dependencies {
     compile("com.esotericsoftware.kryo:kryo:2.24.0") {
         exclude group: "org.ow2.asm", module: '*'
     }
-    compile("de.javakaffee:kryo-serializers:0.26") {
+    compile("de.javakaffee:kryo-serializers:0.27") {
         exclude group: "com.esotericsoftware.kryo", module: '*'
     }
     testCompile "junit:junit:4.11"
@@ -267,7 +267,7 @@ uploadArchives {
 //////// Javancss
  
 dependencies {
-    javancssConf 'org.codehaus.javancss:javancss:32.53'
+    javancssConf 'org.codehaus.javancss:javancss:33.54'
 }
  
 task javancss(dependsOn: 'classes') << {
