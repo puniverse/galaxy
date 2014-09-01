@@ -17,8 +17,8 @@ ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 if (!project.hasProperty("sonatypeUsername") || !project.hasProperty("sonatypePassword")) {
     println "sonatype username or password not set"
-    sonatypeUsername = ""
-    sonatypePassword = ""
+    ext.sonatypeUsername = ""
+    ext.sonatypePassword = ""
 }
 
 configurations {
@@ -220,13 +220,13 @@ configure(install.repositories.mavenInstaller) {
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            beforeDeployment { deployment -> signing.signPom(deployment) }
             repository(
                 url: (isReleaseVersion ? 
                         "https://oss.sonatype.org/service/local/staging/deploy/maven2" : 
                         "https://oss.sonatype.org/content/repositories/snapshots")) {
                 // User and Password are taken from ~/.gradle/gradle.properties
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
+                authentication(userName: project.sonatypeUsername, password: project.sonatypePassword)
             } 
             pom.whenConfigured { pom -> pom.dependencies = pom.dependencies.findAll { 
                     dep -> !dep.artifactId.startsWith('high-scale-lib') } 
