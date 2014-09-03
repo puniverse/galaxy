@@ -51,8 +51,8 @@ dependencies {
     compile ("com.codahale.metrics:metrics-core:3.0.2") {
         exclude group: "org.slf4j", module: '*'
     }
-    compile "io.netty:netty:3.9.3.Final"
-    compile "org.jgroups:jgroups:3.5.0.CR2"
+    compile "io.netty:netty:3.9.4.Final"
+    compile "org.jgroups:jgroups:3.5.0.Final"
     compile "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4"
     compile "com.sleepycat:je:5.0.73"
     compile "co.parallelunivese:high-scale-lib:" // non-Maven
