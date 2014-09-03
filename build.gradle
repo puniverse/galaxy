@@ -36,6 +36,7 @@ repositories {
         mavenCentral()
     }
 }
+
 configurations.all {
     resolutionStrategy {
         failOnVersionConflict()
@@ -43,7 +44,7 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.google.guava:guava:17.0" 
+    compile "com.google.guava:guava:18.0" 
     compile "net.sf.trove4j:trove4j:3.0.3"
     compile "org.springframework:spring-beans:4.0.6.RELEASE"
     compile "org.springframework:spring-context:4.0.6.RELEASE"
@@ -90,8 +91,9 @@ dependencies {
         exclude group: "com.esotericsoftware.kryo", module: '*'
     }
     testCompile "junit:junit:4.11"
-    testCompile ('org.truth0:truth:0.22') {
+    testCompile ('org.truth0:truth:0.23') {
         exclude group: 'junit', module: '*'
+        exclude group: "com.google.guava", module: '*'
     }
     testCompile "org.hamcrest:hamcrest-core:1.3"
     testCompile "org.hamcrest:hamcrest-library:1.3"
@@ -107,7 +109,7 @@ configure (javadoc) {
     destinationDir = file("docs/javadoc")
     options.links = [    
         "http://docs.oracle.com/javase/7/docs/api/",
-        "http://docs.guava-libraries.googlecode.com/git-history/v12.0/javadoc/"
+        "http://docs.guava-libraries.googlecode.com/git-history/v18.0/javadoc/"
     ]
     excludes = [
         "co/paralleluniverse/common/MonitoringType.java",
