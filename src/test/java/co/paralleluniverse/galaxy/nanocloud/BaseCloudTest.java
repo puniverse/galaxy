@@ -1,3 +1,22 @@
+/*
+ * Galaxy
+ * Copyright (C) 2012-2014 Parallel Universe Software Co.
+ * 
+ * This file is part of Galaxy.
+ *
+ * Galaxy is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as 
+ * published by the Free Software Foundation, either version 3 of 
+ * the License, or (at your option) any later version.
+ *
+ * Galaxy is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with Galaxy. If not, see <http://www.gnu.org/licenses/>.
+ */
 package co.paralleluniverse.galaxy.nanocloud;
 
 import co.paralleluniverse.galaxy.Grid;
@@ -9,15 +28,14 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import org.gridkit.nanocloud.CloudFactory;
-import org.gridkit.vicluster.ViManager;
 import org.gridkit.vicluster.ViProps;
 import org.junit.After;
 import org.junit.Before;
-import static co.paralleluniverse.galaxy.testing.GalaxyTestingUtils.*;
-        
-public abstract class BaseCloudTest {
+import static co.paralleluniverse.galaxy.test.GalaxyTestingUtils.*;
+import org.gridkit.nanocloud.Cloud;
 
-    protected ViManager cloud;
+public abstract class BaseCloudTest {
+    protected Cloud cloud;
 
     @Before
     public void defineCloud() {
@@ -31,10 +49,10 @@ public abstract class BaseCloudTest {
         }
     }
 
-    public static ViManager createLocalCloud() {
-        ViManager vim = CloudFactory.createCloud();
-        ViProps.at(vim.node("**")).setLocalType();
-        return vim;
+    public static Cloud createLocalCloud() {
+        Cloud cloud = CloudFactory.createCloud();
+        ViProps.at(cloud.node("**")).setLocalType();
+        return cloud;
     }
 
     public static Callable<Short> startWaitForLargerPeer(final int peerNum, final String configpeerxml) {

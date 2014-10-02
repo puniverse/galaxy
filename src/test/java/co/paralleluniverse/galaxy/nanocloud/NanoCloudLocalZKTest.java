@@ -1,11 +1,30 @@
+/*
+ * Galaxy
+ * Copyright (C) 2012-2014 Parallel Universe Software Co.
+ * 
+ * This file is part of Galaxy.
+ *
+ * Galaxy is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as 
+ * published by the Free Software Foundation, either version 3 of 
+ * the License, or (at your option) any later version.
+ *
+ * Galaxy is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with Galaxy. If not, see <http://www.gnu.org/licenses/>.
+ */
 package co.paralleluniverse.galaxy.nanocloud;
 
-import static co.paralleluniverse.galaxy.testing.GalaxyTestingUtils.*;
+import static co.paralleluniverse.galaxy.test.GalaxyTestingUtils.*;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
-import org.gridkit.vicluster.ViManager;
+import org.gridkit.nanocloud.Cloud;
 import org.gridkit.vicluster.telecontrol.jvm.JvmProps;
 import org.junit.After;
 import static org.junit.Assert.*;
@@ -36,7 +55,7 @@ public class NanoCloudLocalZKTest extends BaseCloudTest {
         assertEquals("inode's id larger than peer1", 2, largerID);
     }
 
-    private static void setJvmArgs(final ViManager cloud) {
+    private static void setJvmArgs(Cloud cloud) {
         String[] copyEnv = {
             "log4j.configurationFile",
         };
