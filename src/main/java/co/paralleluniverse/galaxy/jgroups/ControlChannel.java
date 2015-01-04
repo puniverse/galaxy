@@ -50,6 +50,7 @@ public class ControlChannel extends JChannelAdapter implements ExtendedChannel, 
 
     /**
      * The JChannel's setDiscardOwnMessages must be called before constructing the control channel (and the value must never change)
+     *
      * @param channel
      */
     public ControlChannel(JChannel channel) {
@@ -92,11 +93,18 @@ public class ControlChannel extends JChannelAdapter implements ExtendedChannel, 
             switch (evt.getType()) {
                 case Event.MSG:
                     final Message msg = (Message) evt.getArg();
+                    LOG.debug("up: " + msg);
                     if (msg.getHeader(MAGIC_HEADER) != null) {
-                        if (!(discardOwnMessages && getAddress() != null && msg.getSrc() != null && getAddress().equals(msg.getSrc())))
+                        LOG.debug("up: to control channel " + msg);
+                        if (discardOwnMessages && isOwnMessage(msg))
+                            LOG.debug("up: discarded");
+                        else
                             receiver.receive(msg);
-                    } else {
-                        if (dataReceiver != null && !(dataDiscardOwnMessages && getAddress() != null && msg.getSrc() != null && getAddress().equals(msg.getSrc())))
+                    } else if (dataReceiver != null) {
+                        LOG.debug("up: to data channel " + msg);
+                        if (dataDiscardOwnMessages && isOwnMessage(msg))
+                            LOG.debug("up: discarded");
+                        else
                             dataReceiver.receive(msg);
                     }
                     break;
@@ -163,6 +171,10 @@ public class ControlChannel extends JChannelAdapter implements ExtendedChannel, 
         }
 
         return null;
+    }
+
+    private boolean isOwnMessage(Message msg) {
+        return getAddress() != null && msg.getSrc() != null && getAddress().equals(msg.getSrc());
     }
 
     public static class ControlHeader extends Header {
