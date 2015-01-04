@@ -153,13 +153,11 @@ class JGroupsCluster extends AbstractCluster implements RootLocker, RefAllocator
             this.lockService = new LockService(channel);
 
         this.dataChannel = new JChannelAdapter(channel) {
-
             @Override
             public void send(Message msg) throws Exception {
-                msg.setFlag(Message.NO_TOTAL_ORDER);
+                msg.setFlag(Message.Flag.NO_TOTAL_ORDER);
                 super.send(msg);
             }
-
         };
 
         setControlTree(tree);

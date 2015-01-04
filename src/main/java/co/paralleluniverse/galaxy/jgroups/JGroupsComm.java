@@ -173,7 +173,8 @@ class JGroupsComm extends AbstractComm<Address> {
         try {
             if (LOG.isDebugEnabled())
                 LOG.debug("Sending to node {} ({}): {}", new Object[]{node, address, message});
-            channel.send(new org.jgroups.Message(address, message.toByteArray()));
+            final byte[] content = message.toByteArray();
+            channel.send(new org.jgroups.Message(address, content));
         } catch (Exception ex) {
             LOG.error("Error while sending message " + message + " to node " + node, ex);
         }
@@ -192,13 +193,14 @@ class JGroupsComm extends AbstractComm<Address> {
     @Override
     protected void broadcast(Message message) {
         assignMessageId(message);
-        if (addToPending(message, (short) -1))
-            broadcast(message);
-        try {
-            LOG.debug("Broadcasting (null): {}", message);
-            channel.send(new org.jgroups.Message(null, message.toByteArray()));
-        } catch (Exception ex) {
-            LOG.error("Error while broadcasting message " + message, ex);
+        if (addToPending(message, (short) -1)) {
+            try {
+                LOG.debug("Broadcasting (null): {}", message);
+                final byte[] content = message.toByteArray();
+                channel.send(new org.jgroups.Message(null, content));
+            } catch (Exception ex) {
+                LOG.error("Error while broadcasting message " + message, ex);
+            }
         }
     }
 
@@ -207,7 +209,7 @@ class JGroupsComm extends AbstractComm<Address> {
             LOG.debug("Received {}", msg);
             if (getCluster().getMyAddress() != null && msg.getSrc() != null && getCluster().getMyAddress().equals(msg.getSrc()))
                 return; // discard own (cannot set the flag because it screws up th control channel. not much to do about it - annoing up handler in JChannel)
-            final byte[] buffer = msg.getRawBuffer();
+            final byte[] buffer = msg.getBuffer();
             if (buffer.length == 0)
                 return; // probably just a flush
             final Message message = Message.fromByteArray(buffer);
