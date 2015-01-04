@@ -144,7 +144,6 @@ public class ZooKeeperCluster extends AbstractCluster implements RootLocker, Ref
         super.shutdown();
         refAllocationExecutor.shutdownNow();
         client.close();
-
     }
 
     @Override

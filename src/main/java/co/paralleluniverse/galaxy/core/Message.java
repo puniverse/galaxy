@@ -194,6 +194,8 @@ public class Message implements Streamable, Externalizable, Cloneable {
 
     public static Message fromByteArray(byte[] array) {
         final Type type = Type.values()[array[0]];
+        if (LOG.isDebugEnabled())
+            LOG.debug("from byte array type:" + type.name());
         final Message message = newMessage(type);
         message.read(array, 1);
         return message;

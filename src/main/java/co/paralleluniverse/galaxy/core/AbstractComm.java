@@ -97,12 +97,10 @@ public abstract class AbstractComm<Address> extends ClusterService implements Co
 
         if (message.getNode() == cluster.getMyNodeId()) {
             scheduler.execute(new Runnable() {
-
                 @Override
                 public void run() {
                     receive(message);
                 }
-
             });
             return;
         }
@@ -167,5 +165,4 @@ public abstract class AbstractComm<Address> extends ClusterService implements Co
     @Override
     public void nodeRemoved(short id) {
     }
-
 }

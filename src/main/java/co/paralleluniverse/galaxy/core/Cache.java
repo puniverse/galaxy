@@ -556,7 +556,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             throw new IllegalStateException("Node is a slave. Cannot run grid operations");
 
         if (LOG.isDebugEnabled())
-            LOG.debug("Run(fast): Op.{}(line:{}{}{})", type, hex(id), (data != null ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : ""));
+            LOG.debug("Run(fast): Op.{}(line:{}{}{})", type, hex(id), ((data != null && LOG.isTraceEnabled()) ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : ""));
 
         Object result = runFastTrack(id, type, data, extra, txn);
         if (result instanceof Op)
@@ -574,7 +574,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             throw new IllegalStateException("Node is a slave. Cannot run grid operations");
 
         if (LOG.isDebugEnabled())
-            LOG.debug("Run(fast): Op.{}(line:{}{}{})", type, hex(id), (data != null ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : ""));
+            LOG.debug("Run(fast): Op.{}(line:{}{}{})", type, hex(id), ((data != null && LOG.isTraceEnabled()) ? ", data:" + data : ""), (extra != null ? ", extra:" + extra : ""));
         Object result = runFastTrack(id, type, data, extra, txn);
         if (result instanceof Op)
             return doOpAsync((Op) result);
@@ -636,7 +636,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             if (res != DIDNT_HANDLE)
                 return res;
             else
-                line = (CacheLine) createNewCacheLine(id);
+                line = createNewCacheLine(id);
         }
 
         final Object res;
@@ -664,7 +664,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 if (res != DIDNT_HANDLE)
                     return res;
                 else
-                    line = (CacheLine) createNewCacheLine(op);
+                    line = createNewCacheLine(op);
             }
 
             final Object res;
@@ -924,7 +924,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             if (handleMessageNoLine(message))
                 return;
             else
-                line = (CacheLine) createNewCacheLine(message);
+                line = createNewCacheLine(message);
         }
 
         synchronized (line) {
@@ -2691,7 +2691,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 evictLine(old, false);
             return line;
         } else {
-            old = owned.putIfAbsent(id, (CacheLine) line);
+            old = owned.putIfAbsent(id, line);
             if (old != null && old != line) {
                 evictLine(line, false);
                 return old;
@@ -2960,7 +2960,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
         throw IRRELEVANT_STATE;
     }
-    //</editor-fold>
 
     static final Persistable NULL_PERSISTABLE = new Persistable() {
         @Override
@@ -3010,4 +3009,5 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
         return isVoidLineFunction(clazz.getSuperclass());
     }
+    //</editor-fold>
 }
