@@ -99,7 +99,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
     private BroadcastPeer broadcastPeer = new BroadcastPeer();
     private SocketAddress myAddress;
     private final ConcurrentMap<Short, NodePeer> peers = new ConcurrentHashMap<Short, NodePeer>();
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1,new ThreadFactoryBuilder().setDaemon(true).build());
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("uspCommScheduled-%d").setDaemon(true).build());
     private final UDPCommMonitor monitor;
 
     @ConstructorProperties({"name", "cluster", "serverComm", "port"})
@@ -511,7 +511,11 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         public void sendMessage(Message message) throws InterruptedException {
             if (!queue.offer(message)) {
                 LOG.info("Adding message {} to full queue. Waiting for available space.", message);
-                LOG.debug("no space in Peer {}", this);
+                LOG.warn("no space in Peer {}", this);
+                if (recursive.get() == Boolean.TRUE) {
+                    LOG.error("Queue is too small");
+                    throw new RuntimeException("Queue full");
+                }
                 queue.put(message);
             }
         }
@@ -653,7 +657,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
             try {
                 for (Message message : received) {
                     LOG.debug("Passing received message {} to cache", message);
-                    receive(message);
+                    receive(message); // XXXX
                 }
             } finally {
                 recursive.remove();
@@ -760,7 +764,6 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 //                            // this is a quickReplyToBroadcast
 //                            // TODO
 //                        }
-
                         sentPacket.removeMessage(message);
                     }
                 } else {
@@ -905,7 +908,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 if (next.size() + sentPacketSizeInBytes() > maxPacketSize) {
                     if (next.isResponse() && requestsOnly)
                         LOG.warn("IMPORTANT: Response message {} does not fit in packet {} which contains only requests. THIS MAY CAUSE A DEADLOCK!", next, sentPacket);
-                    LOG.debug("Message {} cannot be added to packet now; packet full.");
+                    LOG.debug("Message {} cannot be added to packet now; packet full (size = {})", next, next.size());
                     break;
                 }
 
@@ -947,7 +950,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
     }
 
     class BroadcastPeer extends Peer {
-        private ConcurrentMap<Long, BroadcastEntry> broadcasts = new ConcurrentHashMap<Long, BroadcastEntry>();
+        private final ConcurrentMap<Long, BroadcastEntry> broadcasts = new ConcurrentHashMap<Long, BroadcastEntry>();
 
         @Override
         public String toString() {
