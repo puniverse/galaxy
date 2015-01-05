@@ -209,10 +209,9 @@ class JGroupsComm extends AbstractComm<Address> {
             LOG.debug("Received {}", msg);
             if (getCluster().getMyAddress() != null && msg.getSrc() != null && getCluster().getMyAddress().equals(msg.getSrc()))
                 return; // discard own (cannot set the flag because it screws up th control channel. not much to do about it - annoing up handler in JChannel)
-            final byte[] buffer = msg.getBuffer();
-            if (buffer.length == 0)
+            if (msg.getLength() == 0)
                 return; // probably just a flush
-            final Message message = Message.fromByteArray(buffer);
+            final Message message = Message.fromByteArray(msg.getRawBuffer(), msg.getOffset(), msg.getLength()); // Message.fromByteArray(msg.getBuffer());
             final Address source = msg.getSrc();
 
             if (message.isResponse()) {

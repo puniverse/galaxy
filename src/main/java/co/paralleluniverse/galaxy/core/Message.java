@@ -193,11 +193,15 @@ public class Message implements Streamable, Externalizable, Cloneable {
     }
 
     public static Message fromByteArray(byte[] array) {
-        final Type type = Type.values()[array[0]];
+        return fromByteArray(array, 0, array.length);
+    }
+
+    public static Message fromByteArray(byte[] array, int offset, int length) {
+        final Type type = Type.values()[array[offset]];
         if (LOG.isDebugEnabled())
             LOG.debug("from byte array type:" + type.name());
         final Message message = newMessage(type);
-        message.read(array, 1);
+        message.read(array, offset + 1, length - 1);
         return message;
     }
 
@@ -512,9 +516,9 @@ public class Message implements Streamable, Externalizable, Cloneable {
         return Streamables.toByteArray(this);
     }
 
-    public void read(byte[] array, int offset) {
-        Streamables.fromByteArray(streamableNoBuffers(), array, offset);
-        offset = size1(); // we don't += b/c orig offset included the type which is also included in size1, so we don't count it twice
+    public void read(byte[] array, int offset, int length) {
+        Streamables.fromByteArray(streamableNoBuffers(), array, offset, length);
+        offset += size1() - 1; // subtract 1 for the type, which is also included in the size
         for (int i = 0; i < getNumDataBuffers(); i++) {
             final int size = Ints.fromBytes((byte) 0, (byte) 0, array[offset], array[offset + 1]);// big-endian, unsigned short
             offset += 2;
