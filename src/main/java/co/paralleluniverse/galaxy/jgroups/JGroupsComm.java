@@ -145,8 +145,7 @@ class JGroupsComm extends AbstractComm<Address> {
         }
 
         if (node >= 0) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Enqueing message in pending-replies {}", message);
+            LOG.debug("Enqueing message in pending replies {}", message);
             pendingReply.getOrAllocate(node).addFirst(message);
         } else {
             assert message.isBroadcast();
@@ -158,6 +157,7 @@ class JGroupsComm extends AbstractComm<Address> {
                     receive(Message.NOT_FOUND((LineMessage) message).setIncoming());
                     return false;
                 } else {
+                    LOG.debug("Enqueing message in pending broadcasts {}", message);
                     pendingBroadcasts.put(message.getMessageId(), new BroadcastEntry((LineMessage) message, nodes));
                     return true;
                 }
@@ -211,20 +211,20 @@ class JGroupsComm extends AbstractComm<Address> {
                 return; // discard own (cannot set the flag because it screws up th control channel. not much to do about it - annoing up handler in JChannel)
             if (msg.getLength() == 0)
                 return; // probably just a flush
-            final Message message = Message.fromByteArray(msg.getRawBuffer(), msg.getOffset(), msg.getLength()); // Message.fromByteArray(msg.getBuffer());
-            final Address source = msg.getSrc();
+            final short sourceNode = getNode(msg.getSrc());
+            if (sourceNode < 0)
+                throw new RuntimeException("Node not found for source address " + msg.getSrc());
+
+            final Message message = Message.fromByteArray(msg.getRawBuffer(), msg.getOffset(), msg.getLength()).setIncoming().setNode(sourceNode); // Message.fromByteArray(msg.getBuffer());
 
             if (message.isResponse()) {
                 final Deque<Message> pending = pendingReply.get(message.getNode());
-
                 if (pending != null) {
                     boolean res = pending.removeLastOccurrence(message); // relies on Message.equals that matches request/reply
                     if (res)
                         LOG.debug("Message {} is a reply! (removing from pending)", message);
                 }
-            }
 
-            if (message.isResponse()) {
                 final BroadcastEntry entry = pendingBroadcasts.get(message.getMessageId());
                 if (entry != null) {
                     if (message.getType() != Message.Type.ACK) {// this is a response - no need to wait for further acks
@@ -235,9 +235,6 @@ class JGroupsComm extends AbstractComm<Address> {
                 }
             }
 
-            final short sourceNode = getNode(source);
-            if (sourceNode < 0)
-                throw new RuntimeException("Node not found for source address " + source);
             message.setNode(sourceNode);
             receive(message);
         } catch (Exception ex) {
