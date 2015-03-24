@@ -33,7 +33,7 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
         if (id <= 0)
             return null;
         assert cache.getListener(id) == null;
-        R ref = createRef(id, obj);
+        final R ref = createRef(id, obj);
         cache.setListener(id, ref);
         return ref;
     }
@@ -41,7 +41,7 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
     public R getOrCreateRef(long id) {
         if (id <= 0)
             return null;
-        CacheListener ref = cache.getListener(id);
+        final CacheListener ref = cache.getListener(id);
         return (R) (ref != null ? ref : cache.setListenerIfAbsent(id, createRef(id, null)));
     }
 
@@ -53,7 +53,7 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
         if (id <= 0)
             return null;
         assert cache.getListener(id) == null;
-        DistributedReference<T> ref = new DistributedReference<T>(id, obj);
+        final DistributedReference<T> ref = new DistributedReference<T>(id, obj);
         cache.setListener(id, ref);
         return ref;
     }
@@ -61,7 +61,7 @@ public class DistributedReferenceStore<R extends DistributedReference<T>, T> {
     public static <T> DistributedReference<T> getOrCreateRef(Cache cache, long id) {
         if (id <= 0)
             return null;
-        CacheListener ref = cache.getListener(id);
+        final CacheListener ref = cache.getListener(id);
         return (DistributedReference<T>) (ref != null ? ref : cache.setListenerIfAbsent(id, new DistributedReference<T>(id, null)));
     }
 }
