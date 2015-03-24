@@ -26,9 +26,11 @@ import co.paralleluniverse.galaxy.core.NodeNotFoundException;
 import co.paralleluniverse.galaxy.core.ServerComm;
 import static co.paralleluniverse.galaxy.netty.IpConstants.*;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import gnu.trove.iterator.TShortIterator;
-import gnu.trove.set.hash.TLongHashSet;
-import gnu.trove.set.hash.TShortHashSet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.shorts.ShortIterator;
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import java.beans.ConstructorProperties;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -417,7 +419,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
             assignMessageId(message);
             final boolean unicast = getNumPeerNodes() < minimumNodesToMulticast;
-            final TShortHashSet nodes = new TShortHashSet();
+            final ShortSet nodes = new ShortOpenHashSet();
             for (NodePeer peer : peers.values()) {
                 nodes.add(peer.node);
                 peer.sendMessage(message, unicast);
@@ -585,7 +587,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         private boolean hasRequests = false; // true if not all messages in the sent packet are responses
         private boolean requestsOnly = true; // true if none of the messages in the sent packet are responses
         private volatile boolean broadcast; // true if the sent packet contains a (single) broadcast (and only that)
-        private final TLongHashSet pendingRequests = new TLongHashSet();
+        private final LongSet pendingRequests = new LongOpenHashSet();
         private final Set<Message> unicastBroadcasts = Collections.newSetFromMap(new ConcurrentHashMap<Message, Boolean>());
         private long lastReceivedBroadcastId;
 
@@ -957,7 +959,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
             return "BroadcastPeer{" + "multicastAddress=" + multicastGroup + ", lastSent=" + getLastSent() + ", sentPacket=" + sentPacket + ", next=" + overflow + ", queue=" + queue + '}';
         }
 
-        public void sendMessage(Message message, TShortHashSet nodes, boolean unicast) throws InterruptedException {
+        public void sendMessage(Message message, ShortSet nodes, boolean unicast) throws InterruptedException {
             broadcasts.put(message.getMessageId(), new BroadcastEntry(message, nodes));
             if (!unicast)
                 sendMessage(message);
@@ -1027,7 +1029,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                 }
 
                 if (entry != null) {
-                    for (TShortIterator it = entry.nodes.iterator(); it.hasNext();) {
+                    for (ShortIterator it = entry.nodes.iterator(); it.hasNext();) {
                         final short node = it.next();
                         final NodePeer peer = peers.get(node);
                         synchronized (peer) {
@@ -1110,7 +1112,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
                         final long sinceLastSent = now - getLastSent();
                         long delay = resendPeriodNanos - sinceLastSent;
                         delay = (delay >= 0 ? delay : 0);
-                        for (TShortIterator it = entry.nodes.iterator(); it.hasNext();) {
+                        for (ShortIterator it = entry.nodes.iterator(); it.hasNext();) {
                             final NodePeer peer = peers.get(it.next());
                             if (peer.isBroadcast()) {
                                 peer.unicastBroadcast();
@@ -1134,7 +1136,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
         private void releasePeers(BroadcastEntry entry, short node) {
             final Message message = entry.message;
-            for (TShortIterator it = entry.nodes.iterator(); it.hasNext();) {
+            for (ShortIterator it = entry.nodes.iterator(); it.hasNext();) {
                 final NodePeer peer = peers.get(it.next());
                 if (peer.isBroadcast()) {
                     LOG.debug("Broadcast releasing peer {} for message {}", peer, message);
@@ -1164,9 +1166,9 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
     private static class BroadcastEntry {
         final Message message;
-        final TShortHashSet nodes;
+        final ShortSet nodes;
 
-        public BroadcastEntry(Message message, TShortHashSet nodes) {
+        public BroadcastEntry(Message message, ShortSet nodes) {
             this.message = message;
             this.nodes = nodes;
             this.nodes.remove(Comm.SERVER); // NOT TO SERVER

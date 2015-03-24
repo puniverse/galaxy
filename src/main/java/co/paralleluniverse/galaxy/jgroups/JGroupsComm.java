@@ -22,7 +22,8 @@ import co.paralleluniverse.galaxy.core.Message;
 import co.paralleluniverse.galaxy.core.Message.LineMessage;
 import co.paralleluniverse.galaxy.core.MessageReceiver;
 import co.paralleluniverse.galaxy.core.NodeNotFoundException;
-import gnu.trove.set.hash.TShortHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import java.beans.ConstructorProperties;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -287,11 +288,11 @@ class JGroupsComm extends AbstractComm<Address> {
 
     private static class BroadcastEntry {
         final LineMessage message;
-        final TShortHashSet nodes;
+        final ShortSet nodes;
 
         public BroadcastEntry(LineMessage message, Set<Short> nodes) {
             this.message = message;
-            this.nodes = new TShortHashSet(nodes);
+            this.nodes = new ShortOpenHashSet(nodes);
             this.nodes.remove(Comm.SERVER); // NOT TO SERVER
             LOG.debug("Awaiting ACKS for message {} from nodes {}", message, this.nodes);
         }

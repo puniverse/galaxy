@@ -14,6 +14,7 @@
 package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.common.MonitoringType;
+import co.paralleluniverse.common.collection.LongObjectProcedure;
 import co.paralleluniverse.common.io.Checksum;
 import co.paralleluniverse.common.io.HashFunctionChecksum;
 import co.paralleluniverse.common.io.Persistable;
@@ -38,10 +39,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.googlecode.concurrentlinkedhashmap.Weigher;
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.iterator.TShortIterator;
-import gnu.trove.procedure.TLongObjectProcedure;
-import gnu.trove.set.hash.TShortHashSet;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.shorts.ShortArraySet;
+import it.unimi.dsi.fastutil.shorts.ShortIterator;
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import java.beans.ConstructorProperties;
 import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
@@ -104,7 +106,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private final NonBlockingHashMapLong<ArrayList<Op>> pendingOps;
     private final NonBlockingHashMapLong<LinkedHashSet<LineMessage>> pendingMessages;
     private ConcurrentLinkedDeque<CacheLine> freeLineList;
-    private ConcurrentLinkedDeque<TShortHashSet> freeSharerSetList;
+    private ConcurrentLinkedDeque<ShortSet> freeSharerSetList;
     private final ThreadLocal<Queue<Message>> shortCircuitMessage = new ThreadLocal<Queue<Message>>();
     private boolean reuseLines = true;
     private boolean reuseSharerSets = false;
@@ -291,7 +293,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             throw new RuntimeException("Synchronous mode has not been implemented yet.");
 
         this.freeLineList = reuseLines ? new ConcurrentLinkedDeque<CacheLine>() : null;
-        this.freeSharerSetList = reuseSharerSets ? new ConcurrentLinkedDeque<TShortHashSet>() : null;
+        this.freeSharerSetList = reuseSharerSets ? new ConcurrentLinkedDeque<ShortSet>() : null;
         this.broadcastsRoutedToServer = hasServer && ((AbstractComm) comm).isSendToServerInsteadOfMulticast(); // this is a special case that requires special handling b/c of potential consistency problems (see MainMemory)
     }
 
@@ -379,7 +381,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         private ByteBuffer data;        // 4
         private short parts;            // 2
         private short owner = -1;       // 2
-        private TShortHashSet sharers;  // 4
+        private ShortSet sharers;       // 4
         private volatile CacheListener listener; // 4
         // =
         // 49 (+ 8 = 57)
@@ -1198,7 +1200,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (!rollbackSupported)
             throw new IllegalStateException("Cache nconfigured to not support rollbacks");
 
-        txn.forEachRollback(new TLongObjectProcedure<RollbackInfo>() {
+        txn.forEachRollback(new LongObjectProcedure<RollbackInfo>() {
             @Override
             public boolean execute(long id, RollbackInfo r) {
                 final CacheLine line = getLine(id);
@@ -1233,7 +1235,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         final ArrayList<CacheLine> unmodified = new ArrayList<CacheLine>();
         final boolean locked = backup.startBackup();
         try {
-            for (TLongIterator it = txn.getLines().iterator(); it.hasNext();) {
+            for (LongIterator it = txn.getLines().iterator(); it.hasNext();) {
                 final long id = it.next();
                 final CacheLine line = getLine(id);
                 LOG.debug("Ending transaction: {}, line {}", txn, line);
@@ -1419,7 +1421,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (line.state.isLessThan(State.E)) {
             if (setNextState(line, State.E)) {
                 assert !line.sharers.isEmpty();
-                for (TShortIterator it = line.sharers.iterator(); it.hasNext();) {
+                for (ShortIterator it = line.sharers.iterator(); it.hasNext();) {
                     final short sharer = it.next();
                     if (sharer != Comm.SERVER) // we've already INVed server in handleMessagePutX
                         send(Message.INV(sharer, line.getId(), line.getOwner())); // owner may not be us but the previous owner - see handleMessagePutX
@@ -1584,8 +1586,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
 
         setState(line, State.O);
-        short[] toNodes = (short[]) extra;
-        line.sharers.addAll(toNodes);
+        final short[] toNodes = (short[]) extra;
+        for (short s : toNodes)
+            line.sharers.add(s);
 
         for (short node : toNodes) {
             send(Message.PUT(node, line.id, line.version, readOnly(line.data)));
@@ -1607,7 +1610,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         short toNode = (Short) extra;
         setOwner(line, toNode);
-        final short[] sharers = line.sharers.toArray();
+        final short[] sharers = line.sharers.toShortArray();
         // TODO: maybe S, or, rather, transitional O. We could add this node to sharers and  if new owner dies, we become owner here and in the server
         setState(line, State.I);
 
@@ -1736,7 +1739,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (!hasServer && line.is(CacheLine.SLAVE))
             line.sharers.add(myNodeId());
 
-        final short[] sharers = line.sharers.toArray(); // setState will nullify sharers
+        final short[] sharers = line.sharers.toShortArray(); // setState will nullify sharers
 
         int change = 0;
         // TODO: maybe S, or, rather, transitional O. We could add this node to sharers and  if new owner dies, we become owner here and in the server
@@ -1791,9 +1794,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             return LINE_NO_CHANGE;
         }
 
-        final TShortHashSet sharers = new TShortHashSet((msg.getSharers() != null ? msg.getSharers().length : 0) + 1);
-        if (msg.getSharers() != null)
-            sharers.addAll(msg.getSharers());
+        final ShortSet sharers = new ShortArraySet((msg.getSharers() != null ? msg.getSharers().length : 0) + 1);
+        if (msg.getSharers() != null) {
+            for (short s : msg.getSharers())
+                sharers.add(s);
+        }
         if (hasServer && msg.getNode() != Comm.SERVER)
             sharers.add(Comm.SERVER); // this is so we make sure the server was notified for the ownership transfer. this is done by INV
         sharers.remove(myNodeId()); // don't INV myself
@@ -2832,17 +2837,17 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         freeLineList.addFirst(line);
     }
 
-    private TShortHashSet allocateSharerSet(int size) {
+    private ShortSet allocateSharerSet(int size) {
         if (freeSharerSetList == null)
-            return new TShortHashSet(size);
+            return new ShortOpenHashSet(size);
 
-        TShortHashSet sharers = freeSharerSetList.pollFirst();
+        ShortSet sharers = freeSharerSetList.pollFirst();
         if (sharers != null)
             return sharers;
-        return new TShortHashSet(size);
+        return new ShortOpenHashSet(size);
     }
 
-    private void deallocateSharerSet(long id, TShortHashSet sharers) {
+    private void deallocateSharerSet(long id, ShortSet sharers) {
         if (freeSharerSetList == null)
             return;
 

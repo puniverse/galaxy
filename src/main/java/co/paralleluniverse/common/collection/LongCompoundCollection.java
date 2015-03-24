@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014, Parallel Universe Software Co. All rights reserved.
+ * Copyright (c) 2012-2015, Parallel Universe Software Co. All rights reserved.
  * 
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -12,8 +12,10 @@
  */
 package co.paralleluniverse.common.collection;
 
-import gnu.trove.TLongCollection;
-import gnu.trove.iterator.TLongIterator;
+import it.unimi.dsi.fastutil.longs.AbstractLongCollection;
+import it.unimi.dsi.fastutil.longs.AbstractLongIterator;
+import it.unimi.dsi.fastutil.longs.LongCollection;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -23,32 +25,32 @@ import java.util.NoSuchElementException;
  *
  * @author pron
  */
-public class TLongCompoundCollection extends TLongAbstractCollection {
-    private Collection<TLongCollection> collections;
+public class LongCompoundCollection extends AbstractLongCollection {
+    private final Collection<LongCollection> collections;
 
-    public TLongCompoundCollection() {
-        collections = new ArrayList<TLongCollection>();
+    public LongCompoundCollection() {
+        collections = new ArrayList<LongCollection>();
     }
 
-    public void addCollection(TLongCollection c) {
+    public void addCollection(LongCollection c) {
         collections.add(c);
     }
 
-    public void removeCollection(TLongCollection c) {
+    public void removeCollection(LongCollection c) {
         collections.remove(c);
     }
 
     @Override
     public int size() {
         int size = 0;
-        for(TLongCollection c : collections)
+        for(LongCollection c : collections)
             size += c.size();
         return size;
     }
 
     @Override
     public boolean isEmpty() {
-        for(TLongCollection c : collections) {
+        for(LongCollection c : collections) {
             if(!c.isEmpty())
                 return false;
         }
@@ -56,10 +58,10 @@ public class TLongCompoundCollection extends TLongAbstractCollection {
     }
 
     @Override
-    public TLongIterator iterator() {
-        return new TLongIterator() {
-            private Iterator<TLongCollection> ce = collections.iterator();
-            private TLongIterator i = null;
+    public LongIterator iterator() {
+        return new AbstractLongIterator() {
+            private final Iterator<LongCollection> ce = collections.iterator();
+            private LongIterator i = null;
 
             @Override
             public boolean hasNext() {
@@ -70,18 +72,19 @@ public class TLongCompoundCollection extends TLongAbstractCollection {
             }
 
             @Override
-            public long next() {
+            public long nextLong() {
                 setIterator();
                 if (i == null)
                     throw new NoSuchElementException();
                 return i.next();
             }
 
+            
             @Override
             public void remove() {
                 i.remove();
             }
-
+            
             private void setIterator() {
                 if (i == null || !i.hasNext()) {
                     if (ce.hasNext())
@@ -93,13 +96,13 @@ public class TLongCompoundCollection extends TLongAbstractCollection {
 
     @Override
     public void clear() {
-        for (TLongCollection c : collections)
+        for (LongCollection c : collections)
             c.clear();
     }
 
     @Override
     public boolean contains(long value) {
-        for (TLongCollection c : collections) {
+        for (LongCollection c : collections) {
             if (c.contains(value))
                 return true;
         }
@@ -107,9 +110,9 @@ public class TLongCompoundCollection extends TLongAbstractCollection {
     }
 
     @Override
-    public boolean remove(long value) {
+    public boolean rem(long value) {
         boolean retValue = false;
-        for (TLongCollection c : collections)
+        for (LongCollection c : collections)
             retValue |= c.remove(value);
         return retValue;
     }

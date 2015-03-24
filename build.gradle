@@ -45,7 +45,7 @@ configurations.all {
 
 dependencies {
     compile "com.google.guava:guava:18.0" 
-    compile "net.sf.trove4j:trove4j:3.0.3"
+    compile 'it.unimi.dsi:fastutil:6.6.2' // compile "net.sf.trove4j:trove4j:3.0.3"
     compile "org.springframework:spring-beans:4.0.6.RELEASE"
     compile "org.springframework:spring-context:4.0.6.RELEASE"
     compile ("com.codahale.metrics:metrics-core:3.0.2") {

@@ -13,14 +13,16 @@
  */
 package co.paralleluniverse.galaxy.core;
 
-import co.paralleluniverse.common.collection.TLongAbstractCollection;
-import co.paralleluniverse.common.collection.TLongCompoundCollection;
+import co.paralleluniverse.common.collection.LongCompoundCollection;
+import co.paralleluniverse.common.collection.LongObjectProcedure;
 import co.paralleluniverse.galaxy.StoreTransaction;
-import gnu.trove.TLongCollection;
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.procedure.TLongObjectProcedure;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongCollection;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongLists;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -31,33 +33,33 @@ import java.util.List;
  * @author pron
  */
 public class Transaction extends StoreTransaction {
-    private TLongCollection lines;
-    private TLongHashSet ls;
+    private LongCollection lines;
+    private LongSet ls;
     private List<Op> ops;
-    private final TLongObjectHashMap<RollbackInfo> rollbackLog;
+    private final Long2ObjectOpenHashMap<RollbackInfo> rollbackLog;
 
     Transaction(boolean rollback) {
-        rollbackLog = rollback ? new TLongObjectHashMap<RollbackInfo>() : null;
+        rollbackLog = rollback ? new Long2ObjectOpenHashMap<RollbackInfo>() : null;
     }
 
     synchronized void add(long id) {
         if (ls == null)
-            ls = new TLongHashSet();
+            ls = new LongOpenHashSet();
         ls.add(id);
         if (lines == null)
             lines = ls;
         else if (lines != ls)
-            ((TLongCompoundCollection) lines).addCollection(ls);
+            ((LongCompoundCollection) lines).addCollection(ls);
     }
 
-    synchronized void add(TLongCollection c) {
+    synchronized void add(LongCollection c) {
         if (lines == null)
-            lines = new TLongCompoundCollection();
+            lines = new LongCompoundCollection();
         else if (lines == ls) {
-            lines = new TLongCompoundCollection();
-            ((TLongCompoundCollection) lines).addCollection(ls);
+            lines = new LongCompoundCollection();
+            ((LongCompoundCollection) lines).addCollection(ls);
         }
-        ((TLongCompoundCollection) lines).addCollection(c);
+        ((LongCompoundCollection) lines).addCollection(c);
     }
 
     synchronized void add(Op op) {
@@ -65,32 +67,34 @@ public class Transaction extends StoreTransaction {
             ops = new ArrayList<Op>();
         ops.add(op);
     }
+
     synchronized boolean isRecorded(long id) {
-        return rollbackLog.contains(id);
+        return rollbackLog.containsKey(id);
     }
 
     synchronized void recordRollback(long id, long version, boolean modified, byte[] data) {
-        RollbackInfo prev = rollbackLog.putIfAbsent(id, new RollbackInfo(version, modified, data));
-        assert prev == null;
+        assert rollbackLog.get(id) == null;
+        rollbackLog.put(id, new RollbackInfo(version, modified, data));
     }
 
-    synchronized TLongCollection getLines() {
-        return lines != null ? lines : TLongAbstractCollection.EMPTY_COLLECTION;
+    synchronized LongCollection getLines() {
+        return lines != null ? lines : LongLists.EMPTY_LIST;
     }
 
     synchronized List<Op> getOps() {
         return ops == null ? Collections.<Op>emptyList() : ops;
     }
 
-    synchronized void forEachRollback(TLongObjectProcedure<RollbackInfo> proc) {
-        rollbackLog.forEachEntry(proc);
+    synchronized void forEachRollback(LongObjectProcedure<RollbackInfo> proc) {
+        for (Long2ObjectMap.Entry<RollbackInfo> entry : rollbackLog.long2ObjectEntrySet())
+            proc.execute(entry.getLongKey(), entry.getValue());
     }
 
     @Override
     public synchronized Iterator<Long> iterator() {
         if (lines == null)
             return Collections.emptyIterator();
-        final TLongIterator it = lines.iterator();
+        final LongIterator it = lines.iterator();
         return new Iterator<Long>() {
             @Override
             public boolean hasNext() {

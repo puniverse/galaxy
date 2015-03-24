@@ -12,17 +12,19 @@
  */
 package co.paralleluniverse.common.collection;
 
-import gnu.trove.iterator.TLongIterator;
+import it.unimi.dsi.fastutil.longs.AbstractLongCollection;
+import it.unimi.dsi.fastutil.longs.AbstractLongIterator;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 
 /**
  *
  * @author pron
  */
-public class TLongRange extends TLongAbstractCollection {
+public class LongRange extends AbstractLongCollection {
     final long start;
     final int length;
 
-    public TLongRange(long start, int length) {
+    public LongRange(long start, int length) {
         this.start = start;
         this.length = length;
     }
@@ -33,8 +35,8 @@ public class TLongRange extends TLongAbstractCollection {
     }
 
     @Override
-    public TLongIterator iterator() {
-        return new TLongIterator() {
+    public LongIterator iterator() {
+        return new AbstractLongIterator() {
             private int nextIndex = 0;
 
             @Override
@@ -43,7 +45,7 @@ public class TLongRange extends TLongAbstractCollection {
             }
 
             @Override
-            public long next() {
+            public long nextLong() {
                 return start + (nextIndex++);
             }
 
@@ -60,7 +62,7 @@ public class TLongRange extends TLongAbstractCollection {
     }
 
     @Override
-    public boolean remove(long entry) {
+    public boolean rem(long entry) {
         throw new UnsupportedOperationException();
     }
 

@@ -45,8 +45,8 @@ import com.sleepycat.je.SecondaryDatabase;
 import com.sleepycat.je.SecondaryKeyCreator;
 import com.sleepycat.je.Transaction;
 import com.sleepycat.je.TransactionConfig;
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
@@ -217,7 +217,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         final Transaction txn = null;
 //        final Transaction txn = env.beginTransaction(null, TransactionConfig.DEFAULT);
 //        try {
-        TLongArrayList lines = new TLongArrayList();
+        final LongArrayList lines = new LongArrayList();
 
         final DatabaseEntry sKey = new DatabaseEntry(Shorts.toByteArray(node));
         final DatabaseEntry pKey = new DatabaseEntry();
@@ -236,7 +236,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         }
 
         byte[] longArray = new byte[8];
-        for (TLongIterator it = lines.iterator(); it.hasNext();) {
+        for (LongIterator it = lines.iterator(); it.hasNext();) {
             toByteArray(it.next(), longArray);
             pKey.setData(longArray);
             ownerDirectory.put(null, pKey, SERVER);
