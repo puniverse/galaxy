@@ -143,6 +143,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private static final long LOCKING_OPS = Enums.setOf(Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL);
     private static final long PUSH_OPS = Enums.setOf(Op.Type.PUSH, Op.Type.PUSHX);
 
+    //<editor-fold defaultstate="collapsed" desc="Constructors and Config">
+    /////////////////////////// Constructors and Config ///////////////////
     @ConstructorProperties({"name", "cluster", "comm", "storage", "backup", "monitoringType", "maxCapacity"})
     public Cache(String name, Cluster cluster, Comm comm, CacheStorage storage, Backup backup, MonitoringType monitoringType, long maxCapacity) {
         this(name, cluster, comm, storage, backup, createMonitor(monitoringType, name), maxCapacity);
@@ -313,6 +315,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     public void awaitAvailable() throws InterruptedException {
         super.awaitAvailable();
     }
+    //</editor-fold>
 
     public void setReceiver(MessageReceiver receiver) {
         assertDuringInitialization();
@@ -337,20 +340,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     RefAllocator getRefAllocator() {
         return idAllocator.getRefAllocator();
-    }
-
-    boolean tryLock(long id, ItemState state, Transaction txn) {
-        final CacheLine line = getLine(id);
-        if (line == null)
-            return false;
-        synchronized (line) {
-            if ((state == ItemState.OWNED & line.getState() == State.E)
-                    | (state == ItemState.SHARED & !line.getState().isLessThan(State.S))) {
-                lockLine(line, txn);
-                return true;
-            }
-        }
-        return false;
     }
 
     //<editor-fold defaultstate="collapsed" desc="Types">
@@ -499,57 +488,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
     }
     //</editor-fold>
-
-    public boolean isLocked(long id) {
-        final CacheLine line = getLine(id);
-        if (line == null)
-            return false;
-        else
-            synchronized (line) {
-                return line.isLocked();
-            }
-    }
-
-    State getState(long id) {
-        final CacheLine line = getLine(id);
-        if (line == null)
-            return null;
-        else
-            return line.getState();
-    }
-
-    public long getVersion(long id) {
-        final CacheLine line = getLine(id);
-        if (line == null)
-            return -1;
-        return line.getVersion();
-    }
-
-    private CacheListener setListener(long id, CacheListener listener, boolean ifAbsent) {
-        try {
-            return (CacheListener) doOp(Op.Type.LSTN, id, ifAbsent, listener, null);
-        } catch (TimeoutException e) {
-            throw new AssertionError();
-        }
-    }
-
-    @Override
-    public CacheListener setListenerIfAbsent(long id, CacheListener listener) {
-        return setListener(id, listener, true);
-    }
-
-    @Override
-    public void setListener(long id, CacheListener listener) {
-        setListener(id, listener, false);
-    }
-
-    @Override
-    public CacheListener getListener(long id) {
-        final CacheLine line = getLine(id);
-        if (line == null)
-            return null;
-        return line.getListener();
-    }
 
     //<editor-fold defaultstate="collapsed" desc="Execution flow">
     /////////////////////////// Execution flow ///////////////////////////////////////////
@@ -866,6 +804,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     @Override
+    @SuppressWarnings({"BoxedValueEquality"})
     public void receive(Message message) {
         if (recursive.get() != Boolean.TRUE) {
             recursive.set(Boolean.TRUE);
@@ -1127,6 +1066,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
         return change;
     }
+
     private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(
             Message.Type.GET,
             Message.Type.GETX,
@@ -1183,6 +1123,74 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     public void send(Message.MSG message) {
         send((Message) message);
         monitor.addOp(Op.Type.SEND, 0);
+    }
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="Public Ops">
+    /////////////////////////// Public Ops ///////////////////
+    boolean tryLock(long id, ItemState state, Transaction txn) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return false;
+        synchronized (line) {
+            if ((state == ItemState.OWNED & line.getState() == State.E)
+                    | (state == ItemState.SHARED & !line.getState().isLessThan(State.S))) {
+                lockLine(line, txn);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isLocked(long id) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return false;
+        else
+            synchronized (line) {
+                return line.isLocked();
+            }
+    }
+
+    State getState(long id) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return null;
+        else
+            return line.getState();
+    }
+
+    public long getVersion(long id) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return -1;
+        return line.getVersion();
+    }
+
+    @Override
+    public CacheListener setListenerIfAbsent(long id, CacheListener listener) {
+        return setListener(id, listener, true);
+    }
+
+    @Override
+    public void setListener(long id, CacheListener listener) {
+        setListener(id, listener, false);
+    }
+
+    @Override
+    public CacheListener getListener(long id) {
+        final CacheLine line = getLine(id);
+        if (line == null)
+            return null;
+        return line.getListener();
+    }
+
+    private CacheListener setListener(long id, CacheListener listener, boolean ifAbsent) {
+        try {
+            return (CacheListener) doOp(Op.Type.LSTN, id, ifAbsent, listener, null);
+        } catch (TimeoutException e) {
+            throw new AssertionError();
+        }
     }
     //</editor-fold>
 
@@ -2237,6 +2245,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     public void nodeAdded(short node) {
     }
 
+    @SuppressWarnings({"BoxedValueEquality"})
     private void handleNodeEvents(CacheLine line) {
         if (inNodeEventHandler.get() == Boolean.TRUE)
             return;
@@ -2305,7 +2314,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Implementation details">
-    /////////////////////////// Implementation details ///////////////////////////////////////////
+    /////////////////////////// Implementation details ///////////////////
     private boolean setNextState(CacheLine line, State nextState) {
         if (line.nextState == nextState)
             return false;
