@@ -138,10 +138,41 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private static final int LINE_MODIFIED_CHANGED = 1 << 2;
     private static final int LINE_EVERYTHING_CHANGED = -1;
     //
-    private static final long HIT_OR_MISS_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL);
-    private static final long FAST_TRACK_OPS = Enums.setOf(Op.Type.GET, Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL, Op.Type.INVOKE, Op.Type.LSTN);
-    private static final long LOCKING_OPS = Enums.setOf(Op.Type.GETS, Op.Type.GETX, Op.Type.SET, Op.Type.DEL);
-    private static final long PUSH_OPS = Enums.setOf(Op.Type.PUSH, Op.Type.PUSHX);
+    private static final long HIT_OR_MISS_OPS = Enums.setOf(
+            Op.Type.GET, 
+            Op.Type.GETS, 
+            Op.Type.GETX, 
+            Op.Type.SET, 
+            Op.Type.DEL);
+    private static final long FAST_TRACK_OPS = Enums.setOf(
+            Op.Type.GET,
+            Op.Type.GETS,
+            Op.Type.GETX,
+            Op.Type.SET,
+            Op.Type.DEL,
+            Op.Type.INVOKE,
+            Op.Type.LSTN);
+    private static final long LOCKING_OPS = Enums.setOf(
+            Op.Type.GETS, 
+            Op.Type.GETX, 
+            Op.Type.SET, 
+            Op.Type.DEL);
+    private static final long PUSH_OPS = Enums.setOf(
+            Op.Type.PUSH, 
+            Op.Type.PUSHX);
+
+    private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(
+            Message.Type.GET,
+            Message.Type.GETX,
+            Message.Type.INV,
+            Message.Type.PUT,
+            Message.Type.PUTX,
+            Message.Type.INVOKE);
+
+    private static final long MESSAGES_WITH_FAST_REPLY = Enums.setOf(
+            Message.Type.GET,
+            Message.Type.GETX,
+            Message.Type.INVOKE);
 
     //<editor-fold defaultstate="collapsed" desc="Constructors and Config">
     /////////////////////////// Constructors and Config ///////////////////
@@ -1067,14 +1098,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return change;
     }
 
-    private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(
-            Message.Type.GET,
-            Message.Type.GETX,
-            Message.Type.INV,
-            Message.Type.PUT,
-            Message.Type.PUTX,
-            Message.Type.INVOKE);
-
     private boolean shouldHoldMessage(CacheLine line, Message message) {
         final boolean res = message.getType().isOf(MESSAGES_BLOCKED_BY_LOCK)
                 && (line.isLocked()
@@ -1087,11 +1110,6 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             return false;
         return res;
     }
-
-    private static final long MESSAGES_WITH_FAST_REPLY = Enums.setOf(
-            Message.Type.GET,
-            Message.Type.GETX,
-            Message.Type.INVOKE);
 
     private boolean quickReplyToBroadcast(CacheLine line, LineMessage msg) {
         // we quickly reply to a broadcast if we're the line owner so that the sender's UDPComm
