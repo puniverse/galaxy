@@ -50,11 +50,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -82,6 +80,9 @@ import org.springframework.jmx.export.annotation.ManagedAttribute;
  * @author pron
  */
 public class Cache extends ClusterService implements MessageReceiver, NodeChangeListener, co.paralleluniverse.galaxy.Cache {
+    static {
+        System.out.println("CACHE VER: 13");
+    }
     /*
      * To preserve memory ordering semantics, all messages from node N must be received and processed in the order in which they
      * were sent.
@@ -103,8 +104,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     //
     private final NonBlockingHashMapLong<CacheLine> owned;
     private final ConcurrentMap<Long, CacheLine> shared;
-    private final NonBlockingHashMapLong<ArrayList<Op>> pendingOps;
-    private final NonBlockingHashMapLong<LinkedHashSet<LineMessage>> pendingMessages;
+    private final NonBlockingHashMapLong<ArrayList<Object>> pending;
     private ConcurrentLinkedDeque<CacheLine> freeLineList;
     private ConcurrentLinkedDeque<ShortSet> freeSharerSetList;
     private final ThreadLocal<Queue<Message>> shortCircuitMessage = new ThreadLocal<Queue<Message>>();
@@ -139,10 +139,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private static final int LINE_EVERYTHING_CHANGED = -1;
     //
     private static final long HIT_OR_MISS_OPS = Enums.setOf(
-            Op.Type.GET, 
-            Op.Type.GETS, 
-            Op.Type.GETX, 
-            Op.Type.SET, 
+            Op.Type.GET,
+            Op.Type.GETS,
+            Op.Type.GETX,
+            Op.Type.SET,
             Op.Type.DEL);
     private static final long FAST_TRACK_OPS = Enums.setOf(
             Op.Type.GET,
@@ -153,12 +153,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             Op.Type.INVOKE,
             Op.Type.LSTN);
     private static final long LOCKING_OPS = Enums.setOf(
-            Op.Type.GETS, 
-            Op.Type.GETX, 
-            Op.Type.SET, 
+            Op.Type.GETS,
+            Op.Type.GETX,
+            Op.Type.SET,
             Op.Type.DEL);
     private static final long PUSH_OPS = Enums.setOf(
-            Op.Type.PUSH, 
+            Op.Type.PUSH,
             Op.Type.PUSHX);
 
     private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(
@@ -207,8 +207,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         this.owned = new NonBlockingHashMapLong<CacheLine>();
         this.shared = buildSharedCache(maxCapacity);
-        this.pendingOps = new NonBlockingHashMapLong<ArrayList<Op>>();
-        this.pendingMessages = new NonBlockingHashMapLong<LinkedHashSet<LineMessage>>();
+        this.pending = new NonBlockingHashMapLong<ArrayList<Object>>();
     }
 
     private ConcurrentMap<Long, CacheLine> buildSharedCache(long maxCapacity) {
@@ -677,7 +676,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
      * @param pending true if this op is already pending
      */
     private Object handleOp(CacheLine line, Op op, boolean pending, int lineChange) {
-        LOG.debug("handleOp: {} line: {}", op, line);
+        LOG.debug("handleOp: {} line: {} pending: {}", op, line, pendingToString(line));
         if (op.isCancelled()) {
             LOG.debug("handleOp: {} line: {}: CANCELLED", op, line);
             return null;
@@ -717,7 +716,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         Object res = null;
 
-        if (line != null && shouldHoldOp(line, type))
+        if (line != null && shouldHoldOp(line, type, op))
             res = PENDING;
         else {
             switch (type) {
@@ -759,6 +758,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         if (!pending && type.isOf(HIT_OR_MISS_OPS)) {
             if (res != PENDING) {
+                assert line != null;
                 if (line.getState() == State.I)
                     monitor.addStaleHit();
                 else
@@ -814,18 +814,19 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
     }
 
-    private boolean shouldHoldOp(CacheLine line, Op.Type op) {
-        return (hasPendingBlockingMessages(line) // give messages a chance if we're not part of a transaction (line isn't locked) and messages are simply waiting for backups or another independent set (that isn't part of a transaction)
-                && op.isOf(LOCKING_OPS)
+    private boolean shouldHoldOp(CacheLine line, Op.Type type, Op op) {
+        return (hasPendingBlockingMessages(line, op) // give messages a chance if we're not part of a transaction (line isn't locked) and messages are simply waiting for backups or another independent set (that isn't part of a transaction)
+                && type.isOf(LOCKING_OPS)
                 && !line.isLocked()
                 && !(line.getState() != State.E && line.getNextState() == State.E))
-                || (line.is(CacheLine.MODIFIED) && op.isOf(PUSH_OPS));
+                || (line.is(CacheLine.MODIFIED) && type.isOf(PUSH_OPS));
     }
 
-    private void handlePendingOps(CacheLine line, int change) {
+    private void handlePendingOps(CacheLine line, int change, LineMessage message) {
         if (line == null)
             return;
-        for (Iterator<Op> it = getPendingOps(line).iterator(); it.hasNext();) {
+        LOG.debug("Handling pending messages line: {} pending: ", line, pendingToString(line));
+        for (Iterator<Op> it = getPendingOpsUpToBlockingMessage(line, message); it.hasNext();) {
             final Op op = it.next();
             if (LOG.isDebugEnabled())
                 LOG.debug("Handling pending op {}, change = {}", op, change);
@@ -890,7 +891,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         CacheLine line = getLine(id);
 
         if (LOG.isDebugEnabled())
-            LOG.debug("runMessage: {} {} {}", line, hex(id), message);
+            LOG.debug("runMessage line: {} id: {} message: {} pending: {}", line, hex(id), message, pendingToString(line));
 
         if (line == null) {
             if (handleMessageNoLine(message))
@@ -945,7 +946,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         assert line != null;
         handleNodeEvents(line);
         int change = handleMessage1(message, line);
-        handlePendingOps(line, change);
+        handlePendingOps(line, change, message);
         handlePendingMessagesAfterMessage(line, change);
     }
 
@@ -1065,19 +1066,14 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private int handlePendingMessages(CacheLine line, CacheMonitor.MessageDelayReason reason) {
+        LOG.debug("Handling pending messages line: {} pending: ", line, pendingToString(line));
         int change = LINE_NO_CHANGE;
 
         final long now = System.nanoTime();
         int messageCount = 0;
         long totalDelay = 0;
 
-        final Collection<LineMessage> pending = getPendingMessages(line);
-        final int n = pending.size();
-        for (int i = 0; i < n; i++) {
-            final Iterator<LineMessage> it = pending.iterator();
-            if (!it.hasNext())
-                break;
-
+        for (Iterator<LineMessage> it = getPendingMessagesUntilLock(line); it.hasNext();) {
             final LineMessage msg = it.next();
             it.remove();
 
@@ -1092,7 +1088,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             monitor.addMessageHandlingDelay(messageCount, totalDelay, reason);
 
         if (change != LINE_NO_CHANGE) {
-            handlePendingOps(line, change);
+            handlePendingOps(line, change, null);
             handlePendingMessagesAfterMessage(line, change);
         }
         return change;
@@ -1272,7 +1268,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                         else {
                             line.set(CacheLine.SLAVE, true);
                             backup.backup(line.getId(), line.getVersion());
-                            if (hasPendingMessages(line))
+                            if (hasPendingMessages(line, null))
                                 flush = true;
                         }
                     }
@@ -1319,7 +1315,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         } finally {
             backup.endBackup(locked);
         }
-        if (bckp && hasPendingMessages(line))
+        if (bckp && hasPendingMessages(line, null))
             backup.flush();
     }
 
@@ -1669,8 +1665,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private List<Message.MSG> getAndClearPendingMSGs(CacheLine line) {
         final List<Message.MSG> ms = new ArrayList<>();
-        final Collection<LineMessage> msgs = getPendingMessages(line);
-        for (Iterator<LineMessage> it = msgs.iterator(); it.hasNext();) {
+        for (Iterator<LineMessage> it = getPendingMessages(line, null); it.hasNext();) {
             final LineMessage msg = it.next();
             if (msg.getType() == Message.Type.MSG) {
                 ms.add((Message.MSG) msg);
@@ -1998,8 +1993,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         int change = LINE_NO_CHANGE;
         change |= setOwner(line, ack.getNode()) ? LINE_OWNER_CHANGED : 0;
 
-        final Collection<Op> pending = getPendingOps(line);
-        for (Iterator<Op> it = pending.iterator(); it.hasNext();) {
+        for (Iterator<Op> it = getPendingOps(line, ack); it.hasNext();) {
             final Op op = it.next();
             if (op.type == Op.Type.SEND) {
                 final Message.MSG msg = (Message.MSG) op.getExtra();
@@ -2017,7 +2011,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private int handleMessageTimeout(LineMessage msg, CacheLine line) throws IrrelevantStateException {
-        for (Iterator<Op> it = getPendingOps(line).iterator(); it.hasNext();) {
+        for (Iterator<Op> it = getPendingOps(line, null); it.hasNext();) {
             final Op op = it.next();
             if (!op.hasFuture())
                 op.createFuture();
@@ -2094,8 +2088,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private int handleMessageInvRes(INVRES res, CacheLine line) {
         Op invokeOp = null;
-        final Collection<Op> pending = getPendingOps(line);
-        for (Iterator<Op> it = pending.iterator(); it.hasNext();) {
+        for (Iterator<Op> it = getPendingOps(line, res); it.hasNext();) {
             final Op op = it.next();
             if (op.type == Op.Type.INVOKE) {
                 Message.INVOKE msg = (Message.INVOKE) op.getExtra();
@@ -2223,7 +2216,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 @Override
                 public boolean processLine(CacheLine line) {
                     // remove pending messages from node
-                    for (Iterator<LineMessage> it = getPendingMessages(line).iterator(); it.hasNext();) {
+                    for (Iterator<LineMessage> it = getPendingMessages(line, null); it.hasNext();) {
                         LineMessage message = it.next();
                         if (message.getNode() == node)
                             it.remove();
@@ -2288,7 +2281,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             boolean stop = false;
             do {
                 try {
-                    handlePendingOps(line, change);
+                    handlePendingOps(line, change, null);
                     stop = true;
                 } catch (ConcurrentModificationException e) {
                     LOG.debug("processLineOnNodeEvent: OOPS. CME. Retrying");
@@ -2299,7 +2292,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
                 LOG.debug("Node {} switched/removed - removing from sharers of line {}", node, line);
             if (line.sharers.isEmpty()) {
                 setState(line, State.E);
-                handlePendingOps(line, LINE_STATE_CHANGED);
+                handlePendingOps(line, LINE_STATE_CHANGED, null);
             }
         }
     }
@@ -2738,86 +2731,203 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             shared.remove(id);
     }
 
+    private void addPending(long id, Object p) {
+        ArrayList<Object> ps = pending.get(id);
+        if (ps == null) {
+            ps = new ArrayList<Object>();
+            pending.put(id, ps);
+        }
+        if (ps.contains(p))
+            LOG.error("Duplicate " + p, new Throwable());
+        ps.add(p);
+    }
+
+    private ArrayList<Object> getPending(long id) {
+        return pending.get(id);
+    }
+
+    private void removePending(long id, Object p) {
+        final ArrayList<Object> ps = pending.get(id);
+        if (ps == null)
+            return;
+
+        ps.remove(p);
+        if (ps.isEmpty())
+            pending.remove(id);
+    }
+
+    private <T> Iterator<T> getPendingAfter(long id, final Class<T> type, final Object after) {
+        final ArrayList<Object> ps = pending.get(id);
+        if (ps == null)
+            return Collections.emptyIterator();
+        return new PendingIterator(ps.iterator()) {
+            @Override
+            protected boolean include(Object x) {
+                return type.isInstance(x);
+            }
+
+            @Override
+            protected boolean stopBefore(Object x) {
+                return x == after;
+            }
+        };
+    }
+
+    private static class PendingIterator<T> implements Iterator<T> {
+        private final Iterator<Object> it;
+        private Object next;
+        boolean nextCalled = false;
+
+        public PendingIterator(Iterator<Object> it) {
+            this.it = it;
+
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (!nextCalled)
+                this.next = getNext(true);
+            return next != null;
+        }
+
+        @Override
+        public T next() {
+            if(!nextCalled)
+                throw new AssertionError();
+            
+            final Object n = next;
+            this.next = null;
+            this.nextCalled = false;
+            return (T) n;
+        }
+
+        @Override
+        public void remove() {
+            it.remove();
+        }
+
+        private Object getNext(boolean first) {
+            while (it.hasNext()) {
+                final Object x = it.next();
+                nextCalled = true;
+                if (stopBefore(x))
+                    return null;
+                if (first && !startAt(x))
+                    continue;
+                if (include(x))
+                    return x;
+            }
+            return null;
+        }
+
+        protected boolean startAt(Object x) {
+            return true;
+        }
+
+        protected boolean include(Object x) {
+            return true;
+        }
+
+        protected boolean stopBefore(Object x) {
+            return false;
+        }
+    }
+
+    private String pendingToString(CacheLine line) {
+        if (line == null)
+            return null;
+        final ArrayList<Object> ps = pending.get(line.getId());
+        if (ps == null || ps.isEmpty())
+            return null;
+        return ps.toString();
+    }
+
     private void addPendingOp(CacheLine line, Op op) {
         if (op.hasFuture())
             return;
         op.createFuture();
 
-        ArrayList<Op> ops = pendingOps.get(op.line);
-        if (ops == null) {
-            ops = new ArrayList<Op>();
-            pendingOps.put(op.line, ops);
-        }
-        ops.add(op);
+        addPending(op.line, op);
     }
 
-    /**
-     * Returns, but DOES NOT CLEAR the pending ops queue.
-     */
-    private Collection<Op> getPendingOps(CacheLine line) {
-        ArrayList<Op> ops = pendingOps.get(line.getId());
-        return (ops != null ? ops : Collections.EMPTY_LIST);
+    private Iterator<Op> getPendingOps(CacheLine line, LineMessage msg) {
+        return getPendingAfter(line.getId(), Op.class, msg);
+    }
+
+    private Iterator<Op> getPendingOpsUpToBlockingMessage(CacheLine line, final LineMessage startAt) {
+        final ArrayList<Object> ps = pending.get(line.getId());
+        if (ps == null)
+            return Collections.emptyIterator();
+        return new PendingIterator(ps.iterator()) {
+            private boolean msgSeen;
+
+            @Override
+            protected boolean include(Object x) {
+                return x instanceof Op;
+            }
+
+            @Override
+            protected boolean stopBefore(Object x) {
+                if (x instanceof Message)
+                    return x != startAt && ((Message) x).getType().isOf(MESSAGES_BLOCKED_BY_LOCK);
+                return false;
+            }
+        };
     }
 
     private void removePendingOp(CacheLine line, Op op) {
-        ArrayList<Op> ops = pendingOps.get(op.line);
-        if (ops == null)
-            return;
-        ops.remove(op);
-        if (ops.isEmpty())
-            pendingOps.remove(op.line);
+        removePending(op.line, op);
     }
 
     private boolean hasPendingOp(CacheLine line, Op.Type opType) {
-        for (Op op : getPendingOps(line)) {
-            if (op.type == opType)
+        ArrayList<Object> ps = getPending(line.getId());
+        if (ps == null || ps.isEmpty())
+            return false;
+        for (Object p : ps) {
+            if (p instanceof Op && ((Op) p).type == opType)
                 return true;
         }
         return false;
     }
 
     private void addPendingMessage(CacheLine line, LineMessage message) {
-        LinkedHashSet<LineMessage> msgs = pendingMessages.get(line.getId());
-        if (msgs == null) {
-            msgs = new LinkedHashSet<LineMessage>();
-            pendingMessages.put(line.getId(), msgs);
-        }
-        msgs.add(message);
+        addPending(line.getId(), message);
         if (LOG.isDebugEnabled())
             LOG.debug("addPendingMessage {} to line {}", message, line);
     }
 
-    private boolean hasPendingMessages(CacheLine line) {
-        final Collection<LineMessage> msgs = pendingMessages.get(line.getId());
-        return msgs != null && !msgs.isEmpty();
+    private boolean hasPendingMessages(CacheLine line, Op op) {
+        return getPendingAfter(line.getId(), LineMessage.class, op).hasNext();
     }
 
-    private boolean hasPendingBlockingMessages(CacheLine line) {
-        final Collection<LineMessage> msgs = pendingMessages.get(line.getId());
-        if (msgs == null || msgs.isEmpty())
-            return false;
-        for (LineMessage m : msgs) {
+    private boolean hasPendingBlockingMessages(CacheLine line, Op op) {
+        for (Iterator<LineMessage> it = getPendingMessages(line, op); it.hasNext();) {
+            final LineMessage m = it.next();
             if (!(m instanceof Message.MSG))
                 return true;
         }
         return false;
     }
 
-    /**
-     * Returns and CLEARS the pending messages queue.
-     */
-    private Set<LineMessage> getAndClearPendingMessages(CacheLine line) {
-        Set<LineMessage> msgs = pendingMessages.remove(line.getId());
-        if (msgs == null)
-            msgs = Collections.emptySet();
-        return msgs;
+    private Iterator<LineMessage> getPendingMessages(CacheLine line, Op op) {
+        return getPendingAfter(line.getId(), LineMessage.class, op);
     }
 
-    private Set<LineMessage> getPendingMessages(CacheLine line) {
-        Set<LineMessage> msgs = pendingMessages.get(line.getId());
-        if (msgs == null)
-            msgs = Collections.emptySet();
-        return msgs;
+    private <T> Iterator<T> getPendingMessagesUntilLock(CacheLine line) {
+        final ArrayList<Object> ps = pending.get(line.getId());
+        if (ps == null)
+            return Collections.emptyIterator();
+        return new PendingIterator(ps.iterator()) {
+            @Override
+            protected boolean include(Object x) {
+                return x instanceof LineMessage;
+            }
+
+            @Override
+            protected boolean stopBefore(Object x) {
+                return (x instanceof Op && ((Op) x).type.isOf(LOCKING_OPS));
+            }
+        };
     }
 
     interface LinePredicate {
