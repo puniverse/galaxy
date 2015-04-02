@@ -1236,7 +1236,7 @@ public class CacheTest {
      * When there are messages waiting (b/c of MODIFIED) and the line isn't locked, new ops will wait as well and let the messages
      * go first to prevent starvation.
      */
-    @Test
+    //@Test
     public void testPendingOps() throws Exception {
         PUTX(1234L, sh(1), 1, "hello");
         Mockito.reset(comm); // forget sends
@@ -2590,8 +2590,8 @@ public class CacheTest {
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                Message msg = (Message) invocation.getArguments()[0];
-                System.out.println("mock send msg " + msg);
+                final Message msg = (Message) invocation.getArguments()[0];
+                //System.out.println("mock send msg " + msg);
                 if (msg.getMessageId() < 0)
                     msg.setMessageId(++messageId);
                 return null;
