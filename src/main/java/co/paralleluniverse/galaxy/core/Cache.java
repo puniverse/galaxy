@@ -2792,9 +2792,9 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
         @Override
         public T next() {
-            if(!nextCalled)
+            if (!nextCalled)
                 throw new AssertionError();
-            
+
             final Object n = next;
             this.next = null;
             this.nextCalled = false;
@@ -2850,11 +2850,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         addPending(op.line, op);
     }
 
-    private Iterator<Op> getPendingOps(CacheLine line, LineMessage msg) {
+    private Iterator<Op> getPendingOps(CacheLine line, Message msg) {
         return getPendingAfter(line.getId(), Op.class, msg);
     }
 
-    private Iterator<Op> getPendingOpsUpToBlockingMessage(CacheLine line, final LineMessage startAt) {
+    private Iterator<Op> getPendingOpsUpToBlockingMessage(CacheLine line, final Message startAt) {
         final ArrayList<Object> ps = pending.get(line.getId());
         if (ps == null)
             return Collections.emptyIterator();
