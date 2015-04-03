@@ -1233,6 +1233,54 @@ public class CacheTest {
     }
 
     /**
+     * Tests execution of pending messages on a locked line.
+     */
+    @Test
+    public void testPendingMessages3() throws Exception {
+        //public void whenLockedThenDontProecssMessagesUntilRelease() {
+        for (Op.Type getType : new Op.Type[]{GETX, GETS}) {
+            PUTX(1234L, sh(1), 1, "hello");
+
+            Op op;
+            Object res;
+
+            res = cache.runOp(new Op(getType, 1234L, null));
+            assertThat(res, is(not(PENDING)));
+
+            cache.receive(Message.GET(sh(10), 1234L));
+            cache.receive(Message.GET(sh(20), 1234L));
+
+            res = cache.runOp((op = new Op(GETX, 1234L, null))); // this is pending because of messages
+            assertThat(res, is(PENDING));
+
+            cache.receive(Message.GET(sh(30), 1234L));
+
+            if (hasServer)
+                verify(comm).send(argThat(equalTo(Message.INV(sh(0), 1234L, sh(1)))));
+            verifyNoMoreInteractions(comm);
+
+            cache.release(1234);
+            if (getType == GETX)
+                cache.receive(Message.BACKUPACK(sh(0), 1234L, 1L));
+
+            verify(comm).send(argThat(equalTo(Message.PUT(Message.GET(sh(10), 1234L), 1234L, 1L, toBuffer("hello")))));
+            verify(comm).send(argThat(equalTo(Message.PUT(Message.GET(sh(20), 1234L), 1234L, 1L, toBuffer("hello")))));
+
+            verify(comm).send(argThat(equalTo(Message.INV(sh(10), 1234L, sh(5)))));
+            verify(comm).send(argThat(equalTo(Message.INV(sh(20), 1234L, sh(5)))));
+
+            verifyNoMoreInteractions(comm);
+
+            cache.receive(Message.INVACK(Message.INV(sh(10), 1234L, sh(5))));
+            cache.receive(Message.INVACK(Message.INV(sh(20), 1234L, sh(5))));
+
+            assertTrue(op.getFuture().isDone());
+
+            reset();
+        }
+    }
+
+    /**
      * When there are messages waiting (b/c of MODIFIED) and the line isn't locked, new ops will wait as well and let the messages
      * go first to prevent starvation.
      */
