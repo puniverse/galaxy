@@ -515,7 +515,6 @@ public class StoreImpl implements Store {
     }
 
     private ListenableFuture<byte[]> getAsync(Op.Type type, long id, StoreTransaction txn) {
-        // TODO: make fast (when already locked)
         return (ListenableFuture<byte[]>) (Object) cache.doOpAsync(type, id, null, null, (Transaction) txn);
     }
 
