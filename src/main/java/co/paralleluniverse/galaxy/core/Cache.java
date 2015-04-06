@@ -974,6 +974,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             }
             if (line.is(CacheLine.MODIFIED))
                 backup.flush();
+            fireLineKnock(line);
             return LINE_NO_CHANGE;
         }
 
@@ -3096,6 +3097,24 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         for (CacheListener listener : listeners) {
             try {
                 listener.killed(this, line.getId());
+            } catch (Exception e) {
+                LOG.error("Listener threw an exception.", e);
+            }
+        }
+    }
+
+    private void fireLineKnock(CacheLine line) {
+        LOG.debug("fireLineKnock {}", line);
+        if (line.getListener() != null) {
+            try {
+                line.getListener().knock(this, line.getId());
+            } catch (Exception e) {
+                LOG.error("Listener threw an exception.", e);
+            }
+        }
+        for (CacheListener listener : listeners) {
+            try {
+                listener.knock(this, line.getId());
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }
