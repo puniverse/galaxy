@@ -864,6 +864,7 @@ public class CacheTest {
      * A put allocates ID and line
      */
     @Test
+    @SuppressWarnings("null")
     public void whenPutThenAllocateId() throws Exception {
         final RefAllocationsListener listener = hasServer ? null : getRefAllocationListener(cache.getRefAllocator());
         Object res;
@@ -1232,11 +1233,8 @@ public class CacheTest {
         verify(comm).send(argThat(equalTo(Message.CHNGD_OWNR(Message.GET(sh(30), 1234L), 1234L, sh(20), false)))); // b/c hasServer: I, no-server: S
     }
 
-    /**
-     * Tests execution of pending messages on a locked line.
-     */
     @Test
-    public void testPendingMessages3() throws Exception {
+    public void testPending1() throws Exception {
         //public void whenLockedThenDontProecssMessagesUntilRelease() {
         for (Op.Type getType : new Op.Type[]{GETX, GETS}) {
             PUTX(1234L, sh(1), 1, "hello");
@@ -1284,7 +1282,7 @@ public class CacheTest {
      * When there are messages waiting (b/c of MODIFIED) and the line isn't locked, new ops will wait as well and let the messages
      * go first to prevent starvation.
      */
-    //@Test
+    @Test
     public void testPendingOps() throws Exception {
         PUTX(1234L, sh(1), 1, "hello");
         Mockito.reset(comm); // forget sends
@@ -1334,7 +1332,7 @@ public class CacheTest {
     /**
      * When there are messages waiting and the line isn't locked (b/c O -> E), new ops will execute
      */
-//    @Test
+    //@Test
     public void testPendingOps2() throws Exception {
         PUTX(1234L, sh(1), 1, "hello", 20);
         if (hasServer()) {
@@ -1344,8 +1342,6 @@ public class CacheTest {
 
         assertLocked(1234L, false);
         assertState(1234L, O, null);
-
-        System.out.println("111: " + cache.getLine(1234L));
 
         set(1234L, "bye");
         set(1234L, "1234"); // this length must be less than the sets' buffer length to make sure a new buffer is allocated to them
@@ -2297,10 +2293,8 @@ public class CacheTest {
         assertThat(get(ref2), is(nullValue()));
     }
 
-    /**
-     *
-     */
     @Test
+    @SuppressWarnings("null")
     public void testAlloc() throws Exception {
         final RefAllocationsListener listener = hasServer ? null : getRefAllocationListener(cache.getRefAllocator());
         Object res;
