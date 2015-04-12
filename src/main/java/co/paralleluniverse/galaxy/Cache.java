@@ -40,4 +40,22 @@ public interface Cache {
      * @return The cacheListener of this line
      */
     CacheListener getListener(long id);
+
+    /**
+     * Tests whether an item is pinned on this node.
+     *
+     * @param id The item's ID.
+     * @return {@code true} if the item is pinned; {@code false} otherwise.
+     */
+    boolean isPinned(long id);
+
+    /**
+     * Releases a line that's been pinned to this node by one of the {@code gets}, {@code getx}, {@code put} operations.
+     * <p>
+     * This method must be called to release a line used in one of the {@code gets}, {@code getx}, {@code put}
+     * operations, if they were called with a {@code null} transaction.
+     *
+     * @param id
+     */
+    void release(long id);
 }

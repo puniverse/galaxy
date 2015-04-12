@@ -76,6 +76,7 @@ public interface Store extends Cache {
      *
      * @param id
      */
+    @Override
     void release(long id);
 
     /**
@@ -912,6 +913,7 @@ public interface Store extends Cache {
      * @param id The item's ID.
      * @return {@code true} if the item is pinned; {@code false} otherwise.
      */
+    @Override
     boolean isPinned(long id);
 
     /**
