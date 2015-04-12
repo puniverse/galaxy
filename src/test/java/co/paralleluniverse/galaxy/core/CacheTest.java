@@ -1852,6 +1852,28 @@ public class CacheTest {
     }
 
     @Test
+    public void testKnock1() throws Exception {
+        Op op;
+        Object res;
+
+        final CacheListener listener = mock(CacheListener.class);
+        doOp(LSTN, 1234L, listener);
+
+        res = cache.runOp((op = new Op(GETX, 1234L, null)));
+        assertThat(res, is(PENDING));
+
+        PUTX(1234L, sh(1), 1, "hello");
+
+        assertThat(op.getFuture().isDone(), is(true));
+
+        cache.receive(Message.GET(sh(10), 1234L));
+        cache.receive(Message.GETX(sh(20), 1234L));
+
+        verify(listener).knock(cache, 1234L, false);
+        verify(listener).knock(cache, 1234L, true);
+    }
+
+    @Test
     public void testDel() throws Exception {
         PUTX(1234L, sh(1), 1, "hello");
 
