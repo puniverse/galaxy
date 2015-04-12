@@ -55,7 +55,7 @@ public interface CacheListener {
      * 
      * @param id The item's ID.
      */
-    void knock(Cache cache, long id);
+    void knock(Cache cache, long id, boolean exclusive);
 
     /**
      * Called when a message has been received.

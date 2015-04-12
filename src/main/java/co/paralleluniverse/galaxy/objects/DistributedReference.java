@@ -34,7 +34,6 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
     private transient volatile T obj;
     private transient volatile long version;
     private transient byte[] tmpBuffer;
-    private transient volatile boolean knocked;
 
     public DistributedReference(long id, T obj) {
         this.obj = obj;
@@ -79,10 +78,9 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
             this.version = version;
         }
     }
-
+    
     @Override
-    public void knock(Cache cache, long id) {
-        this.knocked = true;
+    public void knock(Cache cache, long id, boolean exclusive) {
     }
 
     /**
@@ -134,13 +132,6 @@ public class DistributedReference<T> implements CacheListener, Persistable, java
 
     @Override
     public void messageReceived(byte[] message) {
-    }
-
-    public boolean knocked() {
-        final boolean val = knocked;
-        if (val)
-            this.knocked = false;
-        return val;
     }
 
     protected void set(T obj) {

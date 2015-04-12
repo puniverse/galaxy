@@ -181,6 +181,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             Message.Type.GETX,
             Message.Type.MSG,
             Message.Type.INVOKE);
+    private static final long MESSAGES_REQUESTING_EXCLUSIVE = Enums.setOf(
+            Message.Type.GETX,
+            Message.Type.INVOKE);
+    private static final long MESSAGES_REQUESTING_SHARED = Enums.setOf(
+            Message.Type.GET);
 
     private static boolean isConflicting(Message.Type msg, Op.Type op) {
         return (msg == Message.Type.GETX && op.isOf(HIT_OR_MISS_OPS))
@@ -974,7 +979,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             }
             if (line.is(CacheLine.MODIFIED))
                 backup.flush();
-            fireLineKnock(line);
+            fireLineKnock(line, message);
             return LINE_NO_CHANGE;
         }
 
@@ -1173,6 +1178,11 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         return false;
     }
 
+    @Override
+    public boolean isPinned(long id) {
+        return isLocked(id);
+    }
+    
     public boolean isLocked(long id) {
         final CacheLine line = getLine(id);
         if (line == null)
@@ -3103,18 +3113,26 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         }
     }
 
-    private void fireLineKnock(CacheLine line) {
+    private void fireLineKnock(CacheLine line, LineMessage message) {
+        final boolean exclusive;
+        if (message.getType().isOf(MESSAGES_REQUESTING_EXCLUSIVE))
+            exclusive = true;
+        else if (message.getType().isOf(MESSAGES_REQUESTING_SHARED))
+            exclusive = false;
+        else
+            return;
+        
         LOG.debug("fireLineKnock {}", line);
         if (line.getListener() != null) {
             try {
-                line.getListener().knock(this, line.getId());
+                line.getListener().knock(this, line.getId(), exclusive);
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }
         }
         for (CacheListener listener : listeners) {
             try {
-                listener.knock(this, line.getId());
+                listener.knock(this, line.getId(), exclusive);
             } catch (Exception e) {
                 LOG.error("Listener threw an exception.", e);
             }

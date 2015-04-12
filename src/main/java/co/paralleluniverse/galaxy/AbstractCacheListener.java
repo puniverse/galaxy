@@ -37,7 +37,7 @@ public abstract class AbstractCacheListener implements CacheListener {
     }
 
     @Override
-    public void knock(Cache cache, long id) {
+    public void knock(Cache cache, long id, boolean exclusive) {
     }
 
     @Override
