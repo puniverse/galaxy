@@ -24,6 +24,7 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
@@ -120,6 +121,7 @@ abstract class AbstractTcpClient extends ClusterService {
             }
         });
 
+        bootstrap.setOption("localAddress", new InetSocketAddress(InetAddress.getLocalHost(), 0));
         bootstrap.setOption("tcpNoDelay", true);
         bootstrap.setOption("keepAlive", true);
 
