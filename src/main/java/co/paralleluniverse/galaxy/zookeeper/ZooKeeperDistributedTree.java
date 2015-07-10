@@ -119,6 +119,8 @@ public class ZooKeeperDistributedTree implements DistributedTree {
                 }
             }
             client.create().creatingParentsIfNeeded().withMode(ephemeral ? CreateMode.EPHEMERAL : CreateMode.PERSISTENT).forPath(node);
+        } catch (KeeperException.NodeExistsException ignored) {
+            LOG.error("Node " + node + " has been already created.");
         } catch (Exception ex) {
             LOG.error("Node " + node + " creation has failed!", ex);
             throw Throwables.propagate(ex);
