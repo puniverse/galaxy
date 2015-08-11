@@ -56,6 +56,10 @@ public abstract class BaseCloudTest {
     }
 
     public static Callable<Short> startWaitForLargerPeer(final int peerNum, final String configpeerxml) {
+        return startWaitForLargerPeer(peerNum, configpeerxml, false);
+    }
+
+    public static Callable<Short> startWaitForLargerPeer(final int peerNum, final String configpeerxml, final boolean withNamaspace) {
         return new Callable<Short>() {
             @Override
             public Short call() throws IOException, InterruptedException, ExecutionException {
@@ -67,6 +71,9 @@ public abstract class BaseCloudTest {
                 props.setProperty("galaxy.slave_port", Integer.toString(8050 + peerNum));
                 props.setProperty("galaxy.multicast.address", "225.0.0.1");
                 props.setProperty("galaxy.multicast.port", Integer.toString(7050));
+                if (withNamaspace) {
+                    props.setProperty("galaxy.zkNamespace", "tests");
+                }
 
                 final Grid grid = Grid.getInstance(pathToResource(configpeerxml), props);
                 grid.goOnline();
@@ -106,6 +113,7 @@ public abstract class BaseCloudTest {
     static final String PEER_WITH_ZK_SERVER_CFG = "config/peerWithZKServer.xml";
     static final String PEER_WITH_JG_SERVER_CFG = "config/peerWithJGServer.xml";
     static final String SERVER_PROPS = "config/server.properties";
+    static final String SERVER_WITH_ZK_NAMESPACE_PROPS = "config/serverWithZkNamespace.properties";
     static final String SERVER_ZK_CFG = "config/serverZK.xml";
     static final String SERVER_JG_CFG = "config/serverJG.xml";
 }

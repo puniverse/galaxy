@@ -15,6 +15,13 @@
     <bean id="cluster" class="co.paralleluniverse.galaxy.zookeeper.ZooKeeperCluster">
         <constructor-arg name="nodeId" value="${galaxy.nodeId}"/>
         <constructor-arg name="zkConnectString" value="${galaxy.zkServers}"/>
+
+        <!--To give ZooKeeper galaxy cluster his own working directory use "zkNamespace" property.-->
+        <!--Keep in mind that by default ZooKeeper galaxy cluster doesn't have specified namespace and
+        will do stuff at "/co.paralleluniverse.galaxy" directory.-->
+        <!--Usually its a good practice to separate your galaxy clusters working directories. You might want to have-->
+        <!--one for production and the other for tests for example.-->
+        <constructor-arg name="zkNamespace" value="${galaxy.zkNamespace:#{null}}"/>
         <property name="hasServer" ref="has-server"/>
         <property name="sessionTimeoutMs" value="1500"/>
         <property name="connectionTimeoutMs" value="1000"/>
@@ -25,5 +32,5 @@
             </bean>
         </property>
     </bean>
-    
+
 </beans>

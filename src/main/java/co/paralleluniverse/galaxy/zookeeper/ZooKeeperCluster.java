@@ -55,12 +55,19 @@ public class ZooKeeperCluster extends AbstractCluster implements RootLocker, Ref
     private final RefAllocatorSupport refAllocatorSupport = new RefAllocatorSupport();
     private final ExecutorService refAllocationExecutor = Executors.newFixedThreadPool(1);
     private DistributedAtomicLong refIdCounter;
+    private final String zkNamespace;
     private volatile boolean counterReady;
+
+    @ConstructorProperties({"name", "nodeId", "zkConnectString", "zkNamespace"})
+    public ZooKeeperCluster(String name, short nodeId, String zkConnectString, String zkNamespace) throws Exception {
+        super(name, nodeId);
+        this.zkConnectString = zkConnectString;
+        this.zkNamespace = zkNamespace;
+    }
 
     @ConstructorProperties({"name", "nodeId", "zkConnectString"})
     public ZooKeeperCluster(String name, short nodeId, String zkConnectString) throws Exception {
-        super(name, nodeId);
-        this.zkConnectString = zkConnectString;
+        this(name, nodeId, zkConnectString, null);
     }
 
     public void setConnectionTimeoutMs(int connectionTimeoutMs) {
@@ -81,7 +88,7 @@ public class ZooKeeperCluster extends AbstractCluster implements RootLocker, Ref
     @Override
     protected void init() throws Exception {
         super.init();
-        client = CuratorFrameworkFactory.builder().connectString(zkConnectString).sessionTimeoutMs(sessionTimeoutMs).
+        client = CuratorFrameworkFactory.builder().namespace(zkNamespace).connectString(zkConnectString).sessionTimeoutMs(sessionTimeoutMs).
                 connectionTimeoutMs(connectionTimeoutMs).retryPolicy(retryPolicy).defaultData(new byte[0]).build();
         client.start();
 
