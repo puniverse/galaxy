@@ -69,17 +69,17 @@ dependencies {
         exclude group: "io.netty", module: 'netty'
         exclude group: "junit", module: '*'
     }
-    compile("org.apache.curator:curator-recipes:2.6.0") {
+    compile("org.apache.curator:curator-recipes:$APACHE_CURATOR_VERSION") {
         exclude group: "org.slf4j", module: '*'
         exclude group: "com.google.guava", module: '*'
         exclude group: "org.apache.zookeeper", module: "zookeeper"
     }
-    compile("org.apache.curator:curator-client:2.6.0") {
+    compile("org.apache.curator:curator-client:$APACHE_CURATOR_VERSION") {
         exclude group: "org.slf4j", module: '*'
         exclude group: "com.google.guava", module: '*'
         exclude group: "org.apache.zookeeper", module: "zookeeper"
     }
-    compile("org.apache.curator:curator-framework:2.6.0") {
+    compile("org.apache.curator:curator-framework:$APACHE_CURATOR_VERSION") {
         exclude group: "org.slf4j", module: '*'
         exclude group: "com.google.guava", module: '*'
         exclude group: "org.apache.zookeeper", module: "zookeeper"
@@ -89,6 +89,11 @@ dependencies {
     }
     compile("de.javakaffee:kryo-serializers:0.27") {
         exclude group: "com.esotericsoftware.kryo", module: '*'
+    }
+    testCompile("org.apache.curator:curator-test:$APACHE_CURATOR_VERSION") {
+        exclude group: "org.slf4j", module: '*'
+        exclude group: "com.google.guava", module: '*'
+        exclude group: "org.apache.zookeeper", module: "zookeeper"
     }
     testCompile "junit:junit:4.11"
     testCompile ('org.truth0:truth:0.23') {

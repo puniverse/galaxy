@@ -1178,6 +1178,9 @@ and has (in addition to the common ``nodeId`` and ``hasServer``) the following c
 ``zkConnectString`` (constructor-arg, ``String``) <br>
   The ZooKeeper connection string, which tells the node how to connect to the ZooKeeper servers. See the [ZooKeeper Programmers Guide] for details.
 
+``zkNamespace`` (constructor-arg, ``String``) <br>
+  The ZooKeeper namespace string, which means which directory ZooKeeper Cluster will use for its operations. Its just a prefix for all ZooKeeper cluster internal actions which is created automatically if itsn't exist yet. This property should be the same for all cluster nodes.
+
 ``sessionTimeoutMs`` (property, ``int``, default: ``15000``) <br>
   The ZooKeeper session timeout, in milliseconds. The ZooKeeper documentation has the details.
 
@@ -1206,6 +1209,8 @@ Please refer to [No multicast (using Galaxy in the cloud)](#config-comm-common-c
       <constructor-arg name="nodeId" value="${galaxy.nodeId}"/>
       <property name="hasServer" value="true"/>
       <constructor-arg name="zkConnectString" value="127.0.0.1:2181"/>
+      <!--all zookeeper cluster internal operations will be prefixed with this namespace-->
+      <constructor-arg name="zkNamespace" value="production-galaxy"/>
       <property name="sessionTimeoutMs" value="1500"/>
       <property name="connectionTimeoutMs" value="1000"/>
       <property name="retryPolicy">
