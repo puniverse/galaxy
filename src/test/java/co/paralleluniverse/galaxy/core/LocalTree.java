@@ -20,7 +20,6 @@
 package co.paralleluniverse.galaxy.core;
 
 import co.paralleluniverse.galaxy.cluster.DistributedTree;
-import co.paralleluniverse.galaxy.cluster.DistributedTree.Listener;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -218,6 +217,10 @@ public class LocalTree implements DistributedTree {
             return null;
         final String child = fqn.substring(index + 1, fqn.length());
         return child;
+    }
+
+    @Override
+    public void shutdown() {
     }
 
     private class Node {

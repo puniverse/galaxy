@@ -112,7 +112,12 @@ public interface DistributedTree {
      * @param out The output stream to which the tree structure is to be sent.
      */
     void print(String node, java.io.PrintStream out);
-    
+
+    /**
+     * Method is called when Galaxy Cluster is going offline and requests all services to shutdown.
+     */
+    void shutdown();
+
     /**
      * A listener for DistributedTree node events.
      */

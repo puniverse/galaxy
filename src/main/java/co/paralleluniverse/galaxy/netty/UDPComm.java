@@ -357,6 +357,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
 
     @Override
     public void shutdown() {
+        super.shutdown();
         LOG.info("Shutting down.");
         monitor.unregisterMBean();
         if (channel != null)

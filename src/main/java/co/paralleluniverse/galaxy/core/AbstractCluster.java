@@ -323,6 +323,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
 
     @Override
     public void shutdown() {
+        controlTree.shutdown();
 // moved to setOnline(false)
 //        if (myNodeInfo.getName() != null) {
 //            controlTree.delete(LEADERS + "/" + myNodeInfo.getName());

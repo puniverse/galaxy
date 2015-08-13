@@ -165,4 +165,10 @@ public abstract class AbstractComm<Address> extends ClusterService implements Co
     @Override
     public void nodeRemoved(short id) {
     }
+
+    @Override
+    protected void shutdown() {
+        super.shutdown();
+        scheduler.shutdownNow();
+    }
 }

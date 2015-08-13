@@ -79,4 +79,9 @@ public class DistributedTreeAdapter implements DistributedTree {
     public void print(String node, java.io.PrintStream out) {
         tree.print(node, out);
     }
+
+    @Override
+    public void shutdown() {
+        tree.shutdown();
+    }
 }
