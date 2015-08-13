@@ -90,6 +90,10 @@ class DistributedTreeAdapter implements DistributedTree {
         out.println(tree.toString(node));
     }
 
+    @Override
+    public void shutdown() {
+    }
+
     private static class ListenerAdapter implements ReplicatedTreeListener {
         private final Listener listener;
 

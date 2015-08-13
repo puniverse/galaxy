@@ -57,6 +57,12 @@ public class ZooKeeperDistributedTree implements DistributedTree {
     private final CuratorFramework client;
     private final Map<String, String> namesWithSequence = new ConcurrentHashMap<String, String>();
     private final Set<Listener> removedListeners = Collections.newSetFromMap(new ConcurrentHashMap<Listener, Boolean>());
+    /**
+     * Flag means this component was requested to shutdown. So we don't want to process ZooKeeper events in watchers anymore
+     * and this help us to avoid spamming exceptions in log when {@link ZooKeeperDistributedTree#client} is already closed
+     * but watcher events are still processing.
+     */
+    private volatile boolean shutdownRequested = false;
 
     public ZooKeeperDistributedTree(CuratorFramework client) {
         this.client = client;
@@ -325,6 +331,9 @@ public class ZooKeeperDistributedTree implements DistributedTree {
         private final Watcher childrenWatcher = new Watcher() {
             @Override
             public void process(WatchedEvent event) {
+                if (shutdownRequested) {
+                    return;
+                }
                 try {
                     if (event.getPath() != null) {
                         if (!removedListeners.remove(listener)) {
@@ -345,6 +354,9 @@ public class ZooKeeperDistributedTree implements DistributedTree {
 
         @Override
         public void process(WatchedEvent event) {
+            if (shutdownRequested) {
+                return;
+            }
             try {
                 LOG.debug("ZooKeeper event: {}", event);
                 if (!removedListeners.remove(listener)) {
@@ -637,5 +649,10 @@ public class ZooKeeperDistributedTree implements DistributedTree {
                 throw new AssertionError(e);
             }
         }
+    }
+
+    @Override
+    public void shutdown() {
+        shutdownRequested = true;
     }
 }
