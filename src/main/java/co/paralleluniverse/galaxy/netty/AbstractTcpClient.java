@@ -23,8 +23,11 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.socket.nio.NioClientBossPool;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.channel.socket.nio.NioWorkerPool;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+import org.jboss.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +40,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static co.paralleluniverse.common.collection.Util.reverse;
+import static co.paralleluniverse.galaxy.netty.NettyUtils.KEEP_UNCHANGED_DETERMINER;
 
 /**
  * @author pron
@@ -75,13 +79,15 @@ abstract class AbstractTcpClient extends ClusterService {
             bossExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         if (workerExecutor == null)
             workerExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        configureThreadPool(getName() + "-tcpClientBoss", bossExecutor);
-        configureThreadPool(getName() + "-tcpClientWorker", workerExecutor);
+        final short currentNodeId = getCluster().getMyNodeId();
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpClientBoss", bossExecutor);
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpClientWorker", workerExecutor);
         if (receiveExecutor != null)
-            configureThreadPool(getName() + "-tcpClientReceive", receiveExecutor);
+            configureThreadPool(currentNodeId + "-" + getName() + "-tcpClientReceive", receiveExecutor);
 
-        this.channelFactory = new NioClientSocketChannelFactory(bossExecutor, workerExecutor,
-                NettyUtils.getWorkerCount(workerExecutor));
+        this.channelFactory = new NioClientSocketChannelFactory(
+                new NioClientBossPool(bossExecutor, NettyUtils.DEFAULT_BOSS_COUNT, new HashedWheelTimer(), KEEP_UNCHANGED_DETERMINER),
+                new NioWorkerPool(workerExecutor, NettyUtils.getWorkerCount(workerExecutor), KEEP_UNCHANGED_DETERMINER));
         this.bootstrap = new ClientBootstrap(channelFactory);
 
         final Cluster cluster = getCluster();

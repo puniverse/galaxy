@@ -19,6 +19,16 @@ import co.paralleluniverse.galaxy.core.ClusterService;
 import co.paralleluniverse.galaxy.core.CommThread;
 import co.paralleluniverse.galaxy.core.Message;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.group.DefaultChannelGroup;
+import org.jboss.netty.channel.socket.nio.NioServerBossPool;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.channel.socket.nio.NioWorkerPool;
+import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jmx.export.annotation.ManagedAttribute;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -26,22 +36,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
-import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jmx.export.annotation.ManagedAttribute;
+import static co.paralleluniverse.galaxy.netty.NettyUtils.KEEP_UNCHANGED_DETERMINER;
 
 /**
  * @author pron
@@ -78,12 +73,15 @@ public abstract class AbstractTcpServer extends ClusterService {
             bossExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         if (workerExecutor == null)
             workerExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        configureThreadPool(getName() + "-tcpServerBoss", bossExecutor);
-        configureThreadPool(getName() + "-tcpServerWorker", workerExecutor);
+        final short currentNodeId = getCluster().getMyNodeId();
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpServerBoss", bossExecutor);
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpServerWorker", workerExecutor);
         if (receiveExecutor != null)
-            configureThreadPool(getName() + "-tcpServerReceive", receiveExecutor);
+            configureThreadPool(currentNodeId + "-" + getName() + "-tcpServerReceive", receiveExecutor);
 
-        channelFactory = new NioServerSocketChannelFactory(bossExecutor, workerExecutor);
+        channelFactory = new NioServerSocketChannelFactory(
+                new NioServerBossPool(bossExecutor, NettyUtils.DEFAULT_BOSS_COUNT, KEEP_UNCHANGED_DETERMINER),
+                new NioWorkerPool(workerExecutor, NettyUtils.getWorkerCount(workerExecutor), KEEP_UNCHANGED_DETERMINER));
         bootstrap = new ServerBootstrap(channelFactory);
 
         origChannelFacotry = new TcpMessagePipelineFactory(LOG, channels, receiveExecutor) {
