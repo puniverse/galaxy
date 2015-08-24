@@ -355,35 +355,30 @@ abstract class AbstractTcpClient extends ClusterService {
 
         @Override
         public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-            channelLock.lock();
-            try {
-                if (ctx.getChannel() == channel) {
-                    setReady(false);
-                    if (channel != null)
-                        channel.close();
-                    channel = null;
-                    connectLater();
-                }
-            } finally {
-                channelLock.unlock();
-            }
+            resetConnectionState(ctx.getChannel());
             super.channelDisconnected(ctx, e);
         }
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-            channelLock.lock();
-            try {
-                LOG.info("Channel exception: {} {}", e.getCause().getClass().getName(), e.getCause().getMessage());
-                LOG.debug("Channel exception", e.getCause());
+            LOG.info("Channel {} exception: {} {}", e.getChannel(), e.getCause().getClass().getName(), e.getCause().getMessage());
+            LOG.debug("Channel {} exception", e.getChannel(), e.getCause());
+            resetConnectionState(ctx.getChannel());
+        }
+    };
+
+    private void resetConnectionState(Channel contextChannel) {
+        channelLock.lock();
+        try {
+            if (contextChannel == channel) {
                 setReady(false);
                 if (channel != null)
                     channel.close();
                 channel = null;
-            } finally {
-                channelLock.unlock();
                 connectLater();
             }
+        } finally {
+            channelLock.unlock();
         }
-    };
+    }
 }
