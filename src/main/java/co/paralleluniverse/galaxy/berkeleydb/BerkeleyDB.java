@@ -386,6 +386,7 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
         ownerIndex.close();
         ownerDirectory.close();
         mainStore.close();
+        allocationDirectory.close();
         env.close();
     }
 

@@ -136,7 +136,8 @@ final class TcpServerServerComm extends AbstractTcpServer implements Comm {
                 }
                 final short nodeId = node.getNodeId();
                 if (channels.containsKey(nodeId)) {
-                    LOG.warn("Received connection from address {} of node {}, but this node is already connected.", channel.getRemoteAddress(), nodeId);
+                    LOG.warn("Received connection from address {} of node {}, but this node is already connected from address {}.",
+                            channel.getRemoteAddress(), nodeId, channels.get(nodeId).getRemoteAddress());
                     throw new RuntimeException("Node " + nodeId + " already connected.");
                 }
                 final boolean added = super.add(channel);
