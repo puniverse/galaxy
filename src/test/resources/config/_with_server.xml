@@ -34,14 +34,14 @@
         <property name="maxQueueSize" value="10"/>
         <property name="maxPacketSize" value="2048"/>
         <property name="maxRequestOnlyPacketSize" value="400"/>
-        <property name="workerExecutor">
-            <bean class="co.paralleluniverse.galaxy.core.ConfigurableThreadPool">
-                <constructor-arg name="corePoolSize" value="2"/>
-                <constructor-arg name="maximumPoolSize" value="8"/>
-                <constructor-arg name="keepAliveMillis" value="5000"/>
-                <constructor-arg name="maxQueueSize" value="500"/>
-            </bean>
-        </property>
+        <!--<property name="workerExecutor">-->
+            <!--<bean class="co.paralleluniverse.galaxy.core.ConfigurableThreadPool">-->
+                <!--<constructor-arg name="corePoolSize" value="2"/>-->
+                <!--<constructor-arg name="maximumPoolSize" value="8"/>-->
+                <!--<constructor-arg name="keepAliveMillis" value="5000"/>-->
+                <!--<constructor-arg name="maxQueueSize" value="500"/>-->
+            <!--</bean>-->
+        <!--</property>-->
         <property name="receiveExecutor">
             <bean class="org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor">
                 <constructor-arg index="0" value="8"/> <!-- name="corePoolSize" -->

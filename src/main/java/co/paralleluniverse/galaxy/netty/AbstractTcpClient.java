@@ -13,7 +13,6 @@
  */
 package co.paralleluniverse.galaxy.netty;
 
-import static co.paralleluniverse.common.collection.Util.reverse;
 import co.paralleluniverse.common.monitoring.ThreadPoolExecutorMonitor;
 import co.paralleluniverse.galaxy.Cluster;
 import co.paralleluniverse.galaxy.cluster.NodeInfo;
@@ -22,38 +21,28 @@ import co.paralleluniverse.galaxy.core.CommThread;
 import co.paralleluniverse.galaxy.core.Message;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelException;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.socket.nio.NioClientBossPool;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.channel.socket.nio.NioWorkerPool;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+import org.jboss.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.Deque;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static co.paralleluniverse.common.collection.Util.reverse;
+import static co.paralleluniverse.galaxy.netty.NettyUtils.KEEP_UNCHANGED_DETERMINER;
+
 /**
- *
  * @author pron
  */
 abstract class AbstractTcpClient extends ClusterService {
@@ -62,9 +51,9 @@ abstract class AbstractTcpClient extends ClusterService {
     private String nodeName;
     private final String portProperty;
     private InetSocketAddress address;
-    private final ChannelPipelineFactory origChannelFacotry;
-    private final ChannelFactory channelFactory;
-    private final ClientBootstrap bootstrap;
+    private ChannelPipelineFactory origChannelFacotry;
+    private ChannelFactory channelFactory;
+    private ClientBootstrap bootstrap;
     private boolean connecting;
     private Channel channel;
     private volatile boolean reconnect;
@@ -76,24 +65,33 @@ abstract class AbstractTcpClient extends ClusterService {
     private ThreadPoolExecutor workerExecutor;
     private OrderedMemoryAwareThreadPoolExecutor receiveExecutor;
 
+
     public AbstractTcpClient(String name, final Cluster cluster, final String portProperty) throws Exception {
         super(name, cluster);
-
         this.portProperty = portProperty;
+        reconnect = true;
+    }
 
+    @Override
+    protected void init() throws Exception {
+        super.init();
         if (bossExecutor == null)
             bossExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         if (workerExecutor == null)
             workerExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        configureThreadPool(name + "-tcpClientBoss", bossExecutor);
-        configureThreadPool(name + "-tcpClientWorker", workerExecutor);
+        final short currentNodeId = getCluster().getMyNodeId();
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpClientBoss", bossExecutor);
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpClientWorker", workerExecutor);
         if (receiveExecutor != null)
-            configureThreadPool(name + "-tcpClientReceive", receiveExecutor);
+            configureThreadPool(currentNodeId + "-" + getName() + "-tcpClientReceive", receiveExecutor);
 
-        this.channelFactory = new NioClientSocketChannelFactory(bossExecutor, workerExecutor);
+        this.channelFactory = new NioClientSocketChannelFactory(
+                new NioClientBossPool(bossExecutor, NettyUtils.DEFAULT_BOSS_COUNT, new HashedWheelTimer(), KEEP_UNCHANGED_DETERMINER),
+                new NioWorkerPool(workerExecutor, NettyUtils.getWorkerCount(workerExecutor), KEEP_UNCHANGED_DETERMINER));
         this.bootstrap = new ClientBootstrap(channelFactory);
 
-        origChannelFacotry = new TcpMessagePipelineFactory(LOG, null, receiveExecutor) {
+        final Cluster cluster = getCluster();
+        this.origChannelFacotry = new TcpMessagePipelineFactory(LOG, null, receiveExecutor) {
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 final ChannelPipeline pipeline = super.getPipeline();
@@ -122,8 +120,6 @@ abstract class AbstractTcpClient extends ClusterService {
 
         bootstrap.setOption("tcpNoDelay", true);
         bootstrap.setOption("keepAlive", true);
-
-        reconnect = true;
     }
 
     @Override
@@ -230,7 +226,7 @@ abstract class AbstractTcpClient extends ClusterService {
 
     private void connect() {
         try {
-            for (;;) {
+            for (; ; ) {
                 channelLock.lock();
                 try {
                     if (!reconnect || Thread.interrupted())
@@ -322,6 +318,7 @@ abstract class AbstractTcpClient extends ClusterService {
     }
 
     abstract protected void receive(ChannelHandlerContext ctx, Message message);
+
     private final ChannelHandler channelHandler = new SimpleChannelHandler() {
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {

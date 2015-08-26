@@ -19,41 +19,38 @@ import co.paralleluniverse.galaxy.core.ClusterService;
 import co.paralleluniverse.galaxy.core.CommThread;
 import co.paralleluniverse.galaxy.core.Message;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.net.InetSocketAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicLong;
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
+import org.jboss.netty.channel.socket.nio.NioServerBossPool;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.channel.socket.nio.NioWorkerPool;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static co.paralleluniverse.galaxy.netty.NettyUtils.KEEP_UNCHANGED_DETERMINER;
+
 /**
- *
  * @author pron
  */
 public abstract class AbstractTcpServer extends ClusterService {
     private final Logger LOG = LoggerFactory.getLogger(AbstractTcpServer.class.getName() + "." + getName());
     //
     private final int port;
-    private final ChannelFactory channelFactory;
-    private final ServerBootstrap bootstrap;
+    private ChannelFactory channelFactory;
+    private ServerBootstrap bootstrap;
     private final DefaultChannelGroup channels;
     private final AtomicLong nextMessageId = new AtomicLong(1L);
-    private final ChannelPipelineFactory origChannelFacotry;
+    private ChannelPipelineFactory origChannelFacotry;
+    private final ChannelHandler testHandler;
     private ThreadPoolExecutor bossExecutor;
     private ThreadPoolExecutor workerExecutor;
     private OrderedMemoryAwareThreadPoolExecutor receiveExecutor;
@@ -62,24 +59,36 @@ public abstract class AbstractTcpServer extends ClusterService {
         super(name, cluster);
         this.channels = channels;
         this.port = port;
+        this.testHandler = testHandler;
+    }
 
+    public AbstractTcpServer(String name, Cluster cluster, DefaultChannelGroup channels, int port) {
+        this(name, cluster, channels, port, null);
+    }
+
+    @Override
+    protected void init() throws Exception {
+        super.init();
         if (bossExecutor == null)
             bossExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         if (workerExecutor == null)
             workerExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        configureThreadPool(name + "-tcpServerBoss", bossExecutor);
-        configureThreadPool(name + "-tcpServerWorker", workerExecutor);
+        final short currentNodeId = getCluster().getMyNodeId();
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpServerBoss", bossExecutor);
+        configureThreadPool(currentNodeId + "-" + getName() + "-tcpServerWorker", workerExecutor);
         if (receiveExecutor != null)
-            configureThreadPool(name + "-tcpServerReceive", receiveExecutor);
+            configureThreadPool(currentNodeId + "-" + getName() + "-tcpServerReceive", receiveExecutor);
 
-        this.channelFactory = new NioServerSocketChannelFactory(bossExecutor, workerExecutor);
-        this.bootstrap = new ServerBootstrap(channelFactory);
+        channelFactory = new NioServerSocketChannelFactory(
+                new NioServerBossPool(bossExecutor, NettyUtils.DEFAULT_BOSS_COUNT, KEEP_UNCHANGED_DETERMINER),
+                new NioWorkerPool(workerExecutor, NettyUtils.getWorkerCount(workerExecutor), KEEP_UNCHANGED_DETERMINER));
+        bootstrap = new ServerBootstrap(channelFactory);
 
         origChannelFacotry = new TcpMessagePipelineFactory(LOG, channels, receiveExecutor) {
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 final ChannelPipeline pipeline = super.getPipeline();
-                pipeline.addBefore("messageCodec", "nodeNameReader", new ChannelNodeNameReader(cluster));
+                pipeline.addBefore("messageCodec", "nodeNameReader", new ChannelNodeNameReader(getCluster()));
                 pipeline.addLast("router", channelHandler);
                 if (testHandler != null)
                     pipeline.addLast("test", testHandler);
@@ -98,10 +107,6 @@ public abstract class AbstractTcpServer extends ClusterService {
         bootstrap.setOption("reuseAddress", true);
         bootstrap.setOption("child.tcpNoDelay", true);
         bootstrap.setOption("child.keepAlive", true);
-    }
-
-    public AbstractTcpServer(String name, Cluster cluster, DefaultChannelGroup channels, int port) {
-        this(name, cluster, channels, port, null);
     }
 
     public void setBossExecutor(ThreadPoolExecutor bossExecutor) {
@@ -129,6 +134,7 @@ public abstract class AbstractTcpServer extends ClusterService {
         }).build());
         ThreadPoolExecutorMonitor.register(name, executor);
     }
+
     private final ChannelHandler channelHandler = new SimpleChannelHandler() {
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {

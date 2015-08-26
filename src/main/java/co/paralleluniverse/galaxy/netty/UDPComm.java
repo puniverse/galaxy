@@ -276,13 +276,20 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
         }
 
         this.myAddress = new InetSocketAddress(InetAddress.getLocalHost(), port);
+        if (workerExecutor == null)
+            workerExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
+        // Netty ignores executor thread naming strategy cause of Worker renaming policy.
+        // org.jboss.netty.channel.socket.nio.AbstractNioWorker.newThreadRenamingRunnable()
+        // And unfortunately for NioDatagramChannelFactory itsn't possible to pass our own ThreadNameDeterminer.
         configureThreadPool(getWorkerExecutorName(), workerExecutor);
 
         if (receiveExecutor != null)
             configureThreadPool(getReceiveExecutorName(), receiveExecutor);
 
-        this.channelFactory = isSendToServerInsteadOfMulticast() ? new NioDatagramChannelFactory(workerExecutor) : new OioDatagramChannelFactory(workerExecutor);
+        this.channelFactory = isSendToServerInsteadOfMulticast()
+                ? new NioDatagramChannelFactory(workerExecutor, NettyUtils.getWorkerCount(workerExecutor))
+                : new OioDatagramChannelFactory(workerExecutor);
         this.bootstrap = new ConnectionlessBootstrap(channelFactory);
         this.bootstrap.setOption("receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(4096));
 
