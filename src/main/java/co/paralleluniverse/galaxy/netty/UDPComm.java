@@ -318,7 +318,7 @@ public class UDPComm extends AbstractComm<InetSocketAddress> {
             }
         });
 
-        bootstrap.setOption("localAddress", new InetSocketAddress(port));
+        bootstrap.setOption("localAddress", new InetSocketAddress(InetAddress.getLocalHost(), port));
         bootstrap.setOption("tcpNoDelay", true);
 
         monitor.registerMBean();
