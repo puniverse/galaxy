@@ -85,7 +85,7 @@ public abstract class AbstractCluster extends Service implements Cluster {
     public AbstractCluster(String name, short nodeId) {
         super(name);
         if (nodeId < 0) {
-            throw new IllegalArgumentException("nodId " + nodeId + " is <= 0!");
+            throw new IllegalArgumentException("nodeId " + nodeId + " is <= 0!");
         }
         this.myId = nodeId;
         this.online = false;
