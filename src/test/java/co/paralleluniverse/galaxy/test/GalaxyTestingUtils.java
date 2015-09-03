@@ -20,6 +20,8 @@
 package co.paralleluniverse.galaxy.test;
 
 import co.paralleluniverse.galaxy.Server;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 public class GalaxyTestingUtils {
     static final boolean ci = (isEnvTrue("CI") || isEnvTrue("CONTINUOUS_INTEGRATION") || isEnvTrue("TRAVIS"));
@@ -28,8 +30,8 @@ public class GalaxyTestingUtils {
         return ci;
     }
 
-    public static String pathToResource(final String name) {
-        return ClassLoader.getSystemClassLoader().getResource(name).getPath();
+    public static Resource pathToResource(final String name) {
+        return new ClassPathResource(name, ClassLoader.getSystemClassLoader());
     }
 
     public static Runnable startGlxServer(final String serverConfig, final String serverProps) {

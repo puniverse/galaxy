@@ -15,12 +15,8 @@ package co.paralleluniverse.galaxy;
 
 import co.paralleluniverse.common.spring.Service;
 import co.paralleluniverse.common.spring.SpringContainerHelper;
-import co.paralleluniverse.galaxy.core.AbstractCluster;
-import co.paralleluniverse.galaxy.core.Backup;
+import co.paralleluniverse.galaxy.core.*;
 import co.paralleluniverse.galaxy.core.Cache;
-import co.paralleluniverse.galaxy.core.ClusterMonitor;
-import co.paralleluniverse.galaxy.core.StoreImpl;
-import java.util.Properties;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -28,6 +24,9 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+
+import java.util.Properties;
 
 /**
  * The central access point to the grid's services (the word <i>grid</i> describes the collection distributed of software provided
@@ -55,7 +54,36 @@ public class Grid {
      * instances.
      * @return The grid instance.
      */
+    @Deprecated
     public static Grid getInstance(String configFile, String propertiesFile) throws InterruptedException {
+        return getInstance(configFile == null ? null : new FileSystemResource(configFile), propertiesFile);
+    }
+
+    /**
+     * Retrieves the grid instance, as defined in the given configuration file.
+     *
+     * @param configFile The name of the configuration file containing the grid definition.
+     * @param properties A {@link Properties Properties} object containing the grid's properties to be injected into placeholders
+     * in the configuration file.
+     * This parameter is helpful when you want to use the same xml configuration with different properties for different
+     * instances.
+     * @return The grid instance.
+     */
+    @Deprecated
+    public static Grid getInstance(String configFile, Properties properties) throws InterruptedException {
+        return getInstance(configFile == null ? null : new FileSystemResource(configFile), (Object) properties);
+    }
+
+    /**
+     * Retrieves the grid instance, as defined in the given configuration file.
+     *
+     * @param configFile The name of the configuration file containing the grid definition.
+     * @param propertiesFile The name of the properties file containing the grid's properties. You may, of course use Spring's {@code <context:property-placeholder location="classpath:com/foo/bar.properties"/>}
+     * but this parameter is helpful when you want to use the same xml configuration with different properties for different
+     * instances.
+     * @return The grid instance.
+     */
+    public static Grid getInstance(Resource configFile, Resource propertiesFile) throws InterruptedException {
         return getInstance(configFile, (Object) propertiesFile);
     }
 
@@ -69,11 +97,11 @@ public class Grid {
      * instances.
      * @return The grid instance.
      */
-    public static Grid getInstance(String configFile, Properties properties) throws InterruptedException {
+    public static Grid getInstance(Resource configFile, Properties properties) throws InterruptedException {
         return getInstance(configFile, (Object) properties);
     }
 
-    private static Grid getInstance(String configFile, Object properties) throws InterruptedException {
+    private static Grid getInstance(Resource configFile, Object properties) throws InterruptedException {
         synchronized (lock) {
             Grid _instance = instance;
             if (_instance == null) {
@@ -97,13 +125,19 @@ public class Grid {
     private final Cluster cluster;
     private final ClusterMonitor clusterMonitor;
 
-    private Grid(String configFile, Object properties) throws InterruptedException {
-        if (configFile == null)
-            configFile = System.getProperty("co.paralleluniverse.galaxy.configFile");
+    private Grid(Resource configFile, Object properties) throws InterruptedException {
+        if (configFile == null) {
+            String propertyConfigFile = System.getProperty("co.paralleluniverse.galaxy.configFile");
+            if (propertyConfigFile != null) {
+                configFile = new FileSystemResource(propertyConfigFile);
+            } else {
+                configFile = new ClassPathResource("galaxy.xml");
+            }
+        }
         if (properties == null)
             properties = System.getProperty("co.paralleluniverse.galaxy.propertiesFile");
         this.context = SpringContainerHelper.createContext("co.paralleluniverse.galaxy",
-                configFile != null ? new FileSystemResource(configFile) : new ClassPathResource("galaxy.xml"),
+                configFile,
                 properties instanceof String ? new FileSystemResource((String) properties) : properties,
                 new BeanFactoryPostProcessor() {
                     @Override
