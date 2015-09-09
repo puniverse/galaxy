@@ -25,7 +25,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
+import java.net.URL;
 import java.util.Properties;
 
 /**
@@ -54,7 +56,6 @@ public class Grid {
      * instances.
      * @return The grid instance.
      */
-    @Deprecated
     public static Grid getInstance(String configFile, String propertiesFile) throws InterruptedException {
         return getInstance(configFile == null ? null : new FileSystemResource(configFile), propertiesFile);
     }
@@ -69,7 +70,6 @@ public class Grid {
      * instances.
      * @return The grid instance.
      */
-    @Deprecated
     public static Grid getInstance(String configFile, Properties properties) throws InterruptedException {
         return getInstance(configFile == null ? null : new FileSystemResource(configFile), (Object) properties);
     }
@@ -83,8 +83,8 @@ public class Grid {
      * instances.
      * @return The grid instance.
      */
-    public static Grid getInstance(Resource configFile, Resource propertiesFile) throws InterruptedException {
-        return getInstance(configFile, (Object) propertiesFile);
+    public static Grid getInstance(URL configFile, URL propertiesFile) throws InterruptedException {
+        return getInstance(new UrlResource(configFile), propertiesFile);
     }
 
     /**
@@ -97,8 +97,8 @@ public class Grid {
      * instances.
      * @return The grid instance.
      */
-    public static Grid getInstance(Resource configFile, Properties properties) throws InterruptedException {
-        return getInstance(configFile, (Object) properties);
+    public static Grid getInstance(URL configFile, Properties properties) throws InterruptedException {
+        return getInstance(new UrlResource(configFile), properties);
     }
 
     private static Grid getInstance(Resource configFile, Object properties) throws InterruptedException {
@@ -136,9 +136,14 @@ public class Grid {
         }
         if (properties == null)
             properties = System.getProperty("co.paralleluniverse.galaxy.propertiesFile");
+        if (properties instanceof String)
+            properties = new FileSystemResource((String) properties);
+        if (properties instanceof URL)
+            properties = new UrlResource((URL)properties);
+
         this.context = SpringContainerHelper.createContext("co.paralleluniverse.galaxy",
                 configFile,
-                properties instanceof String ? new FileSystemResource((String) properties) : properties,
+                properties,
                 new BeanFactoryPostProcessor() {
                     @Override
                     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory1) throws BeansException {
