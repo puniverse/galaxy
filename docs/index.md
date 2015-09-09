@@ -44,7 +44,7 @@ Galaxy 1.3 has been released.
 
 ### August 3, 2012
 
-[How Galaxy Handles Failures](http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures>). Part 2 of the Galaxy Internals blog post series.
+[How Galaxy Handles Failures](http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures). Part 2 of the Galaxy Internals blog post series.
 
 ### July 26, 2012
 
@@ -260,7 +260,7 @@ by the application.
 
 A series of blog posts detailing Galaxy's inner workings can be found here: 
 [part 1](http://blog.paralleluniverse.co/post/28062434301/galaxy-internals-part-1), 
-[part 2](http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures>), 
+[part 2](http://blog.paralleluniverse.co/post/28635713418/how-galaxy-handles-failures), 
 [part 3](http://blog.paralleluniverse.co/post/29085615915/galaxy-internals-part-3).
 
 ### Tips for Achieving High-Performance with Galaxy
