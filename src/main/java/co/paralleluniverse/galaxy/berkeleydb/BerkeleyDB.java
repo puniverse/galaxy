@@ -290,8 +290,8 @@ public class BerkeleyDB extends Component implements MainMemoryDB {
     }
 
     @Override
-    public short findAllocation(long ref) {
-        final DatabaseEntry key = new DatabaseEntry();
+    public short findAllocation(long id) {
+        final DatabaseEntry key = new DatabaseEntry(Longs.toByteArray(id));
         final DatabaseEntry data = new DatabaseEntry();
 
         try (Cursor cursor = allocationDirectory.openCursor(null, CursorConfig.DEFAULT)) {
