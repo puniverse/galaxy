@@ -22,7 +22,6 @@ package co.paralleluniverse.galaxy.nanocloud;
 import co.paralleluniverse.galaxy.Grid;
 import co.paralleluniverse.galaxy.cluster.NodeChangeListener;
 import com.google.common.util.concurrent.SettableFuture;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -65,7 +64,7 @@ public abstract class BaseCloudTest {
             public Short call() throws IOException, InterruptedException, ExecutionException {
                 System.out.println("STARTING PEER " + peerNum);
                 Properties props = new Properties();
-                props.load(new FileInputStream(pathToResource(SERVER_PROPS)));
+                props.load(pathToResource(SERVER_PROPS).openStream());
                 props.setProperty("galaxy.nodeId", Integer.toString(peerNum));
                 props.setProperty("galaxy.port", Integer.toString(7050 + peerNum));
                 props.setProperty("galaxy.slave_port", Integer.toString(8050 + peerNum));

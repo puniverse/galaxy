@@ -19,6 +19,10 @@ import co.paralleluniverse.galaxy.core.MainMemory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+
+import java.net.URL;
 
 /**
  * This class runs the Galaxy server.
@@ -41,9 +45,35 @@ public class Server {
      * with different properties for different instances.
      */
     public static void start(String configFile, String propertiesFile) {
+        Resource configResource = configFile != null ? new FileSystemResource(configFile) : null;
+        Resource propertiesResource = propertiesFile != null ? new FileSystemResource(propertiesFile) : null;
+        start(configResource, propertiesResource);
+    }
+
+    /**
+     * Starts the galaxy server.
+     * @param configFile The path to the xml (spring) configuration file {@code null} null for default.
+     * @param propertiesFile The name of the properties file containing the grid's properties.
+     * You may, of course use Spring's {@code <context:property-placeholder location="classpath:com/foo/bar.properties"/>} but this parameter is helpful when you want to use the same xml configuration
+     * with different properties for different instances.
+     */
+    public static void start(URL configFile, URL propertiesFile) {
+        Resource configResource = configFile != null ? new UrlResource(configFile) : null;
+        Resource propertiesResource = propertiesFile != null ? new UrlResource(propertiesFile) : null;
+        start(configResource, propertiesResource);
+    }
+
+    /**
+     * Starts the galaxy server.
+     * @param configFile The path to the xml (spring) configuration file {@code null} null for default.
+     * @param propertiesFile The name of the properties file containing the grid's properties.
+     * You may, of course use Spring's {@code <context:property-placeholder location="classpath:com/foo/bar.properties"/>} but this parameter is helpful when you want to use the same xml configuration
+     * with different properties for different instances.
+     */
+    private static void start(Resource configFile, Resource propertiesFile) {
         final ApplicationContext context = SpringContainerHelper.createContext("co.paralleluniverse.galaxy",
-                configFile != null ? new FileSystemResource(configFile) : new ClassPathResource("galaxy.xml"),
-                propertiesFile != null ? new FileSystemResource(propertiesFile) : null,
+                configFile != null ? configFile : new ClassPathResource("galaxy.xml"),
+                propertiesFile,
                 null);
         MainMemory memory = context.getBean("memory", MainMemory.class);
         ((AbstractCluster)memory.getCluster()).goOnline();
