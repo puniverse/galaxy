@@ -1,13 +1,13 @@
 /*
  * Galaxy
  * Copyright (c) 2012-2014, Parallel Universe Software Co. All rights reserved.
- * 
+ *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
  * the Eclipse Foundation
- *  
+ *
  *   or (per the licensee's choosing)
- *  
+ *
  * under the terms of the GNU Lesser General Public License version 3.0
  * as published by the Free Software Foundation.
  */
@@ -139,10 +139,10 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     private static final int LINE_EVERYTHING_CHANGED = -1;
     //
     private static final long HIT_OR_MISS_OPS = Enums.setOf(
-            Op.Type.GET, 
-            Op.Type.GETS, 
-            Op.Type.GETX, 
-            Op.Type.SET, 
+            Op.Type.GET,
+            Op.Type.GETS,
+            Op.Type.GETX,
+            Op.Type.SET,
             Op.Type.DEL);
     private static final long FAST_TRACK_OPS = Enums.setOf(
             Op.Type.GET,
@@ -153,12 +153,12 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             Op.Type.INVOKE,
             Op.Type.LSTN);
     private static final long LOCKING_OPS = Enums.setOf(
-            Op.Type.GETS, 
-            Op.Type.GETX, 
-            Op.Type.SET, 
+            Op.Type.GETS,
+            Op.Type.GETX,
+            Op.Type.SET,
             Op.Type.DEL);
     private static final long PUSH_OPS = Enums.setOf(
-            Op.Type.PUSH, 
+            Op.Type.PUSH,
             Op.Type.PUSHX);
 
     private static final long MESSAGES_BLOCKED_BY_LOCK = Enums.setOf(
@@ -305,7 +305,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
 
     private Checksum getChecksum() {
         assert compareBeforeWrite;
-        return new HashFunctionChecksum(com.google.common.hash.Hashing.murmur3_128()); // new DoubleHasher(); // new MessageDigestChecksum("MD5"); // new MessageDigestChecksum("SHA-1"); // new MessageDigestChecksum("SHA-256"); 
+        return new HashFunctionChecksum(com.google.common.hash.Hashing.murmur3_128()); // new DoubleHasher(); // new MessageDigestChecksum("MD5"); // new MessageDigestChecksum("SHA-1"); // new MessageDigestChecksum("SHA-256");
     }
 
     public long getMaxStaleReadMillis() {
@@ -396,7 +396,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         long timeAccessed;
         private volatile State state;   // 4
         private State nextState;        // 4
-        private volatile long version;  // 8 
+        private volatile long version;  // 8
         private long ownerClock;        // 8 must contain a counter that is monotonically increasing for each owner, e.g, the message id
         private ByteBuffer data;        // 4
         private short parts;            // 2
@@ -1048,8 +1048,8 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             } else {
                 id = line.getId();
                 owner = line.getOwner();
-                // actually, S doesn't mean we're certain about the owner b/c transfer of ownership (PUTX) is done before sending INVs. 
-                // However, we're more certain than when we're I. 
+                // actually, S doesn't mean we're certain about the owner b/c transfer of ownership (PUTX) is done before sending INVs.
+                // However, we're more certain than when we're I.
                 // It doesn't matter, though, since at the moment the certain field is ignored.
                 certain = (line.state == State.S);
             }
@@ -1388,7 +1388,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
         if (!transitionToE(line, nodeHint))
             return PENDING;
 
-        lockLine(line, txn); // we get here when were O (see transitionToE or E). 
+        lockLine(line, txn); // we get here when were O (see transitionToE or E).
 
         if (data != null) {
             readData(line, (Persistable) data);
@@ -1460,7 +1460,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
              * Node A owns X and Y. B shares X and pins it. A modifies X, and doesn't wait for B's INVACK, which won't come until
              * it unpins X. Then A also modifies Y (which can be published because it's not shared). B then requests Y and accepts it,
              * but it is now inconsistent with X.
-             * 
+             *
              * An alternative solution will be to enable this optimization for a single line per transaction, so that A won't be able
              * to modify Y until X is released and INVACKed by B.
              */
@@ -1941,7 +1941,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
     }
 
     private int handleMessageChngdOwnr(Message.CHNGD_OWNR msg, CacheLine line) throws IrrelevantStateException {
-        relevantStates(line, State.I, State.S); // S doesn't mean we're certain about the owner b/c transfer of ownership (PUTX) is done before sending INVs. 
+        relevantStates(line, State.I, State.S); // S doesn't mean we're certain about the owner b/c transfer of ownership (PUTX) is done before sending INVs.
 
         if (msg.getNewOwner() != -1 && getCluster().getMaster(msg.getNewOwner()) == null) {
             // either the node that sent the message has not received a node removal event for the new owner
@@ -1956,7 +1956,7 @@ public class Cache extends ClusterService implements MessageReceiver, NodeChange
             int change = LINE_OWNER_CHANGED;
 
             if (msg.getNode() == Comm.SERVER && msg.getNewOwner() == myNodeId()) {
-                setState(line, State.E); // it's me! probably we sent PUTX to a node that died. 
+                setState(line, State.E); // it's me! probably we sent PUTX to a node that died.
                 change |= LINE_STATE_CHANGED;
             }
 
